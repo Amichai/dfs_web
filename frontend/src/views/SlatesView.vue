@@ -17,29 +17,36 @@ onMounted(async () => {
   await fetchData();
 })
 
-  /// handle uploads of slate files
-  /// diff the data and only write new data to the db
-  /// show today's slate files with date picker, sport picker, site picker, etc
+/// handle uploads of slate files
+/// diff the data and only write new data to the db
+/// show today's slate files with date picker, sport picker, site picker, etc
 
-  const fileUploaded = (evt) => {
-    let files = evt.target.files; // FileList object
-      let f = files[0];
-      let reader = new FileReader();
+const fileUploaded = (evt) => {
+  let files = evt.target.files; // FileList object
+  let f = files[0];
+  let reader = new FileReader();
 
-      reader.onload = (() => {
-        return function(e) {
-          const content = e.target.result
-          const lines = content.split('\n')
-          console.log(lines)
-        };
-      })();
+  reader.onload = (() => {
+    return function (e) {
+      const content = e.target.result
+      const lines = content.split('\n')
+      // console.log(lines[0])
 
-      reader.readAsText(f);
-  }
+      // const slate = lines.map((line) => {
+      //   const [id, position, firstName, nickName, lastName, FPPG, played, salary, game, team, opponent, injuryIndicator, injuryDetails, Tier] = line.split(',')
+      //   return {
+      //     id, position, firstName, nickName, lastName, FPPG
+      //   }
+      // })
+    };
+  })();
 
-  const clearFile = () => {
-    document.getElementById('formFile').value = ''
-  }
+  reader.readAsText(f);
+}
+
+const clearFile = () => {
+  document.getElementById('formFile').value = ''
+}
 </script>
 
 <template>
@@ -48,10 +55,8 @@ onMounted(async () => {
     <!-- date picker -->
     <div class="upload-button">
       <!-- :disabled="!Object.keys(byPlayerId).length" -->
-      <input class="form-control" 
-            @change="fileUploaded"
-          type="file" id="formFile">
-            <button class="btn btn-outline-danger" type="button" id="button-addon2" @click="clearFile">clear</button>
+      <input class="form-control" @change="fileUploaded" type="file" id="formFile">
+      <button class="btn btn-outline-danger" type="button" @click="clearFile">clear</button>
     </div>
   </main>
 </template>
@@ -64,6 +69,7 @@ onMounted(async () => {
   align-items: center;
   margin: 1rem;
 }
+
 #formFile {
   width: 100%;
 }

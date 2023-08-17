@@ -147,5 +147,6 @@ h3 {
 
 main {
   width: min(100% - 3rem, 70ch);
-  margin-inline: auto; 
+  margin-inline: auto;
+  padding-top: 1rem;
 }
