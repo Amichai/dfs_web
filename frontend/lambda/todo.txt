@@ -1,0 +1,38 @@
+todo - 
+
+prompt the user to select a title/epigraph, or write a title as necessary
+ - popper color theme
+
+
+Use HTML forms to support enter key, etc
+Prgressively reveal the page
+
+
+------
+loading screen, polling for book reveal
+debounce the book create button
+analytics?
+use a form on the book builder page
+Deploy to bookplaner.dev
+
+
+
+-  'When a talking raccoon is mistaken for a bandit, the unlikeliest of friends must join forces to save the day.',
+-  'A medieval knight teams up with a crew of modern-day urbanites to take down an alien invasion.',
+-  'Three witches must cook up a magical potion to reverse a curse before their town is destroyed.',
+-  'A single forgotten happy hour leads to one epic night of adventure and excitement.',
+-  'A reluctant space explorer embarks on a mission to locate a mysterious planet that could hold the key to saving humanity.',
+-  'A detective with extraordinary powers and an unlikely sidekick team up to unravel a centuries-old mystery.',
+-  'When a toy box transports two children to a distant galaxy, they must enlist the help of intergalactic superheroes to make their way back home.',
+-  'Discover how you can save money by eating cereal for every meal',
+-  'The bizarre history of the bathroom fixture from ancient Egypt to modern day use',
+-  'Plant communication',
+-  'Uncovering the fascinating secrets of bees',
+-  "The intricate formalities of visiting a foreign royal family, so you don't make any faux pas!"
+-]
+
+
+zip -r lambdaFunc.zip .; aws lambda update-function-code --function-name AIBookWriter --zip-file fileb:///Users/amichailevy/Documents/spikes/AIGhostWriter/lambda/lambdaFunc.zip
+
+
+ amplify publish   
