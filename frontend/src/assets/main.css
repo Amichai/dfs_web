@@ -144,3 +144,8 @@ h3 {
     transform: rotate(1800deg);
   }
 }
+
+main {
+  width: min(100% - 3rem, 70ch);
+  margin-inline: auto; 
+}
