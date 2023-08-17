@@ -1,76 +1,34 @@
-import { v4 as uuidv4 } from 'uuid'
+import axios from 'axios';
 
-export const getTitles = async (description) => {
-  var myHeaders = new Headers()
-  myHeaders.append('Content-Type', 'application/json')
-
-  var raw = JSON.stringify({
-    description
-  })
-
-  var requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    body: raw,
-    redirect: 'follow'
+export const writeData = async (table, data) => {
+  const augmentedData = {
+    ...data,
+    time: new Date().toISOString(),
   }
 
-  const response = await fetch(
-    'https://i27f13a1be.execute-api.us-east-1.amazonaws.com/dev/titles',
-    requestOptions
-  )
-  const result = await response.json()
-
-  return result
+  const result = await axios.post('http://127.0.0.1:5000/write', { table, data: augmentedData })
+  const json = result.json
+  console.log(json)
+  return json
 }
 
-export const getEpigraphs = async (description, title) => {
-  var myHeaders = new Headers()
-  myHeaders.append('Content-Type', 'application/json')
-
-  var raw = JSON.stringify({
-    titleAndDescription: {
-      title,
-      description
-    }
+export const queryData = async (table, key, value) => {
+  const result = await axios.post('http://127.0.0.1:5000/query', { 
+    table,
+    key, 
+    value 
   })
-
-  var requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    body: raw,
-    redirect: 'follow'
-  }
-
-  const response = await fetch(
-    'https://i27f13a1be.execute-api.us-east-1.amazonaws.com/dev/titles',
-    requestOptions
-  )
-  const result = await response.json()
-
-  return result
+  console.log(result.data)
+  return result.data
 }
 
-export const uploadBook = async (description, title, epigraph) => {
-  const id = uuidv4()
-  let data = {
-    uuid: id,
-    description: encodeURIComponent(description),
-    title: encodeURIComponent(title),
-    epigraph: encodeURIComponent(epigraph)
-  }
-
-  fetch('https://i27f13a1be.execute-api.us-east-1.amazonaws.com/dev/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    // body: JSON.stringify(data),
-    body: JSON.stringify(data)
+export const searchData = async (table, key, query) => {
+  const result = await axios.get(`http://127.0.0.1:5000/search?table=${table}&key=${key}&query=${query}`, { 
+    table, 
+    key, 
+    query
   })
-    .then((response) => response.json())
-    .then((data) => console.log('Success:', data))
-    .catch((error) => console.error('Error:', error))
 
-  return id
+  console.log(result.data)
+  return result.data
 }
