@@ -45,6 +45,8 @@ const fileUploaded = (evt) => {
   reader.readAsText(f);
 }
 
+const date = ref(new Date().toISOString().slice(0, 10))
+
 const selectedChanged = (val) => {
   console.log('test test', val)
 }
@@ -57,14 +59,24 @@ const clearFile = () => {
 <template>
   <main>
     <h2>Slates</h2>
-    <!-- date picker -->
-    <ComboBox :array="['NBA FD', 'NFL FD', 'MLB FD', 'NBA DK', 'NFL DK', 'MLB DK']" 
-    @selected="selectedChanged" placeholder="slate"/>
+    <div class="slate-filter">
+      <ComboBox :array="['NBA FD', 'NFL FD', 'MLB FD', 'NBA DK', 'NFL DK', 'MLB DK']" @selected="selectedChanged"
+        placeholder="slate" />
+
+      <VueDatePicker class="datepicker" v-model="date" 
+      :month-change-on-scroll="false"
+      auto-apply
+      text-input
+      :enable-time-picker="false"
+      ></VueDatePicker>
+    </div>
     <div class="upload-button">
       <!-- :disabled="!Object.keys(byPlayerId).length" -->
       <input class="form-control" @change="fileUploaded" type="file" id="formFile">
-      <button class="btn btn-outline-danger" type="button" @click="clearFile">clear</button>
+      <button class="btn btn-outline-danger" type="button" @click="clearFile">×</button>
     </div>
+
+    <button class="btn main-button" type="button">Upload</button>
   </main>
 </template>
 
@@ -79,5 +91,16 @@ const clearFile = () => {
 
 #formFile {
   width: 100%;
+}
+
+.slate-filter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.main-button {
+  margin: 1rem;
+  font-size: var(--fs-1);
 }
 </style>

@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.354.0",
     "@aws-sdk/lib-dynamodb": "^3.354.0",
+    "@vuepic/vue-datepicker": "^6.0.0",
     "aws-sdk": "^2.1399.0",
     "axios": "^1.4.0",
     "floating-vue": "^2.0.0-beta.20",
