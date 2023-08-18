@@ -4,6 +4,9 @@ import { writeData, queryData, searchData } from '../apiHelper';
 import { FDParser } from '../parsers';
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import ComboBox from '../components/ComboBox.vue'
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
+import TableComponent from '../components/TableComponent.vue'
 
 const fetchData = async () => {
   searchData('test1', 'test', 'test3').then((res) => {
@@ -32,6 +35,8 @@ const slatesToParsers = {
   'MLB DK': new FDParser(),
 }
 
+const parsedContent = ref([{ name: 'name1', value: 'test1' }])
+
 const fileUploaded = (evt) => {
   let files = evt.target.files; // FileList object
   let f = files[0];
@@ -41,9 +46,7 @@ const fileUploaded = (evt) => {
     return function (e) {
       const content = e.target.result
       const parser = slatesToParsers[selectedSlate.value]
-      const parsedContent = parser.parse(content)
-
-      debugger
+      parsedContent.value = parser.parse(content)
     };
   })();
 
@@ -60,6 +63,11 @@ const selectedChanged = (val) => {
 
 const clearFile = () => {
   document.getElementById('formFile').value = ''
+
+  parsedContent.value = {
+    columns: [],
+    mappedVals: []
+  }
 }
 
 </script>
@@ -83,9 +91,11 @@ const clearFile = () => {
       <!-- :disabled="!Object.keys(byPlayerId).length" -->
       <input class="form-control" @change="fileUploaded" type="file" id="formFile">
       <button class="btn btn-outline-danger" type="button" @click="clearFile">×</button>
+      <button class="btn main-button" type="button">Upload</button>
     </div>
 
-    <button class="btn main-button" type="button">Upload</button>
+
+    <TableComponent :content="parsedContent" />
   </main>
 </template>
 
@@ -100,6 +110,8 @@ const clearFile = () => {
 
 #formFile {
   width: 100%;
+  color: white;
+  font-size: 0.9em;
 }
 
 .slate-filter {
