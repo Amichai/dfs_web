@@ -1,7 +1,7 @@
 <script setup>
 import axios from 'axios';
 import { writeData, queryData, searchData } from '../apiHelper';
-import { CSVParser } from '../parsers';
+import { FDParser } from '../parsers';
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import ComboBox from '../components/ComboBox.vue'
 
@@ -24,14 +24,12 @@ onMounted(async () => {
 /// show today's slate files with date picker, sport picker, site picker, etc
 
 const slatesToParsers = {
-  'NBA FD': new CSVParser(''),
-  'NFL FD': new CSVParser(
-    ['id', 'position', 'firstName'], [0, 1, 2]
-  ),
-  'MLB FD': null,
-  'NBA DK': null,
-  'NFL DK': null,
-  'MLB DK': null
+  'NBA FD': new FDParser(),
+  'NFL FD': new FDParser(),
+  'MLB FD': new FDParser(),
+  'NBA DK': new FDParser(),
+  'NFL DK': new FDParser(),
+  'MLB DK': new FDParser(),
 }
 
 const fileUploaded = (evt) => {
@@ -44,6 +42,8 @@ const fileUploaded = (evt) => {
       const content = e.target.result
       const parser = slatesToParsers[selectedSlate.value]
       const parsedContent = parser.parse(content)
+
+      debugger
     };
   })();
 

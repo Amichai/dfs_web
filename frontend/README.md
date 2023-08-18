@@ -33,3 +33,6 @@ npm run build
 ```sh
 npm run lint
 ```
+
+
+virtualenv env; source env/bin/activate
