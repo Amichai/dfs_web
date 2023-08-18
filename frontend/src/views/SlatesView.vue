@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { writeData, queryData, searchData } from '../apiHelper';
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import ComboBox from '../components/ComboBox.vue'
 
 const fetchData = async () => {
   searchData('test1', 'test', 'test3').then((res) => {
@@ -44,6 +45,10 @@ const fileUploaded = (evt) => {
   reader.readAsText(f);
 }
 
+const selectedChanged = (val) => {
+  console.log('test test', val)
+}
+
 const clearFile = () => {
   document.getElementById('formFile').value = ''
 }
@@ -53,6 +58,8 @@ const clearFile = () => {
   <main>
     <h2>Slates</h2>
     <!-- date picker -->
+    <ComboBox :array="['NBA FD', 'NFL FD', 'MLB FD', 'NBA DK', 'NFL DK', 'MLB DK']" 
+    @selected="selectedChanged" placeholder="slate"/>
     <div class="upload-button">
       <!-- :disabled="!Object.keys(byPlayerId).length" -->
       <input class="form-control" @change="fileUploaded" type="file" id="formFile">
