@@ -36,7 +36,7 @@ def query_data():
     query = Query()
     db = TinyDB(DB_ROOT + table)
     results = db.search((query[key] == value))
-    print(results)
+
     return jsonify(results)
 
 @app.route('/search')

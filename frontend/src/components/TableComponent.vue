@@ -37,7 +37,7 @@ watch(() => props.content, (newVal, oldVal) => {
   </DataTable>
 </template>
 
-<style>
+<style scoped>
 tr {
   font-size: 0.8em;
 }

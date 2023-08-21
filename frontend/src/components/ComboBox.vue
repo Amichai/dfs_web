@@ -37,7 +37,7 @@ watch(() => props.modelValue, (val) => {
 })
 </script>
   
-<style>
+<style scoped>
 .container {
   font-family: Arial, sans-serif;
 }

@@ -22,10 +22,6 @@ onMounted(async () => {
   await fetchData();
 })
 
-/// handle uploads of slate files
-/// diff the data and only write new data to the db
-/// show today's slate files with date picker, sport picker, site picker, etc
-
 const slatesToParsers = {
   'FD NBA': new FDParser(),
   'FD NFL': new FDParser(),
@@ -45,7 +41,6 @@ const sport = ref('')
 const uploadSlate = () => {
   parser.upload(slateId.value, date.value, sport.value)
 }
-
 
 const fileUploaded = (evt) => {
   const files = evt.target.files; // FileList object
@@ -76,7 +71,6 @@ const fileUploaded = (evt) => {
     return 
   }
 
-
   reader.onload = (() => {
     return function (e) {
       const content = e.target.result
@@ -102,7 +96,6 @@ const clearFile = () => {
     mappedVals: []
   }
 }
-
 </script>
 
 <template>
