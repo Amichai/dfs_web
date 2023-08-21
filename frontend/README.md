@@ -36,3 +36,4 @@ npm run lint
 
 
 virtualenv env; source env/bin/activate
+python app.py 

@@ -27,8 +27,22 @@ export class CSVParser {
 export class FDParser {
   constructor() {
     this.parser = new CSVParser(
-      ['id', 'position', 'name', 'salary', 'game', 'injury'],
-      [0, 1, 3, 7, 8, 11],
+      ['playerId', 'position', 'name', 'salary', 'game', 'team', 'injury'],
+      [0, 1, 3, 7, 8, 9, 11],
+      1
+    )
+  }
+
+  parse(content) {
+    return this.parser.parse(content)
+  }
+}
+
+export class DKParser {
+  constructor() {
+    this.parser = new CSVParser(
+      ['position', 'name', 'playerId', 'salary', 'game', 'team'],
+      [0, 2, 3, 5, 6, 7],
       1
     )
   }
