@@ -3,7 +3,7 @@
 
 <template>
   <nav class="nav-bar">
-    <a href="/slates" class="nav-item">Slates</a>
+    <a href="/upload" class="nav-item">Upload</a>
     <a href="/players" class="nav-item">Players</a>
     <a href="/optimizer" class="nav-item">Optimizer</a>
     <a href="/backtester" class="nav-item">Backtester</a>

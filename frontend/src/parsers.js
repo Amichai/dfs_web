@@ -18,13 +18,28 @@ export class CSVParser {
       return vals
     })
 
-    console.log(mappedVals)
-
     this.mappedVals = mappedVals.slice(this.skipRows)
     return this
   }
 
+  areRowsEqual(row1, row2) {
+    let toReturn = true
+    this.columns.forEach((column) => {
+      if(row1[column] !== row2[column]) {
+        toReturn = false
+      }
+    })
+
+    return toReturn
+  }
+
   async upload(slateId, date, tableName) {
+    const existingRows = await queryData(tableName, 'slateId', slateId)
+    const existingRowsParsed = existingRows.reduce((acc, val) => {
+      acc[val.playerId] = val
+      return acc
+    }, {})
+
     for(var i = 0; i < this.mappedVals.length; i++) {
       const row = this.mappedVals[i]
       const toWrite = this.columns.reduce((acc, val, index) => {
@@ -35,7 +50,12 @@ export class CSVParser {
       toWrite.slateId = slateId
       toWrite.slateDay = date
 
-      await writeData(tableName, toWrite)
+      const existingRow = existingRowsParsed[toWrite.playerId]
+      const isRowNew = !this.areRowsEqual(existingRow, toWrite)
+      if(!existingRow || isRowNew) {
+        console.log("WRITING ROW", toWrite)
+        await writeData(tableName, toWrite)
+      }
     }
   }
 }

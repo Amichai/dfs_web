@@ -10,7 +10,6 @@ export const writeData = async (table, data) => {
 
   const result = await axios.post(`${URL_BASE}/write`, { table, data: augmentedData })
   const json = result.json
-  console.log(json)
   return json
 }
 

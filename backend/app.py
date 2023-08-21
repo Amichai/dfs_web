@@ -8,6 +8,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+DB_ROOT = 'DBs/'
+
 @app.route('/')
 def hello_world():
     return jsonify(message='Hello, World!')
@@ -19,7 +21,7 @@ def write_data():
     table = data['table']
     data = data['data']
 
-    db = TinyDB(table)
+    db = TinyDB(DB_ROOT + table)
     db.insert(data)
 
     return jsonify(message='success')
@@ -32,7 +34,7 @@ def query_data():
     value = data['value']
 
     query = Query()
-    db = TinyDB(table)
+    db = TinyDB(DB_ROOT + table)
     results = db.search((query[key] == value))
     print(results)
     return jsonify(results)
@@ -44,7 +46,7 @@ def search_data():
     queryString = request.args.get('query')
     
     query = Query()
-    db = TinyDB(table)
+    db = TinyDB(DB_ROOT + table)
 
     def search_func(value):
         return queryString in value

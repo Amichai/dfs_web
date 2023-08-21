@@ -107,7 +107,7 @@ const clearFile = () => {
 
 <template>
   <main>
-    <h2>Slates</h2>
+    <h2>Upload</h2>
     <div class="slate-filter">
       <ComboBox :array="Object.keys(slatesToParsers)" 
         v-model="selectedSlate"
@@ -167,6 +167,7 @@ const clearFile = () => {
 .upload-data-button {
   font-size: var(--fs-0);
   padding: 0.3rem;
+  color: white;
 }
 
 .upload-data-row {
