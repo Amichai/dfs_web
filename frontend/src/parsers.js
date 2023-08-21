@@ -55,8 +55,8 @@ export class FDParser {
     return this.parser.parse(content)
   }
 
-  async upload(slateId, date) {
-    await this.parser.upload(slateId, date, this.tableName)
+  async upload(slateId, date, sport) {
+    await this.parser.upload(slateId, date, `${this.tableName}_${sport}`)
   }
 }
 
@@ -75,8 +75,8 @@ export class DKParser {
     return this.parser.parse(content)
   }
 
-  async upload(slateId, date) {
-    await this.parser.upload(slateId, date, this.tableName)
+  async upload(slateId, date, sport) {
+    await this.parser.upload(slateId, date, `${this.tableName}_${sport}`)
   }
 }
 

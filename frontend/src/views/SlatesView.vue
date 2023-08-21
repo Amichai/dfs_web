@@ -36,9 +36,14 @@ const slatesToParsers = {
 const parsedContent = ref({})
 
 let parser = null;
+const reader = new FileReader();
+const date = ref(new Date().toISOString().slice(0, 10))
+const slateId = ref('')
+const selectedSlate = ref('')
+const sport = ref('')
 
 const uploadSlate = () => {
-  parser.upload(slateId.value, date.value)
+  parser.upload(slateId.value, date.value, sport.value)
 }
 
 
@@ -50,13 +55,13 @@ const fileUploaded = (evt) => {
     /// This is an FD file and we can parse the name
     console.log('players list')
     const parts = name.split('-');
-    const sport = parts[1];
+    sport.value = parts[1];
     const year = parts[2].replace(' ET', '');
     const month = parts[3].replace(' ET', '');
     const day = parts[4].replace(' ET', '');
     date.value = `${year}-${month}-${day} EST`
     slateId.value = parts[5];
-    selectedSlate.value = 'FD ' + sport
+    selectedSlate.value = 'FD ' + sport.value
   } else if(name.includes('DKSalaries') ) {
     selectedSlate.value = 'DK'
     date.value = ''
@@ -71,7 +76,6 @@ const fileUploaded = (evt) => {
     return 
   }
 
-  const reader = new FileReader();
 
   reader.onload = (() => {
     return function (e) {
@@ -89,11 +93,6 @@ const fileUploaded = (evt) => {
 
   reader.readAsText(f);
 }
-
-const date = ref(new Date().toISOString().slice(0, 10))
-const slateId = ref('')
-
-const selectedSlate = ref('')
 
 const clearFile = () => {
   document.getElementById('formFile').value = ''
