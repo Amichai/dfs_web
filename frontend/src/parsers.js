@@ -23,6 +23,21 @@ export class CSVParser {
     this.mappedVals = mappedVals.slice(this.skipRows)
     return this
   }
+
+  async upload(slateId, date, tableName) {
+    for(var i = 0; i < this.mappedVals.length; i++) {
+      const row = this.mappedVals[i]
+      const toWrite = this.columns.reduce((acc, val, index) => {
+        acc[val] = row[index]
+        return acc
+      }, {})
+
+      toWrite.slateId = slateId
+      toWrite.slateDay = date
+
+      await writeData(tableName, toWrite)
+    }
+  }
 }
 
 export class FDParser {
@@ -40,23 +55,8 @@ export class FDParser {
     return this.parser.parse(content)
   }
 
-  sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
   async upload(slateId, date) {
-    for(var i = 0; i < this.parser.mappedVals.length; i++) {
-      const row = this.parser.mappedVals[i]
-      const toWrite = this.parser.columns.reduce((acc, val, index) => {
-        acc[val] = row[index]
-        return acc
-      }, {})
-
-      toWrite.slateId = slateId
-      toWrite.slateDay = date
-
-      await writeData(this.tableName, toWrite)
-    }
+    await this.parser.upload(slateId, date, this.tableName)
   }
 }
 
@@ -67,14 +67,16 @@ export class DKParser {
       [0, 2, 3, 5, 6, 7],
       1
     )
+
+    this.tableName = 'DKSlatePlayers'
   }
 
   parse(content) {
     return this.parser.parse(content)
   }
 
-  upload() {
-
+  async upload(slateId, date) {
+    await this.parser.upload(slateId, date, this.tableName)
   }
 }
 

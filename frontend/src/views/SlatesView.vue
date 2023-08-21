@@ -59,6 +59,8 @@ const fileUploaded = (evt) => {
     selectedSlate.value = 'FD ' + sport
   } else if(name.includes('DKSalaries') ) {
     selectedSlate.value = 'DK'
+    date.value = ''
+    slateId.value = ''
   } else {
     alert('file name not recognized')
     return
