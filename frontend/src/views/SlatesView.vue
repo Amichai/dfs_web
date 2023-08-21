@@ -91,6 +91,7 @@ const fileUploaded = (evt) => {
 }
 
 const date = ref(new Date().toISOString().slice(0, 10))
+const slateId = ref('')
 
 const selectedSlate = ref('')
 
@@ -103,8 +104,6 @@ const clearFile = () => {
   }
 }
 
-const slateId = ref('')
-
 </script>
 
 <template>
@@ -113,7 +112,6 @@ const slateId = ref('')
     <div class="slate-filter">
       <ComboBox :array="Object.keys(slatesToParsers)" 
         v-model="selectedSlate"
-      
         placeholder="site" />
 
       <VueDatePicker class="datepicker" v-model="date" 
@@ -130,8 +128,10 @@ const slateId = ref('')
     </div>
     
     <div class="upload-data-row">
-      <input type="text" placeholder="slate id" :value="slateId">
-      <button class="btn upload-data-button" type="button" @click="uploadSlate">Upload</button>
+      <input type="text" placeholder="slate id" v-model="slateId">
+      <button class="btn upload-data-button" type="button" @click="uploadSlate"
+      :disabled="!slateId || !date"
+      >Upload</button>
     </div>
     <br>
     <TableComponent :content="parsedContent" 
