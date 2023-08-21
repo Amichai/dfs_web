@@ -30,12 +30,17 @@ const slatesToParsers = {
   'FD NBA': new FDParser(),
   'FD NFL': new FDParser(),
   'FD MLB': new FDParser(),
-  'DK NBA': new DKParser(),
-  'DK NFL': new DKParser(),
-  'DK MLB': new DKParser(),
+  'DK': new DKParser(),
 }
 
-const parsedContent = ref([{ name: 'name1', value: 'test1' }])
+const parsedContent = ref({})
+
+let parser = null;
+
+const uploadSlate = () => {
+  parser.upload(slateId.value, date.value)
+}
+
 
 const fileUploaded = (evt) => {
   const files = evt.target.files; // FileList object
@@ -53,7 +58,7 @@ const fileUploaded = (evt) => {
     slateId.value = parts[5];
     selectedSlate.value = 'FD ' + sport
   } else if(name.includes('DKSalaries') ) {
-    /// this is a DK file
+    selectedSlate.value = 'DK'
   } else {
     alert('file name not recognized')
     return
@@ -69,8 +74,8 @@ const fileUploaded = (evt) => {
   reader.onload = (() => {
     return function (e) {
       const content = e.target.result
-      const parser = slatesToParsers[selectedSlate.value]
-
+      
+      parser = slatesToParsers[selectedSlate.value]
       if(!parser) {
         console.log('no slate selected')
         return
@@ -107,7 +112,7 @@ const slateId = ref('')
       <ComboBox :array="Object.keys(slatesToParsers)" 
         v-model="selectedSlate"
       
-        placeholder="slate" />
+        placeholder="site" />
 
       <VueDatePicker class="datepicker" v-model="date" 
       :month-change-on-scroll="false"
@@ -117,43 +122,56 @@ const slateId = ref('')
       ></VueDatePicker>
     </div>
     <hr />
-    <div class="upload-button">
-      <!-- :disabled="!Object.keys(byPlayerId).length" -->
+    <div class="input-file-row">
       <input class="form-control" @change="fileUploaded" type="file" id="formFile">
       <button class="btn btn-outline-danger" type="button" @click="clearFile">×</button>
     </div>
     
-    <input type="text" placeholder="slate id" :value="slateId">
-    <button class="btn main-button" type="button">Upload</button>
-
-
-    <TableComponent :content="parsedContent" />
+    <div class="upload-data-row">
+      <input type="text" placeholder="slate id" :value="slateId">
+      <button class="btn upload-data-button" type="button" @click="uploadSlate">Upload</button>
+    </div>
+    <br>
+    <TableComponent :content="parsedContent" 
+      v-show="parsedContent?.mappedVals?.length > 0" 
+    />
+    <br><br>
   </main>
 </template>
 
 <style scoped>
-.upload-button {
+.input-file-row {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin: 1rem;
+  margin: 1rem 0;
 }
 
 #formFile {
   width: 100%;
   color: white;
   font-size: 0.9em;
+  padding: 0;
 }
 
 .slate-filter {
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
 }
 
-.main-button {
-  margin: 1rem;
-  font-size: var(--fs-1);
+.upload-data-button {
+  font-size: var(--fs-0);
+  padding: 0.3rem;
+}
+
+.upload-data-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
 }
 </style>

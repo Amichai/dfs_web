@@ -4,14 +4,14 @@
 
 :root {
   --clr-text: hsl(204, 20%, 85%);
-  --clr-background: #000000;
+  --clr-background: #333;
   --clr-text-background: hsl(255, 4%, 19%);
-  --clr-primary: #8fb4ff;
-  --clr-secondary: hsl(222, 100%, 18%);
-  --clr-accent: #ff8f94;
+  --clr-primary: #44CFCB;
+  --clr-secondary: #4EA5D9;
+  --clr-accent: #2A4494;
 
   --ff-accent: 'Lora', serif;
-  --ff-base: 'Quattrocento Sans', sans-serif;
+  --ff-base: Arial, sans-serif;
 
   --fs--2: clamp(0.78rem, calc(0.77rem + 0.03vw), 0.8rem);
   --fs--1: clamp(0.94rem, calc(0.92rem + 0.11vw), 1rem);
@@ -32,12 +32,17 @@
 button,
 input,
 textarea {
-  color: var(--clr-text);
-  border-radius: 0.3rem;
+  color: var(--clr-accent);
+}
+
+input {
+  padding: 0.4rem;
 }
 
 button {
   background-color: var(--clr-secondary);
+  border: none;
+  transition: background-color 0.3s;
 }
 
 button:not(:disabled) {
@@ -46,6 +51,7 @@ button:not(:disabled) {
 
 button:not(:disabled):hover {
   box-shadow: 0 0 0.5rem var(--clr-primary);
+  background-color: var(--clr-primary);
 }
 
 button:disabled {
@@ -100,7 +106,7 @@ h2,
 h3 {
   font-family: var(--ff-accent);
   line-height: 1.1;
-  color: var(--clr-primary);
+  color: var(--clr-secondary);
   text-wrap: balance;
 }
 

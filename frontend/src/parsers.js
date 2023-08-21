@@ -1,4 +1,5 @@
 import Papa from 'papaparse';
+import { writeData, queryData, searchData } from './apiHelper';
 
 export class CSVParser {
   constructor(columns, indices, skipRows) {
@@ -31,10 +32,31 @@ export class FDParser {
       [0, 1, 3, 7, 8, 9, 11],
       1
     )
+
+    this.tableName = 'FDSlatePlayers'
   }
 
   parse(content) {
     return this.parser.parse(content)
+  }
+
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+  async upload(slateId, date) {
+    for(var i = 0; i < this.parser.mappedVals.length; i++) {
+      const row = this.parser.mappedVals[i]
+      const toWrite = this.parser.columns.reduce((acc, val, index) => {
+        acc[val] = row[index]
+        return acc
+      }, {})
+
+      toWrite.slateId = slateId
+      toWrite.slateDay = date
+
+      await writeData(this.tableName, toWrite)
+    }
   }
 }
 
@@ -49,6 +71,10 @@ export class DKParser {
 
   parse(content) {
     return this.parser.parse(content)
+  }
+
+  upload() {
+
   }
 }
 

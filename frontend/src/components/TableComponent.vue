@@ -18,7 +18,6 @@ watch(() => props.content, (newVal, oldVal) => {
   rows.value = props.content.mappedVals.map((item, index) => {
     const toReturn = Object.values(item).reduce((acc, value, index) => {
       acc[props.content.columns[index]] = value
-      console.log(props.content.columns[index], value, index)
       return acc
     }, {})
 
@@ -34,7 +33,6 @@ watch(() => props.content, (newVal, oldVal) => {
   paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
   >
     <Column v-for="(column, idx) in content.columns" :key="idx" :field="column" :header="column" sortable="">
-
     </Column>
   </DataTable>
 </template>

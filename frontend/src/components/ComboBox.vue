@@ -40,7 +40,6 @@ watch(() => props.modelValue, (val) => {
 <style>
 .container {
   font-family: Arial, sans-serif;
-  margin: 20px;
 }
 
 input {

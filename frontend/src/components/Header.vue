@@ -8,17 +8,12 @@
     <a href="/optimizer" class="nav-item">Optimizer</a>
     <a href="/backtester" class="nav-item">Backtester</a>
   </nav>
+  <hr>
 </template>
 
-<style>
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-}
-
+<style scoped>
 .nav-bar {
-    background-color: #333;
+    background-color: var(--clr-background);
     overflow: hidden;
 }
 
@@ -35,4 +30,5 @@ body {
     background-color: #ddd;
     color: black;
 }
+
 </style>
