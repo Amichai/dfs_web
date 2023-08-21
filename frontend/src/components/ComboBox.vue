@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <input id="combobox" v-model="selectedElement" list="elements" :placeholder="placeholder"
-      @change="$emit('selected', selectedElement)" 
+      @change="$emit('update:modelValue', selectedElement)" 
       
       />
     <datalist id="elements">
@@ -11,9 +11,9 @@
 </template>
   
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
-defineProps({
+const props = defineProps({
   array: {
     type: Array,
     required: true
@@ -24,13 +24,17 @@ defineProps({
   },
   modelValue: {
     type: String,
-    required: false
+    default: ''
   }
 })
 
-defineEmits(['selected', 'update:modelValue'])
+defineEmits(['update:modelValue'])
 
-const selectedElement = ref('');
+const selectedElement = ref(props.modelValue);
+
+watch(() => props.modelValue, (val) => {
+  selectedElement.value = val;
+})
 </script>
   
 <style>

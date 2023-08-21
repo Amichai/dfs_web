@@ -87,10 +87,6 @@ const date = ref(new Date().toISOString().slice(0, 10))
 
 const selectedSlate = ref('')
 
-const selectedChanged = (val) => {
-  selectedSlate.value = val
-}
-
 const clearFile = () => {
   document.getElementById('formFile').value = ''
 
@@ -108,7 +104,9 @@ const slateId = ref('')
   <main>
     <h2>Slates</h2>
     <div class="slate-filter">
-      <ComboBox :array="Object.keys(slatesToParsers)" @selected="selectedChanged"
+      <ComboBox :array="Object.keys(slatesToParsers)" 
+        v-model="selectedSlate"
+      
         placeholder="slate" />
 
       <VueDatePicker class="datepicker" v-model="date" 
