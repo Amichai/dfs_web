@@ -20,9 +20,9 @@ const router = createRouter({
       component: () => import('../views/SlatesView.vue')
     },
     {
-      path: '/players',
-      name: 'players',
-      component: () => import('../views/PlayersView.vue')
+      path: '/scrapers',
+      name: 'Scrapers',
+      component: () => import('../views/ScrapersView.vue')
     },
     {
       path: '/optimizer',

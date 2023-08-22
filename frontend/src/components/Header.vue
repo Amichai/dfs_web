@@ -1,34 +1,45 @@
 <script setup>
+import { computed } from 'vue'
+
+const path = computed(() => {
+  return window.location.pathname.split('/')[1]
+})
+
 </script>
 
 <template>
   <nav class="nav-bar">
-    <a href="/upload" class="nav-item">Upload</a>
-    <a href="/Slates" class="nav-item">Slates</a>
-    <a href="/optimizer" class="nav-item">Optimizer</a>
-    <a href="/backtester" class="nav-item">Backtester</a>
+    <a href="/upload" :class="['nav-item', path === 'upload' && 'selected']">Upload</a>
+    <a href="/slates" :class="['nav-item', path === 'slates' && 'selected']">Slates</a>
+    <a href="/scrapers" :class="['nav-item', path === 'scrapers' && 'selected']">Scrapers</a>
+    <a href="/optimizer" :class="['nav-item', path === 'optimizer' && 'selected']">Optimizer</a>
+    <a href="/backtester" :class="['nav-item', path === 'backtester' && 'selected']">Backtester</a>
   </nav>
   <hr>
 </template>
 
 <style scoped>
 .nav-bar {
-    background-color: var(--clr-background);
-    overflow: hidden;
+  background-color: var(--clr-background);
+  overflow: hidden;
 }
 
 .nav-item {
-    float: left;
-    display: block;
-    color: #f2f2f2;
-    text-align: center;
-    padding: 14px 16px;
-    text-decoration: none;
+  float: left;
+  display: block;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
 }
 
 .nav-item:hover {
-    background-color: #ddd;
-    color: black;
+  background-color: #ddd;
+  color: black;
 }
 
+.selected {
+  background-color: #ddd;
+  color: black;
+}
 </style>
