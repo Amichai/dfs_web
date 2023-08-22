@@ -4,17 +4,32 @@ import ComboBox from '../components/ComboBox.vue'
 import { writeData, queryData, searchData } from '../apiHelper';
 
 
-const date = ref(new Date().toISOString().slice(0, 10))
+const date = ref(new Date().toISOString().slice(0, 10) + ' EST')
+
+console.log(date.value + ' ET')
 
 const slateInput = ref('')
 const selectedSport = ref('')
 
+const selectedSportChanged = () => {
+  query();
+}
+
+const dateString = computed(() => {
+  return new Date(date.value).toISOString().slice(0, 10)
+})
+
 const query = async () => {
-  await queryData('slates', 'date', date.value).then((res) => {
-    if(res.length > 0) {
-      const lastElement = res.pop()
+  await queryData('slates', 'date', dateString.value).then((res) => {
+    const filteredOnSport = res.filter((item) => {
+      return !selectedSport.value || item.sport === selectedSport.value
+    })
+    if(filteredOnSport.length > 0) {
+      const lastElement = filteredOnSport.pop()
       slateInput.value = lastElement.slate
       selectedSport.value = lastElement.sport
+    } else {
+      slateInput.value = ''
     }
   })
 }
@@ -29,9 +44,13 @@ const dateChanged = async () => {
 
 const submitSlate = () => {
   console.log(slateInput.value)
+  if(!selectedSport.value) {
+    alert('select a sport')
+    return
+  }
 
   writeData('slates', {
-    date: date.value,
+    date: dateString.value,
     slate: slateInput.value,
     sport: selectedSport.value
   })
@@ -74,6 +93,7 @@ const inputChanged = () => {
 
       <ComboBox :array="['NBA', 'NFL', 'MLB']" 
         v-model="selectedSport"
+        @update:model-value="selectedSportChanged"
         placeholder="site" />
     </div>
     <br>
