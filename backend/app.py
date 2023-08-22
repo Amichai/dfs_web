@@ -3,6 +3,7 @@ import json
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import source.scraper as scraper
 
 
 app = Flask(__name__)
@@ -54,6 +55,14 @@ def search_data():
     results = db.search((query[key].test(search_func)))
     print(results)
     return jsonify(results)
+
+@app.route('/runscraper', methods=['POST'])
+def run_scraper():
+    scraper_name = request.args.get('name', '')
+
+    print(scraper_name)
+    scraper.scrape(scraper_name)
+    return jsonify(scraper_name)
 
 if __name__ == '__main__':
     app.run(debug=True)

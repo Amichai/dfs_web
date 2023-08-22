@@ -33,3 +33,9 @@ export const searchData = async (table, key, query) => {
   console.log(result.data)
   return result.data
 }
+
+export const runScraper = async (scraperName) => {
+  const result = await axios.post(`${URL_BASE}/runscraper?name=${scraperName}`)
+  console.log(result.data)
+  return result.data
+}
