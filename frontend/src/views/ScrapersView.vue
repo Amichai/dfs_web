@@ -4,12 +4,16 @@ import ComboBox from '../components/ComboBox.vue'
 import { runScraper } from '../apiHelper';
 
 const scrape = () => {
-  runScraper(selectedScraper.value)
+  if(selectedScraper.value === 'PP NFL') {
+    runScraper('NFL', 'PrizePicks')
+  } else {
+    alert('scraper not found')
+  }
 }
 
 const selectedScraper = ref('')
 
-const scrapers = ref(['PP', 'Caesars', 'Underdog', 'DraftKings', 'Stokastic', 'DFS Crunch', 'NFL', 'NBA', 'MLB'])
+const scrapers = ref(['PP NFL', 'Caesars', 'Underdog', 'DraftKings', 'Stokastic', 'DFS Crunch', 'NFL', 'NBA', 'MLB'])
 
 </script>
 

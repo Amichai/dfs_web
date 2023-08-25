@@ -11,6 +11,12 @@ CORS(app)
 
 DB_ROOT = 'DBs/'
 
+def write_to_db(table, data):
+    db = TinyDB(DB_ROOT + table)
+    db.insert(data)
+
+    return True
+
 @app.route('/')
 def hello_world():
     return jsonify(message='Hello, World!')
@@ -22,11 +28,11 @@ def write_data():
     table = data['table']
     data = data['data']
 
-    db = TinyDB(DB_ROOT + table)
-    db.insert(data)
+    write_to_db(table, data)
 
     return jsonify(message='success')
 
+# match on key value
 @app.route('/query', methods=['POST'])
 def query_data():
     data = request.json
@@ -40,6 +46,7 @@ def query_data():
 
     return jsonify(results)
 
+# check if a string contains
 @app.route('/search')
 def search_data():
     table = request.args.get('table')
@@ -58,11 +65,29 @@ def search_data():
 
 @app.route('/runscraper', methods=['POST'])
 def run_scraper():
-    scraper_name = request.args.get('name', '')
+    print("AA")
+    sport = request.args.get('sport', '')
+    scraper_name = request.args.get('scraper', '')
+    print(sport, scraper_name)
+    scrape_results = scraper.scrape(sport, scraper_name)
 
-    print(scraper_name)
-    scraper.scrape(scraper_name)
-    return jsonify(scraper_name)
+    print(scrape_results)
+    table_name = "{}_{}".format(scraper_name, sport)
+    # diff scrape results
+
+    query = Query()
+    db = TinyDB(DB_ROOT + table_name)
+
+    # write this to our db
+    for result in scrape_results:
+        results = db.search((query['line_id'] == result['line_id']))
+        import pdb; pdb.set_trace()
+        # diff the most recent result with the current value
+        # log this diff
+        # update if diff exists
+        write_to_db(table_name, result)
+
+    return jsonify('success')
 
 if __name__ == '__main__':
     app.run(debug=True)

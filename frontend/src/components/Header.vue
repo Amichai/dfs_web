@@ -14,6 +14,7 @@ const path = computed(() => {
     <a href="/scrapers" :class="['nav-item', path === 'scrapers' && 'selected']">Scrapers</a>
     <a href="/optimizer" :class="['nav-item', path === 'optimizer' && 'selected']">Optimizer</a>
     <a href="/backtester" :class="['nav-item', path === 'backtester' && 'selected']">Backtester</a>
+    <a href="/arbitrage" :class="['nav-item', path === 'arbitrage' && 'selected']">Arbitrage</a>
   </nav>
   <hr>
 </template>
