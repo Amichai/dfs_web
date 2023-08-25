@@ -78,13 +78,27 @@ def run_scraper():
     query = Query()
     db = TinyDB(DB_ROOT + table_name)
 
+    seen_ids = []
     # write this to our db
     for result in scrape_results:
-        results = db.search((query['line_id'] == result['line_id']))
-        import pdb; pdb.set_trace()
+        existing_results = db.search((query['line_id'] == result['line_id']))
+
+        if len(existing_results) > 0:        
+            sorted_by_time = sorted(existing_results, key=lambda a: a['time'])
+            most_recent = sorted_by_time[-1]
+            if most_recent['line_score'] == result['line_score']:
+                continue
+            else: 
+                print("Updating line score: {} -> {}")
+
         # diff the most recent result with the current value
         # log this diff
         # update if diff exists
+        line_id = result['line_id']
+        if line_id in seen_ids:
+            continue
+        
+        seen_ids.append(line_id)
         write_to_db(table_name, result)
 
     return jsonify('success')
