@@ -100,7 +100,7 @@ const clearFile = () => {
 
 <template>
   <main>
-    <h2>Upload</h2>
+    <h1>Upload</h1>
     <div class="slate-filter">
       <ComboBox :array="Object.keys(slatesToParsers)" 
         v-model="selectedSlate"

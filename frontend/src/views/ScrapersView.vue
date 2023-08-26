@@ -4,14 +4,31 @@ import ComboBox from '../components/ComboBox.vue'
 import { runScraper, getScrapedLines } from '../apiHelper';
 import TableComponent from '../components/TableComponent.vue'
 
+
+const scrapeOptions = [{
+  sport: 'NFL',
+  site: 'PrizePicks',
+  name: 'PP NFL',
+},
+{
+  sport: 'WNBA',
+  site: 'PrizePicks',
+  name: 'PP WNBA',
+},
+{
+  sport: 'WNBA',
+  site: 'Caesars',
+  name: 'Caesars WNBA'
+},
+]
+
 const scrape = () => {
-  if(selectedScraper.value === 'PP NFL') {
-    runScraper('NFL', 'PrizePicks')
-  } else if(selectedScraper.value === 'PP WNBA') {
-    runScraper('WNBA', 'PrizePicks')
-  } else {
+  const matched = scrapeOptions.find((option) => option.name === selectedScraper.value)
+  if(!matched) {
     alert('scraper not found')
   }
+
+  runScraper(matched.sport, matched.site)
 }
 
 const timeAgo = (secondsFromEpoch) => {
@@ -45,9 +62,9 @@ const timeAgo = (secondsFromEpoch) => {
 }
 
 const selectedScraper = ref('')
-const selectedSport = ref('')
+const selectedSport = ref('NFL')
 
-const scrapers = ref(['PP NFL', 'PP WNBA', 'Caesars', 'Underdog', 'DraftKings', 'Stokastic', 'DFS Crunch', 'NFL', 'NBA', 'MLB'])
+const scrapers = ref(scrapeOptions.map((option) => option.name))
 
 const sports = ref(['NFL', 'WNBA', 'NBA'])
 
@@ -80,6 +97,8 @@ const toEpochSeconds = (dateString) => {
   const date = new Date(dateString);
   return Math.floor(date.getTime() / 1000);
 }
+
+///TODO: add an input box for filtering rows
 </script>
 
 <template>
@@ -94,6 +113,7 @@ const toEpochSeconds = (dateString) => {
       <button class="btn btn-primary scrape-button" @click="scrape">Scrape</button>
     </div>
     <br>
+    <hr>
     <br>
       <ComboBox :array="sports" 
           v-model="selectedSport"

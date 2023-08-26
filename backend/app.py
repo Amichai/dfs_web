@@ -79,6 +79,9 @@ def get_scraped_lines():
     all_results = []
     query = Query()
     db = TinyDB(DB_ROOT + SCRAPE_OPERATIONS_TABLE)
+    if not sport in sport_to_scraper_names:
+        return jsonify([])
+    
     scraper_names = sport_to_scraper_names[sport]
     for scraper_name in scraper_names:
         results = db.search(query['scraper'] == scraper_name)
@@ -107,6 +110,8 @@ def run_scraper():
         "scraper": "{}_{}".format(scraper_name, sport)
     })
 
+
+    
     scrape_results = scraper.scrape(sport, scraper_name, scrape_time)
 
     table_name = "{}_{}".format(scraper_name, sport)
