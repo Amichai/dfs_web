@@ -39,3 +39,9 @@ export const runScraper = async (sport, scraper) => {
   console.log(result.data)
   return result.data
 }
+
+export const getScrapedLines = async (sport) => {
+  const result = await axios.get(`${URL_BASE}/getscrapedlines?sport=${sport}`)
+  console.log(result.data)
+  return result.data
+}

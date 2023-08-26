@@ -4,12 +4,15 @@ import json
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import source.scraper as scraper
+import time
 
 
 app = Flask(__name__)
 CORS(app)
 
 DB_ROOT = 'DBs/'
+
+SCRAPE_OPERATIONS_TABLE = 'scrape_operations'
 
 def write_to_db(table, data):
     db = TinyDB(DB_ROOT + table)
@@ -63,17 +66,46 @@ def search_data():
     print(results)
     return jsonify(results)
 
+
+@app.route('/getscrapedlines')
+def get_scraped_lines():
+    sport = request.args.get('sport', '')
+    
+    sport_to_scraper_names = {
+        'NFL': ['PrizePicks_NFL']
+    }
+
+    all_results = []
+    query = Query()
+    db = TinyDB(DB_ROOT + SCRAPE_OPERATIONS_TABLE)
+    scraper_names = sport_to_scraper_names[sport]
+    for scraper_name in scraper_names:
+        results = db.search(query['scraper'] == scraper_name)
+
+        results_sorted = sorted(results, key=lambda a: a['scrape_time'])
+        most_recent_scrape = results_sorted[-1]
+
+        query2 = Query()
+        db2 = TinyDB(DB_ROOT + scraper_name)
+        all_results += db2.search(query2['time'] == most_recent_scrape['scrape_time'])
+
+    return jsonify(all_results)
+
+
 @app.route('/runscraper', methods=['POST'])
 def run_scraper():
-    print("AA")
     sport = request.args.get('sport', '')
     scraper_name = request.args.get('scraper', '')
     print(sport, scraper_name)
-    scrape_results = scraper.scrape(sport, scraper_name)
+    scrape_time = int(time.time())
+    write_to_db(SCRAPE_OPERATIONS_TABLE, {
+        "scrape_time": scrape_time,
+        "scraper": "{}_{}".format(scraper_name, sport)
+    })
 
-    print(scrape_results)
+    scrape_results = scraper.scrape(sport, scraper_name, scrape_time)
+
     table_name = "{}_{}".format(scraper_name, sport)
-    # diff scrape results
 
     query = Query()
     db = TinyDB(DB_ROOT + table_name)

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import ComboBox from '../components/ComboBox.vue'
-import { runScraper } from '../apiHelper';
+import { runScraper, getScrapedLines } from '../apiHelper';
 
 const scrape = () => {
   if(selectedScraper.value === 'PP NFL') {
@@ -15,6 +15,10 @@ const selectedScraper = ref('')
 
 const scrapers = ref(['PP NFL', 'Caesars', 'Underdog', 'DraftKings', 'Stokastic', 'DFS Crunch', 'NFL', 'NBA', 'MLB'])
 
+
+onMounted(async () => {
+  await getScrapedLines('NFL')
+})
 </script>
 
 <template>
