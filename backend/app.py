@@ -72,7 +72,8 @@ def get_scraped_lines():
     sport = request.args.get('sport', '')
     
     sport_to_scraper_names = {
-        'NFL': ['PrizePicks_NFL']
+        'NFL': ['PrizePicks_NFL'],
+        'WNBA': ['PrizePicks_WNBA']
     }
 
     all_results = []
@@ -87,6 +88,9 @@ def get_scraped_lines():
 
         query2 = Query()
         db2 = TinyDB(DB_ROOT + scraper_name)
+
+        # filter out any expired lines? 
+
         all_results += db2.search(query2['time'] == most_recent_scrape['scrape_time'])
 
     return jsonify(all_results)
@@ -118,16 +122,21 @@ def run_scraper():
         if len(existing_results) > 0:        
             sorted_by_time = sorted(existing_results, key=lambda a: a['time'])
             most_recent = sorted_by_time[-1]
-            if most_recent['line_score'] == result['line_score']:
-                continue
-            else: 
+            if most_recent['line_score'] != result['line_score']:
                 print("Updating line score: {} -> {}")
+            else:
+                document = Query()
+                remove_result = db.remove(document['line_id'] == result['line_id'])
+                print("removed document {} - {}".format(result['line_id'], remove_result))
+                # figure out a strategy for purging old redudant lines
+                pass
 
         # diff the most recent result with the current value
         # log this diff
         # update if diff exists
         line_id = result['line_id']
         if line_id in seen_ids:
+            print("Seen this id already: {}".format(line_id))
             continue
         
         seen_ids.append(line_id)

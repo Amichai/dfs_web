@@ -7,6 +7,8 @@ import TableComponent from '../components/TableComponent.vue'
 const scrape = () => {
   if(selectedScraper.value === 'PP NFL') {
     runScraper('NFL', 'PrizePicks')
+  } else if(selectedScraper.value === 'PP WNBA') {
+    runScraper('WNBA', 'PrizePicks')
   } else {
     alert('scraper not found')
   }
@@ -43,11 +45,25 @@ const timeAgo = (secondsFromEpoch) => {
 }
 
 const selectedScraper = ref('')
+const selectedSport = ref('')
 
-const scrapers = ref(['PP NFL', 'Caesars', 'Underdog', 'DraftKings', 'Stokastic', 'DFS Crunch', 'NFL', 'NBA', 'MLB'])
+const scrapers = ref(['PP NFL', 'PP WNBA', 'Caesars', 'Underdog', 'DraftKings', 'Stokastic', 'DFS Crunch', 'NFL', 'NBA', 'MLB'])
+
+const sports = ref(['NFL', 'WNBA', 'NBA'])
 
 const scrapedLines = ref([])
 const columns = ref(['time', 'line_score', 'name', 'stat', 'team', 'updated_at'])
+
+const selectedSportChanged = async () => {
+  const lines = await getScrapedLines(selectedSport.value)
+
+  scrapedLines.value = lines.map((row) => {
+    return columns.value.reduce((acc, value, index) => {
+      acc[value] = row[value]
+      return acc
+    }, {})
+  })
+}
 
 onMounted(async () => {
   const lines = await getScrapedLines('NFL')
@@ -71,13 +87,19 @@ const toEpochSeconds = (dateString) => {
     <h1>Scrapers</h1>
     <br>
 
-    <ComboBox :array="scrapers" 
-        v-model="selectedScraper"
-        placeholder="site" />
+    <div class="scrapers-area">
+      <ComboBox :array="scrapers" 
+          v-model="selectedScraper"
+          placeholder="site" />
+      <button class="btn btn-primary scrape-button" @click="scrape">Scrape</button>
+    </div>
     <br>
-    <button class="btn btn-primary scrape-button" @click="scrape">Scrape</button>
     <br>
-
+      <ComboBox :array="sports" 
+          v-model="selectedSport"
+          @update:modelValue="selectedSportChanged"
+          placeholder="sport" />
+    
     <TableComponent 
       :columns="columns ?? []"
       :mappedVals="scrapedLines ?? []"
@@ -95,5 +117,10 @@ const toEpochSeconds = (dateString) => {
   font-size: var(--fs-0);
   padding: 0.3rem 1.1rem;
   color: white;
+}
+
+.scrapers-area {
+  display: flex;
+  gap: 2rem;
 }
 </style>
