@@ -4,9 +4,17 @@ import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 
 const props = defineProps({
-  content: {
-    type: Object,
+  columns: {
+    type: Array,
     required: true
+  },
+  mappedVals: {
+    type: Array,
+    required: true
+  },
+  columnMapper: {
+    type: Object,
+    default: {}
   }
 })
 
@@ -14,10 +22,14 @@ const emits = defineEmits([])
 
 const rows = ref([])
 
-watch(() => props.content, (newVal, oldVal) => {
-  rows.value = props.content.mappedVals.map((item, index) => {
+watch(() => props.mappedVals, (newVal, oldVal) => {
+  rows.value = props.mappedVals.map((item, index) => {
     const toReturn = Object.values(item).reduce((acc, value, index) => {
-      acc[props.content.columns[index]] = value
+      const column = props.columns[index]
+      acc[column] = column in props.columnMapper
+                  ? props.columnMapper[column](value)
+                  : value
+
       return acc
     }, {})
 
@@ -32,7 +44,7 @@ watch(() => props.content, (newVal, oldVal) => {
   removableSort
   paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
   >
-    <Column v-for="(column, idx) in content.columns" :key="idx" :field="column" :header="column" sortable="">
+    <Column v-for="(column, idx) in columns" :key="idx" :field="column" :header="column" sortable="">
     </Column>
   </DataTable>
 </template>
@@ -41,4 +53,5 @@ watch(() => props.content, (newVal, oldVal) => {
 tr {
   font-size: 0.8em;
 }
+
 </style>

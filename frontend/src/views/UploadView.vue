@@ -126,8 +126,10 @@ const clearFile = () => {
       >Upload</button>
     </div>
     <br>
-    <TableComponent :content="parsedContent" 
-      v-show="parsedContent?.mappedVals?.length > 0" 
+    <TableComponent 
+      :columns="parsedContent?.columns ?? []"
+      :mappedVals="parsedContent?.mappedVals ?? []"
+      v-show="parsedContent?.mappedVals?.length > 0"
     />
     <br><br>
   </main>
