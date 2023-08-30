@@ -69,32 +69,21 @@ def search_data():
 
 @app.route('/getscrapedlines')
 def get_scraped_lines():
-    sport = request.args.get('sport', '')
-    
-    sport_to_scraper_names = {
-        'NFL': ['PrizePicks_NFL'],
-        'WNBA': ['PrizePicks_WNBA']
-    }
+    scraper = request.args.get('scraper', '')
 
-    all_results = []
     query = Query()
     db = TinyDB(DB_ROOT + SCRAPE_OPERATIONS_TABLE)
-    if not sport in sport_to_scraper_names:
-        return jsonify([])
-    
-    scraper_names = sport_to_scraper_names[sport]
-    for scraper_name in scraper_names:
-        results = db.search(query['scraper'] == scraper_name)
+    results = db.search(query['scraper'] == scraper)
 
-        results_sorted = sorted(results, key=lambda a: a['scrape_time'])
-        most_recent_scrape = results_sorted[-1]
+    results_sorted = sorted(results, key=lambda a: a['scrape_time'])
+    most_recent_scrape = results_sorted[-1]
 
-        query2 = Query()
-        db2 = TinyDB(DB_ROOT + scraper_name)
+    query2 = Query()
+    db2 = TinyDB(DB_ROOT + scraper)
 
-        # filter out any expired lines? 
+    # filter out any expired lines? 
 
-        all_results += db2.search(query2['time'] == most_recent_scrape['scrape_time'])
+    all_results = db2.search(query2['time'] == most_recent_scrape['scrape_time'])
 
     return jsonify(all_results)
 
@@ -111,7 +100,7 @@ def run_scraper():
     })
 
 
-    
+
     scrape_results = scraper.scrape(sport, scraper_name, scrape_time)
 
     table_name = "{}_{}".format(scraper_name, sport)

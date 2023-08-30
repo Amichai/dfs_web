@@ -8,22 +8,25 @@ import TableComponent from '../components/TableComponent.vue'
 const scrapeOptions = [{
   sport: 'NFL',
   site: 'PrizePicks',
-  name: 'PP NFL',
+  displayName: 'PP NFL',
+  scraperName: 'PrizePicks_NFL',
 },
 {
   sport: 'WNBA',
   site: 'PrizePicks',
-  name: 'PP WNBA',
+  displayName: 'PP WNBA',
+  scraperName: 'PrizePicks_WNBA',
 },
 {
   sport: 'WNBA',
   site: 'Caesars',
-  name: 'Caesars WNBA'
+  displayName: 'Caesars WNBA',
+  scraperName: 'Caesars_WNBA',
 },
 ]
 
 const scrape = () => {
-  const matched = scrapeOptions.find((option) => option.name === selectedScraper.value)
+  const matched = scrapeOptions.find((option) => option.displayName === selectedScraper.value)
   if(!matched) {
     alert('scraper not found')
   }
@@ -62,28 +65,14 @@ const timeAgo = (secondsFromEpoch) => {
 }
 
 const selectedScraper = ref('')
-const selectedSport = ref('NFL')
 
-const scrapers = ref(scrapeOptions.map((option) => option.name))
-
-const sports = ref(['NFL', 'WNBA', 'NBA'])
+const scrapers = ref(scrapeOptions.map((option) => option.displayName))
 
 const scrapedLines = ref([])
 const columns = ref(['time', 'line_score', 'name', 'stat', 'team', 'updated_at'])
 
-const selectedSportChanged = async () => {
-  const lines = await getScrapedLines(selectedSport.value)
-
-  scrapedLines.value = lines.map((row) => {
-    return columns.value.reduce((acc, value, index) => {
-      acc[value] = row[value]
-      return acc
-    }, {})
-  })
-}
-
 onMounted(async () => {
-  const lines = await getScrapedLines('NFL')
+  const lines = await getScrapedLines('PrizePicks_NFL')
 
   scrapedLines.value = lines.map((row) => {
     return columns.value.reduce((acc, value, index) => {
@@ -92,6 +81,22 @@ onMounted(async () => {
     }, {})
   })
 })
+
+const selectedScraperChanged = async () => {
+  const matched = scrapeOptions.find((option) => option.displayName === selectedScraper.value)
+  if(!matched) {
+    return
+  }
+
+  const lines = await getScrapedLines(matched.scraperName)
+
+  scrapedLines.value = lines.map((row) => {
+    return columns.value.reduce((acc, value, index) => {
+      acc[value] = row[value]
+      return acc
+    }, {})
+  })
+}
 
 const toEpochSeconds = (dateString) => {
   const date = new Date(dateString);
@@ -109,16 +114,13 @@ const toEpochSeconds = (dateString) => {
     <div class="scrapers-area">
       <ComboBox :array="scrapers" 
           v-model="selectedScraper"
+          @update:modelValue="selectedScraperChanged"
           placeholder="site" />
       <button class="btn btn-primary scrape-button" @click="scrape">Scrape</button>
     </div>
     <br>
     <hr>
     <br>
-      <ComboBox :array="sports" 
-          v-model="selectedSport"
-          @update:modelValue="selectedSportChanged"
-          placeholder="sport" />
     
     <TableComponent 
       :columns="columns ?? []"
@@ -129,6 +131,7 @@ const toEpochSeconds = (dateString) => {
       }"
     />
 
+    <br><br><br>
   </main>
 </template>
 
