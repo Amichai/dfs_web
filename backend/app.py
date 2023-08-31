@@ -8,6 +8,7 @@ import time
 import utils
 from name_mapper import name_mapper
 from optimizer import DK_NBA_Optimizer
+import random
 
 
 app = Flask(__name__)
@@ -127,6 +128,7 @@ def optimize():
     # run optimizer
 
     scraped_lines = _get_scraped_lines('PrizePicks_FIBA')
+
     # print(scraped_lines)
     print("testing testing 123")
 
@@ -146,6 +148,9 @@ def optimize():
         salary = slate_player['salary']
         team = slate_player['team']
         projection = get_player_projection(scraped_lines, name)
+        
+        # projection += float(salary) / 11800 # prefer higher salary
+        # projection += random.uniform(0, 1) / 1000 #this is necessary apparently
         if projection == 0:
             continue
 
@@ -165,8 +170,6 @@ def optimize():
             
             by_position[pos].append(utils.Player(name, position, salary, team, projection))
 
-    print(by_position)
-    
     optimizer = DK_NBA_Optimizer()
 
     results = optimizer.optimize(by_position, None)
