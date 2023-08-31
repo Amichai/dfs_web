@@ -45,3 +45,9 @@ export const getScrapedLines = async (scraper) => {
   console.log(result.data)
   return result.data
 }
+
+export const runOptimizer = async () => {
+  const result = await axios.post(`${URL_BASE}/optimize`)
+  console.log(result.data)
+  return result.data
+}

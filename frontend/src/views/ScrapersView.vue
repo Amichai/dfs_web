@@ -23,6 +23,12 @@ const scrapeOptions = [{
   displayName: 'Caesars WNBA',
   scraperName: 'Caesars_WNBA',
 },
+{
+  sport: 'FIBA',
+  site: 'PrizePicks',
+  displayName: 'PP FIBA',
+  scraperName: 'PrizePicks_FIBA',
+},
 ]
 
 const scrape = () => {

@@ -51,7 +51,7 @@ export class CSVParser {
       toWrite.slateDay = date
 
       const existingRow = existingRowsParsed[toWrite.playerId]
-      const isRowNew = !this.areRowsEqual(existingRow, toWrite)
+      const isRowNew = !existingRow || !this.areRowsEqual(existingRow, toWrite)
       if(!existingRow || isRowNew) {
         console.log("WRITING ROW", toWrite)
         await writeData(tableName, toWrite)
