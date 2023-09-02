@@ -18,7 +18,7 @@ export class CSVParser {
       return vals
     })
 
-    this.mappedVals = mappedVals.slice(this.skipRows)
+    this.mappedVals = mappedVals.slice(this.skipRows).filter(obj => !Object.values(obj).every(value => !value));
     return this
   }
 
@@ -97,6 +97,26 @@ export class DKParser {
 
   async upload(slateId, date, sport) {
     await this.parser.upload(slateId, date, `${this.tableName}_${sport}`)
+  }
+}
+
+export class DKResultsParser {
+  constructor() {
+    this.parser = new CSVParser(
+      ['name', 'drafted', 'fpts'],
+      [7, 9, 10],
+      1
+    )
+
+    this.tableName = 'DKResultsParser'
+  }
+
+  parse(content) {
+    return this.parser.parse(content)
+  }
+
+  async upload(slateId) {
+    await this.parser.upload(slateId, '', 'DKContestResults')
   }
 }
 

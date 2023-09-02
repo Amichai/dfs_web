@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import('../views/OptimizerView.vue')
     },
     {
+      path: '/results',
+      name: 'results',
+      component: () => import('../views/ResultsView.vue')
+    },
+    {
       path: '/backtester',
       name: 'backtester',
       component: () => import('../views/BacktesterView.vue')
