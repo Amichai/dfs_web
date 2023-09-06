@@ -116,7 +116,7 @@ const slateId = ref('')
   </main>
 </template>
 
-<style>
+<style scoped>
 .input-file-row {
   display: flex;
   flex-direction: row;

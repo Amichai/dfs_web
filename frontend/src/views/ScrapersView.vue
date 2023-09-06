@@ -141,7 +141,7 @@ const toEpochSeconds = (dateString) => {
   </main>
 </template>
 
-<style>
+<style scoped>
 .scrape-button {
   font-size: var(--fs-0);
   padding: 0.3rem 1.1rem;

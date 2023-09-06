@@ -33,7 +33,7 @@ const optimize = async () => {
   </main>
 </template>
 
-<style>
+<style scoped>
 .button {
   margin: 1rem 0;
   padding: 0.5rem 1rem;
