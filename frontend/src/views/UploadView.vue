@@ -27,6 +27,7 @@ const slatesToParsers = {
   'FD NFL': new FDParser(),
   'FD MLB': new FDParser(),
   'DK': new DKParser(),
+  'DK NFL': new DKParser(),
   'DK FIBA': new DKParser(),
 }
 
