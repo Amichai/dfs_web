@@ -63,7 +63,7 @@ const inputChanged = () => {
     if(lines[i][0] === '@'){
       console.log(lines[i])
       const timeString1 = lines[i + 1]
-      const timeString2 = lines[i + 2]
+      const timeString2 = lines[i + 2] ?? ''
       const isString1Time = !isNaN(parseInt(timeString1[0]))
       const isString2Time = !isNaN(parseInt(timeString2[0]))
       if((isString1Time && isString2Time)

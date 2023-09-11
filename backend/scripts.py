@@ -1,6 +1,12 @@
 from tinydb import TinyDB, Query, where
 import itertools
 
+import sys
+sys.path.append('/Users/amichailevy/Documents/spikes/dfs_web/backend/source/')
+
+from optimizer import NFL_Optimizer
+import utils
+
 DB_ROOT = 'DBs/'
 
 SCRAPE_OPERATIONS_TABLE = 'scrape_operations'
@@ -80,7 +86,7 @@ def optimize_for_single_game_fd(all_players, ct, locks=None):
     return to_return
 
 
-def optimize_for_single_game_dk(player_pool_all, max_cpt_exposure, exlude=[]):
+def optimize_for_single_game_dk(player_pool_all, ct, max_cpt_exposure=5, exlude=[]):
   player_pool = []
   seen_names = []
   for player in player_pool_all:
@@ -168,128 +174,173 @@ def _get_slate_data(table, slate_id):
     results = db.search((query['slateId'] == slate_id))
     return results
 
+def get_projections():
+  results = _get_scraped_lines('PrizePicks_NFL')
 
-results = _get_scraped_lines('PrizePicks_NFL')
+  seen_names = []
+  seen_stats = []
 
-seen_names = []
-seen_stats = []
+  name_to_stats = {}
+  name_stat_to_val = {}
 
-name_to_stats = {}
-name_stat_to_val = {}
+  for result in results:
+      name = result['name']
+      line = result['line_score']
+      team = result['team']
+      stat = result['stat']
+      if team in ['NYJ', 'BUF']:
+          continue
+      
+      if not name in name_to_stats:
+          name_to_stats[name] = [stat]
+      else:
+          name_to_stats[name].append(stat)
+
+      name_stat = "{}_{}".format(name, stat)
+      name_stat_to_val[name_stat] = line
+
+      if not name in seen_names:
+          seen_names.append(name)
+
+      if not stat in seen_stats:
+          seen_stats.append(stat) 
+
+
+  computed_stats = [
+      # {
+      #   'name': 'FSComputed',
+      #   'stats': ['Pass Yards', 'Pass TDs', 'Rush Yards'],
+      #   'weights': [0.04, 4, 0.1]
+      # },
+      # {
+      #   'name': 'FSComputed',
+      #   'stats': ['Pass Yards', 'Pass+Rush+Rec TDs', 'Rush Yards'],
+      #   'weights': [0.04, 4, 0.1]
+      # },
+  ]
+
+  for name, stats in name_to_stats.items():
+      for computed_stat in computed_stats:
+        computed_stat_name = computed_stat['name']
+        if all([a in stats for a in computed_stat['stats']]):
+            new_stat_name = "{}_{}".format(name, computed_stat_name)
+            new_val = 0
+            for i, stat in enumerate(computed_stat['stats']):
+                new_val += name_stat_to_val["{}_{}".format(name, stat)] * computed_stat['weights'][i]
+
+            name_stat_to_val[new_stat_name] = new_val
+
+            if not computed_stat_name in seen_stats:
+                seen_stats.append(computed_stat_name)
+
+  return name_stat_to_val, seen_names, seen_stats
+
+name_stat_to_val, seen_names, seen_stats = get_projections()
+
+def get_player_pool(name_stat_to_val, seen_names, slate_lines):
+  player_pool = []
+
+  for name in seen_names:
+      if name == "D.K. Metcalf":
+          name = "DK Metcalf"
+
+      if 'DST' in name:
+          parsed_name = name.split(' ')[0]
+          matched_names = [a for a in slate_lines if parsed_name in a['name']]
+      else:
+          matched_names = [a for a in slate_lines if a['name'] == name]
+
+      if len(matched_names) == 0:
+          print("Missing projection for: ", name)
+          assert name != "D.K. Metcalf"
+          continue
+      
+
+      # fantasy_score = 0
+      if len(matched_names) > 1:
+        salary1 = float(matched_names[0]['salary'])
+        salary2 = float(matched_names[1]['salary'])
+        salary = min(salary1, salary2)
+        assert len(matched_names) == 2
+      else:
+        salary = float(matched_names[0]['salary'])
+
+
+      position = matched_names[0]['position']
+      team = matched_names[0]['team']
+      
+      proj = None
+
+      key1 = "{}_{}".format(name, "Fantasy Score")
+      key2 = "{}_{}".format(name, "FSComputed")
+      if key1 in name_stat_to_val:
+          proj = name_stat_to_val[key1]
+      if key2 in name_stat_to_val:
+          proj = name_stat_to_val[key2]
+
+
+      if proj is None:
+          continue
+      
+      # print("{},{},{}".format(name, salary, proj))
+      # fantasy_score = 
+      # get the player cost
+
+      player_pool.append([name, salary, proj, position, team])
+  return player_pool
+
+# slate_lines_dk = _get_slate_data('DKSlatePlayers_NFL', '89943,89970')
+# player_pool = get_player_pool(name_stat_to_val, seen_names, slate_lines_dk)
+# print("DK: ", player_pool)
+# optimize_for_single_game_dk(player_pool, 5)
+
+
+slate_lines_fd = _get_slate_data('FDSlatePlayers_NFL', '92765')
+player_pool = get_player_pool(name_stat_to_val, seen_names, slate_lines_fd)
+print("FD: ", player_pool)
+# optimize_for_single_game_fd(player_pool, 5)
+
+by_position = {'QB': [], 'RB': [], 'WR': [], 'TE': [], 'FLEX': [], 'D': []}
+
+for player in player_pool:
+   name = player[0]
+   cost = player[1]
+   proj = player[2]
+   position = player[3]
+   team = player[4]
+   player = utils.Player(name, player, cost, team, proj)
+
+   by_position[position].append(player)
+   if position != 'D' and position != 'QB':
+    by_position['FLEX'].append(player)
+
+
+print(by_position)
+
+optimizer = NFL_Optimizer()
+# optimizer.optimize(by_position, None, 100000)
+results = optimizer.optimize_top_n(by_position, 16, 100000)
 
 for result in results:
-    name = result['name']
-    line = result['line_score']
-    team = result['team']
-    stat = result['stat']
-    if team not in ['KC', 'DET']:
-        continue
-    
-    if not name in name_to_stats:
-        name_to_stats[name] = [stat]
-    else:
-        name_to_stats[name].append(stat)
+   print(result)
 
-    name_stat = "{}_{}".format(name, stat)
-    name_stat_to_val[name_stat] = line
+import pdb; pdb.set_trace()
+# print(seen_names)
+# print(seen_stats)
 
-    if not name in seen_names:
-        seen_names.append(name)
-
-    if not stat in seen_stats:
-        seen_stats.append(stat) 
-
-
-computed_stats = [
-    {
-      'name': 'FSComputed',
-      'stats': ['Pass Yards', 'Pass TDs', 'Rush Yards'],
-      'weights': [0.04, 4, 0.1]
-    },
-    {
-      'name': 'FSComputed',
-      'stats': ['Pass Yards', 'Pass+Rush+Rec TDs', 'Rush Yards'],
-      'weights': [0.04, 4, 0.1]
-    },
-]
-
-for name, stats in name_to_stats.items():
-    for computed_stat in computed_stats:
-      computed_stat_name = computed_stat['name']
-      if all([a in stats for a in computed_stat['stats']]):
-          new_stat_name = "{}_{}".format(name, computed_stat_name)
-          new_val = 0
-          for i, stat in enumerate(computed_stat['stats']):
-              new_val += name_stat_to_val["{}_{}".format(name, stat)] * computed_stat['weights'][i]
-
-          name_stat_to_val[new_stat_name] = new_val
-
-          if not computed_stat_name in seen_stats:
-              seen_stats.append(computed_stat_name)
-
-slate_lines = _get_slate_data('DKSlatePlayers_NFL', '89943,89970')
-# slate_lines = _get_slate_data('FDSlatePlayers_NFL', '92766')
-
-player_pool = []
+print('', end=',')
+for stat in seen_stats:
+    print(stat, end=',')
+print()
 
 for name in seen_names:
-    if 'DST' in name:
-        parsed_name = name.split(' ')[0]
-        matched_names = [a for a in slate_lines if parsed_name in a['name']]
-    else:
-        matched_names = [a for a in slate_lines if a['name'] == name]
-
-    if len(matched_names) == 0:
-        continue
-
-    # fantasy_score = 0
-    if len(matched_names) > 1:
-      salary1 = float(matched_names[0]['salary'])
-      salary2 = float(matched_names[1]['salary'])
-      salary = min(salary1, salary2)
-      assert len(matched_names) == 2
-    else:
-      salary = float(matched_names[0]['salary'])
-
-    proj = None
-
-    key1 = "{}_{}".format(name, "Fantasy Score")
-    key2 = "{}_{}".format(name, "FSComputed")
-    if key1 in name_stat_to_val:
-        proj = name_stat_to_val[key1]
-    if key2 in name_stat_to_val:
-        proj = name_stat_to_val[key2]
-
-    if proj is None:
-        continue
-    
-    # print("{},{},{}".format(name, salary, proj))
-    # fantasy_score = 
-    # get the player cost
-    player_pool.append([name, salary, proj])
-
-optimize_for_single_game_dk(player_pool, 10)
-# optimize_for_single_game_fd(player_pool, 10)
-        
-print(player_pool)
-
-
-# # print(seen_names)
-# # print(seen_stats)
-
-# print('', end=',')
-# for stat in seen_stats:
-#     print(stat, end=',')
-# print()
-
-# for name in seen_names:
-#     print(name, end=',')
-#     for stat in seen_stats:
-#         name_stat = "{}_{}".format(name, stat)
-#         if name_stat in name_stat_to_val:
-#             print(name_stat_to_val[name_stat], end=',')
-#         else:
-#             print('', end=',')
-#     print()
+    print(name, end=',')
+    for stat in seen_stats:
+        name_stat = "{}_{}".format(name, stat)
+        if name_stat in name_stat_to_val:
+            print(name_stat_to_val[name_stat], end=',')
+        else:
+            print('', end=',')
+    print()
 
 
