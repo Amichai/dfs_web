@@ -910,3 +910,13 @@ def candidate_value(candidate):
 
 def candidate_cost(candidate):
     return candidate[0].cost * 1.5 + candidate[1].cost + candidate[2].cost + candidate[3].cost + candidate[4].cost + candidate[5].cost
+
+
+def name_to_player_id(slate_players):
+    name_to_player_id = {}
+    for player in slate_players:
+        name = player['name']
+        player_id = player['playerId']
+        name_to_player_id[name] = player_id
+
+    return name_to_player_id

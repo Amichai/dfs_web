@@ -5,10 +5,9 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import source.scraper as scraper
 import time
-import utils
-from name_mapper import name_mapper
-from optimizer import DK_NBA_Optimizer
+import optimizer
 import random
+import utils
 
 
 app = Flask(__name__)
@@ -98,83 +97,50 @@ def get_scraped_lines():
     all_results = _get_scraped_lines(scraper)
     return jsonify(all_results)
 
-def normalize_name(name):
-    if name in name_mapper:
-        name = name_mapper[name]
-
-    return name
-
-def get_player_projection(scraped_lines, name):
-    matched_players = [a for a in scraped_lines if a['name'].strip() == name]
-    if len(matched_players) == 0:
-        print("Missing projection for: ", name)
-        return 0
-
-    try:
-        pts = [a for a in matched_players if a['stat'] == 'Points'][0]['line_score']
-        # rebounds = [a for a in matched_players if a['stat'] == 'Rebounds'][0]['line_score']
-    except:
-        print("insufficient data for: ", name)
-        return 0
-    
-    return float(pts)
-    # return float(pts) + float(rebounds) * 1.5
-
 
 @app.route('/optimize', methods=['POST'])
 def optimize():
+    data = request.json
+    print(data)
+    sport = data['sport']
+    site = data['site']
+    game_type = data['type']
+    
+    
     # read player prices/positions
     # get player projections
     # run optimizer
 
-    scraped_lines = _get_scraped_lines('PrizePicks_FIBA')
-
-    # print(scraped_lines)
-    print("testing testing 123")
-
-    dk_positions_mapper = {"PG": ["PG", "G", "UTIL"], "SG": ["SG", "G", "UTIL"], "SF": ["SF", "F", "UTIL"], "PF": ["PF", "F", "UTIL"], "C": ["C", "UTIL"]}
-
     query = Query()
-    db = TinyDB(DB_ROOT + "DKSlatePlayers_FIBA")
-    slate_players = db.search((query['slateId'] == '91834'))
+    if sport == 'FIBA' and site == 'DK':
+        db = TinyDB(DB_ROOT + "DKSlatePlayers_FIBA")
+        scraped_lines = _get_scraped_lines('PrizePicks_FIBA')
+        slate_players = db.search((query['slateId'] == '91834'))
 
-    # print(results)
-    by_position = {}
-    for slate_player in slate_players:
-        # print(slate_player)
-        name = slate_player['name'].strip()
-        name = normalize_name(name)
-        positions = slate_player['position'].split('/')
-        salary = slate_player['salary']
-        team = slate_player['team']
-        projection = get_player_projection(scraped_lines, name)
-        
-        # projection += float(salary) / 11800 # prefer higher salary
-        # projection += random.uniform(0, 1) / 1000 #this is necessary apparently
-        if projection == 0:
-            continue
+        results = optimizer.optimize_FIBA_dk(slate_players, scraped_lines)
+    elif sport == "NFL" and site == 'fd' and game_type == 'single_game':
+        db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
+        scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
+        slate_players = db.search((query['slateId'] == '93773'))
+        name_stat_to_val, seen_names, seen_stats = optimizer.get_player_projection_data(scraped_lines, ['BUF', 'NYJ'])
 
-        all_position = []
+        name_to_id = utils.name_to_player_id(slate_players)
+        print(name_to_id)
 
-        for position in positions:
-            # if not position in by_position:
-            #     by_position[position] = []
-            positions_extended = dk_positions_mapper[position]
-            for pos in positions_extended:
-                if not pos in all_position:
-                    all_position.append(pos)
-        
-        for pos in all_position:
-            if not pos in by_position:
-                by_position[pos] = []
-            
-            by_position[pos].append(utils.Player(name, position, salary, team, projection))
+        player_pool = optimizer.get_player_pool(name_stat_to_val, seen_names, slate_players)
+        print(player_pool)
+        results = optimizer.optimize_for_single_game_fd(player_pool, 10)
+        for result in results:
+            to_print = ["{}:{}".format(name_to_id[a[0]], a[0]) for a in result[0]]
+            print(",".join(to_print) + "," + str(result[1]))
+            # print(result)
+        # optimizer.optimize_fd_single_game(slate_players, projection_data)
 
-    optimizer = DK_NBA_Optimizer()
+        # print(scraped_lines)
+        # print('----------------')
+        # print(slate_players)
 
-    results = optimizer.optimize(by_position, None)
 
-    print(results)
 
     return jsonify([])
 
@@ -205,7 +171,7 @@ def run_scraper():
             sorted_by_time = sorted(existing_results, key=lambda a: a['time'])
             most_recent = sorted_by_time[-1]
             if most_recent['line_score'] != result['line_score']:
-                print("Updating line score: {} -> {}")
+                print("Updating line score: {} -> {}".format(most_recent['line_score'], result['line_score']))
             else:
                 document = Query()
                 remove_result = db.remove(document['line_id'] == result['line_id'])

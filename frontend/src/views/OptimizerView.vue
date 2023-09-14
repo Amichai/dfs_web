@@ -11,9 +11,10 @@ const props = defineProps({
 
 const emits = defineEmits([])
 
-const optimize = async () => {
-  await runOptimizer()
+const optimize = async (sport, site, type) => {
+  await runOptimizer(sport, site, type)
 }
+
 
 
 /// show a table with every player's projcetions (source of the projection, last updated, etc.)
@@ -30,6 +31,9 @@ const optimize = async () => {
     <h1>Optimizer</h1>
 
     <button class="button" @click="optimize">Optimize</button>
+    
+    <br>
+    <button class="button" @click="() => optimize('NFL', 'fd', 'single_game')">Optimize Single Game FD</button>
   </main>
 </template>
 

@@ -31,3 +31,11 @@ name_mapper = {
   "Ahmad Al-Dwairi": "Ahmad Al Dwairi",
   "Behnam Yakhchalidehkordi": "Behnam Yakhchali",
 }
+
+name_mapper_pp_to_fd = {
+  # NFL
+  'Gabriel Davis': 'Gabe Davis',
+  'C.J Uzomah': 'C.J. Uzomah',
+  'Mecole Hardman': 'Mecole Hardman Jr.',
+}
+  

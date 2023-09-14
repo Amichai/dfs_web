@@ -1,546 +1,277 @@
-import random
-import time
-
+from name_mapper import name_mapper_pp_to_fd, name_mapper
 import utils
+from optimizer_library import DK_NBA_Optimizer
 
-class Optimizer:
-  def __init__(self, max_cost, positions_to_fill):
-      self.max_cost = max_cost
-      self.positions_to_fill = positions_to_fill
+def normalize_name(name):
+    if name in name_mapper:
+        name = name_mapper[name]
 
-      self.pos_to_ct = {}
-      self.positions_to_fill_condensed = []
-      for position in self.positions_to_fill:
-        if not position in self.pos_to_ct:
-          self.pos_to_ct[position] = 1
-          self.positions_to_fill_condensed.append(position)
-        else:
-          self.pos_to_ct[position] += 1
-        pass
+    return name
 
 
-  def select_better_player(self, players, max_cost, excluding, initial_value):
-      better_players = []
-      for p in players:
-          if p.name in excluding:
-              continue
-          if p.cost <= max_cost and p.value > initial_value:
-              better_players.append(p)
+def get_player_pool(name_stat_to_val, seen_names, slate_lines):
+  player_pool = []
 
-      if len(better_players) == 0:
-          return None
+  for name in seen_names:
+      unmapped_name = name
+      if name in name_mapper_pp_to_fd:
+          name = name_mapper_pp_to_fd[name]
+      # if name == "D.K. Metcalf":
+      #     name = "DK Metcalf"
 
-      return utils.random_element(better_players)
+      if 'DST' in name:
+          parsed_name = name.split(' ')[0]
+          matched_names = [a for a in slate_lines if parsed_name in a['name']]
+      else:
+          matched_names = [a for a in slate_lines if a['name'] == name]
 
-
-  def optimize_roster(self, roster, by_position):
-      initial_cost = roster.cost
-
-      no_improvement_count = 0
-      if initial_cost <= self.max_cost:
-          # pick a random player
-          # swap that player for the best player we can afford that brings more value
-          while True:
-              swap_idx = random.randint(0, len(roster.players) - 1)
-              
-              if swap_idx in roster.locked_indices:
-                  continue
-                
-              to_swap = roster.players[swap_idx]
-              position = self.positions_to_fill[swap_idx]
-              excluding = [p.name for p in roster.players]
-
-              replacement = self.select_better_player(by_position[position], roster.remaining_funds(self.max_cost) + to_swap.cost, excluding, to_swap.value)
-              if replacement == None or to_swap.name == replacement.name:
-                no_improvement_count += 1
-              else:
-                no_improvement_count = 0
-                roster.replace(replacement, swap_idx)
-                if len(roster.players) != len(set([a.name for a in roster.players])):
-                  __import__('pdb').set_trace()
-
-
-
-              # if roster.value >= 107 and no_improvement_count < 3:
-              #    print(roster, no_improvement_count)
-                 
-              if no_improvement_count > 20:
-                  return roster
-
-      print(roster)
-      assert False
-
-  def random_lineup(self, by_position):
-    return self.build_random_line_up(by_position)
-
-    
-    # to_return = []
-    # taken_names = []
-    # for pos in self.positions_to_fill:
-    #   element = utils.random_element(by_position[pos], taken_names)
-    #   taken_names.append(element.name)
-    #   to_return.append(element)
-
-    # if len(to_return) != len(set(p.name for p in to_return)):
-    #   __import__('pdb').set_trace()
-
-    # to_return.reverse()
-    # return utils.Roster(to_return)
-
-  def random_elements(self, arr, count, exclude=[]):
-      if count > len(arr):
-          assert False
-      if count == len(arr):
-        if arr[0].name in exclude:
-          return None
-        return arr
-
-      to_return = []
-      loop_counter = 0
-      while True:
-        loop_counter += 1
-        if loop_counter >= 100:
-          return None
-        idx = random.randint(0, len(arr) - 1)
-        val = arr[idx]
-        if val.name in exclude:
+      if len(matched_names) == 0:
+          print("Missing projection for: ", name)
+          assert name != "D.K. Metcalf"
           continue
+      
+      # fantasy_score = 0
+      if len(matched_names) > 1:
+        salary1 = float(matched_names[0]['salary'])
+        salary2 = float(matched_names[1]['salary'])
+        salary = min(salary1, salary2)
+        assert len(matched_names) == 2
+      else:
+        salary = float(matched_names[0]['salary'])
 
-        if not val in to_return:
-            to_return.append(val)
 
-        if len(to_return) == count:
-            break
+      position = matched_names[0]['position']
+      team = matched_names[0]['team']
+      
+      proj = None
 
-      return to_return
+      key1 = "{}_{}".format(unmapped_name, "Fantasy Score")
+      key2 = "{}_{}".format(unmapped_name, "FSComputed")
+      if key1 in name_stat_to_val:
+          proj = name_stat_to_val[key1]
+      if key2 in name_stat_to_val:
+          proj = name_stat_to_val[key2]
+
+      if proj is None:
+          continue
+      
+      # print("{},{},{}".format(name, salary, proj))
+      # fantasy_score = 
+      # get the player cost
+
+      player_pool.append([name, salary, proj, position, team])
+  return player_pool
+
+def optimize_NFL_FD_single_game(slate_players, scraped_lines):
+    pass
+
+def get_player_projection_data(scraped_lines, teams_to_include):
+      
+    seen_names = []
+    seen_stats = []
+
+    name_to_stats = {}
+    name_stat_to_val = {}
+
+    for result in scraped_lines:
+        name = result['name']
+        line = result['line_score']
+        team = result['team']
+        stat = result['stat']
+        if teams_to_include and team not in teams_to_include:
+            continue
+        
+        if not name in name_to_stats:
+            name_to_stats[name] = [stat]
+        else:
+            name_to_stats[name].append(stat)
+
+        name_stat = "{}_{}".format(name, stat)
+        name_stat_to_val[name_stat] = line
+
+        if not name in seen_names:
+            seen_names.append(name)
+
+        if not stat in seen_stats:
+            seen_stats.append(stat) 
+
+
+    computed_stats = [
+      # {
+      #   'name': 'FSComputed', # for QBs missing a fantasy score
+      #   'stats': ['Pass Yards', 'Pass TDs', 'Rush Yards'],
+      #   'weights': [0.04, 4, 0.1]
+      # },
+      # {
+      #   'name': 'FSComputed', # for QBs missing a fantasy score
+      #   'stats': ['Pass Yards', 'Pass+Rush+Rec TDs', 'Rush Yards'],
+      #   'weights': [0.04, 4, 0.1]
+      # },
+      {
+        'name': 'FSComputed',
+        'stats': ['Fantasy Score', 'Receptions'],
+        'weights': [1, -0.5]
+      }
+    ]
+
+    for name, stats in name_to_stats.items():
+        for computed_stat in computed_stats:
+          computed_stat_name = computed_stat['name']
+          if all([a in stats for a in computed_stat['stats']]):
+              new_stat_name = "{}_{}".format(name, computed_stat_name)
+              new_val = 0
+              for i, stat in enumerate(computed_stat['stats']):
+                  new_val += name_stat_to_val["{}_{}".format(name, stat)] * computed_stat['weights'][i]
+
+              name_stat_to_val[new_stat_name] = new_val
+
+              if not computed_stat_name in seen_stats:
+                  seen_stats.append(computed_stat_name)
+
+    print('', end=',')
+    for stat in seen_stats:
+        print(stat, end=',')
+    print()
+
+    for name in seen_names:
+        print(name, end=',')
+        for stat in seen_stats:
+            name_stat = "{}_{}".format(name, stat)
+            if name_stat in name_stat_to_val:
+                print(name_stat_to_val[name_stat], end=',')
+            else:
+                print('', end=',')
+        print()
+
+    return name_stat_to_val, seen_names, seen_stats
+
+
+
+
+
+def get_player_projection(scraped_lines, name):
+    matched_players = [a for a in scraped_lines if a['name'].strip() == name]
+    if len(matched_players) == 0:
+        print("Missing projection for: ", name)
+        return 0
+
+    try:
+        pts = [a for a in matched_players if a['stat'] == 'Points'][0]['line_score']
+        # rebounds = [a for a in matched_players if a['stat'] == 'Rebounds'][0]['line_score']
+    except:
+        print("insufficient data for: ", name)
+        return 0
     
-  def build_random_line_up(self, by_position):
-    to_return = []
-    for pos in self.positions_to_fill_condensed:
-      ct = self.pos_to_ct[pos]
-      result = self.random_elements(by_position[pos], ct, [a.name for a in to_return])
+    return float(pts)
+    # return float(pts) + float(rebounds) * 1.5
 
-      if result == None:
-        return None
+def optimize_for_single_game_fd(all_players, ct, locks=None):
+    player_ct = len(all_players)
+    all_rosters = []
 
-      to_return += result
+    roster_keys = set()
+    for i1 in range(player_ct):
+        p1 = all_players[i1]
+        if locks != None and p1[0] != locks[i1]:
+            continue
 
-      if len(to_return) != len(set([a.name for a in to_return])):
-        __import__('pdb').set_trace()
+        for i2 in range(player_ct):
+            if i2 == i1:
+                continue
+            p2 = all_players[i2]
 
-    to_return = utils.Roster(to_return)
+            if locks != None and p2[0] != locks[i2]:
+                continue
+
+
+            for i3 in range(player_ct):
+                if i3 == i1 or i3 == i2:
+                    continue
+                
+                p3 = all_players[i3]
+                if locks != None and p3[0] != locks[i3]:
+                    continue
+
+                for i4 in range(player_ct):
+                    if i4 == i1 or i4 == i2 or i4 == i3:
+                        continue
+                    
+                    p4 = all_players[i4]
+                    if locks != None and p4[0] != locks[i4]:
+                        continue
+
+                    for i5 in range(player_ct):
+                        if i5 == i1 or i5 == i2 or i5 == i3 or i5 == i4:
+                            continue
+                        
+                        p5 = all_players[i5]
+
+                        if locks != None and p5[0] != locks[i5]:
+                            continue
+                        roster_set = [p1, p2, p3, p4, p5]
+                        
+                        total_cost = sum(pl[1] for pl in roster_set)
+                        if total_cost > 60000 or total_cost <= 59000:
+                            continue
+                        
+                        total_value = p1[2] * 2 + p2[2] * 1.5 +  p3[2] * 1.2 + p4[2] + p5[2]
+
+                        # if all(x.team == roster_set[0].team for x in roster_set):
+                        #     continue
+
+                        roster_key = "|".join(sorted([a[0] for a in roster_set])) + "|" + str(round(total_value, 1))
+                        if roster_key in roster_keys:
+                            continue
+
+                        roster_keys.add(roster_key)
+                        all_rosters.append((roster_set, total_value, total_cost))
+    all_rosters_sorted = sorted(all_rosters, key=lambda a: a[1], reverse=True)
+    to_return = all_rosters_sorted[:ct]
+    for roster in to_return:
+        print(roster)
+        
     return to_return
 
+def optimize_FIBA_dk(slate_players, scraped_lines):
+    dk_positions_mapper = {"PG": ["PG", "G", "UTIL"], "SG": ["SG", "G", "UTIL"], "SF": ["SF", "F", "UTIL"], "PF": ["PF", "F", "UTIL"], "C": ["C", "UTIL"]}
 
-  def optimize(self, by_position, iter_count = 600000, lineup_validator = None, seed_roster = None):
-      best_roster = None
-      best_roster_val = 0
-      random.seed(time.time())
-      
-      for i in range(iter_count):
-          if i % 50000 == 0:
-              print(i)
-          to_remove = None
-          if best_roster != None:
-              to_remove = utils.random_element(best_roster.players)
-
-          by_position_copied = {}
-          for pos, players in by_position.items():
-              if to_remove in players:
-                  players_new = list(players)
-
-                  players_new.remove(to_remove)
-                  by_position_copied[pos] = players_new
-              else:
-                  by_position_copied[pos] = players
-
-          if to_remove == None:
-            by_position_copied = by_position
-
-          random_lineup = self.build_random_line_up(by_position_copied)
-
-          if random_lineup == None:
-            continue
-
-          is_full_locked = False
-          if seed_roster != None:
-              is_full_locked = True
-              for i in range(len(self.positions_to_fill)):
-                  pl = seed_roster[i]
-                  if pl != '' and pl != None:
-                      random_lineup.locked_indices.append(i)
-                      random_lineup.replace(pl, i)
-                  else:
-                      is_full_locked = False
-
-              if is_full_locked:
-                  print("ROSTER FULLY LOCKED")
-                  return [random_lineup]
-              
-          if random_lineup == None or random_lineup.cost > self.max_cost:
-            continue
-
-          if len(random_lineup.players) != len(set([a.name for a in random_lineup.players])):
-            __import__('pdb').set_trace()
-
-          result = self.optimize_roster(random_lineup, by_position_copied)
-
-          if lineup_validator != None and lineup_validator(result) != True:
-            continue
-
-          if result.value > best_roster_val:
-              best_roster = result
-              best_roster_val = result.value
-
-              # all_names = [a.name for a in best_roster.players]
-              # all_names_sorted = sorted(all_names)
-              # roster_key = ",".join(all_names_sorted)
-              # if roster_count > 50:
-              #     break
-
-              #TODO: PUT THIS BACK IN AND TROUBLESHOOT
-              # best_roster = optimize_roster_by_start_time(by_position_copied, best_roster)
-              # later games get laters slots
-              # earlier games get earlier slots
-              teams = []
-              for pl in best_roster.players[1:]:
-                if pl.team not in teams:
-                  teams.append(pl.team)
-              print("B: {} - team ct: {}\n".format(best_roster, len(teams)))
-
-
-      return best_roster
-  
-  def optimize_top_n(self, by_position, n, iter_count = 600000, lineup_validator = None, seed_roster = None):
-    all_rosters = []
-    roster_keys = []
-
-    random.seed(time.time())
-    
-    for i in range(iter_count):
-        if i % 50000 == 0:
-            print(i)
+    # print(results)
+    by_position = {}
+    for slate_player in slate_players:
+        # print(slate_player)
+        name = slate_player['name'].strip()
+        name = normalize_name(name)
+        positions = slate_player['position'].split('/')
+        salary = slate_player['salary']
+        team = slate_player['team']
+        projection = get_player_projection(scraped_lines, name)
         
-        random_lineup = self.build_random_line_up(by_position)
-        if random_lineup == None:
-          continue
+        # projection += float(salary) / 11800 # prefer higher salary
+        # projection += random.uniform(0, 1) / 1000 #this is necessary apparently
+        if projection == 0:
+            continue
 
-        is_full_locked = False
-        if seed_roster != None:
-            is_full_locked = True
-            for i in range(len(seed_roster)):
-                pl = seed_roster[i]
-                if pl != '' and pl != None:
-                    random_lineup.replace(pl, i)
-                    random_lineup.locked_indices.append(i)
-                else:
-                    is_full_locked = False
+        all_position = []
 
-            if is_full_locked:
-                print("ROSTER FULLY LOCKED")
-                return [random_lineup]
+        for position in positions:
+            # if not position in by_position:
+            #     by_position[position] = []
+            positions_extended = dk_positions_mapper[position]
+            for pos in positions_extended:
+                if not pos in all_position:
+                    all_position.append(pos)
+        
+        for pos in all_position:
+            if not pos in by_position:
+                by_position[pos] = []
             
-        if random_lineup == None or random_lineup.cost > self.max_cost:
-          continue
+            by_position[pos].append(utils.Player(name, position, salary, team, projection))
 
-        if len(random_lineup.players) != len(set([a.name for a in random_lineup.players])):
-          __import__('pdb').set_trace()
+    optimizer = DK_NBA_Optimizer()
 
-        result = self.optimize_roster(random_lineup, by_position)
-    
-        if lineup_validator != None and lineup_validator(result) != True:
-          continue
+    results = optimizer.optimize(by_position, None)
 
-        all_names = [a.name for a in result.players]
-        all_names_sorted = sorted(all_names)
-        roster_key = ",".join(all_names_sorted)
+    print(results)
 
-        if roster_key in roster_keys:
-          continue
 
-        roster_keys.append(roster_key)
-        all_rosters.append(result)
-
-    all_rosters_sorted = sorted(all_rosters, key=lambda a: a.value, reverse=True)
-    return all_rosters_sorted[:n]
-
-PRUNE_PLAYER_SET_THRESHOLD = 20
-
-class DK_NBA_Optimizer:
-  def __init__(self):
-    self.optimizer = Optimizer(50000, ["PG", "SG", "SF", "PF", "C", "G", "F", "UTIL"])
-
-  def prune_player_pool(self, by_position):
-    by_position_copied = {}
-    for position, players in by_position.items():
-      by_position_copied[position] = []
-
-      all_value_per_dollars = [pl.value_per_dollar for pl in players]
-
-      # best_value = max(all_value_per_dollars)
-      # cuttoff = best_value / 3
-
-      
-
-      best_value = max(all_value_per_dollars)
-      worst_value = min(all_value_per_dollars)
-      value_range = best_value - worst_value
-      cuttoff = best_value - value_range / 1.6
-
-      if len(players) < PRUNE_PLAYER_SET_THRESHOLD:
-        by_position_copied[position] = players
-        continue
-
-      for player in players:
-        if player.value_per_dollar < cuttoff:
-          print("Filtered out: {}".format(player))
-          continue
-        by_position_copied[position].append(player)
-
-      # print("{} Player ct before: {} after: {}".format(position, len(players), len(by_position_copied[position])))
-    
-    return by_position_copied
-
-  def optimize(self, by_position, locked_players, iter=int(100000)):
-    by_position = self.prune_player_pool(by_position)
-    return self.optimizer.optimize(by_position, iter, None, locked_players)
-  
-  def optimize_top_n(self, by_position, n, locked_players, iter = int(60000)):
-    by_position = self.prune_player_pool(by_position)
-    # __import__('pdb').set_trace()
-    result = self.optimizer.optimize_top_n(by_position, n, iter, None, seed_roster=locked_players)
-    return result
-
-class DK_CBB_Optimizer:
-  def __init__(self):
-    self.optimizer = Optimizer(50000, ["G", "G", "G", "F", "F", "F", "UTIL", "UTIL"])
-
-  def prune_player_pool(self, by_position):
-    by_position_copied = {}
-    for position, players in by_position.items():
-      by_position_copied[position] = []
-
-      all_value_per_dollars = [pl.value_per_dollar for pl in players]
-
-      best_value = max(all_value_per_dollars)
-      cuttoff = best_value / 3
-
-      if len(players) < PRUNE_PLAYER_SET_THRESHOLD:
-        by_position_copied[position] = players
-        continue
-
-
-      for player in players:
-        if player.value_per_dollar < cuttoff:
-          # print("Filtered out: {}".format(player))
-          continue
-        by_position_copied[position].append(player)
-
-      print("{} Player ct before: {} after: {}".format(position, len(players), len(by_position_copied[position])))
-    
-    return by_position_copied
-
-  def optimize(self, by_position, locked_players, iter=int(100000)):
-    by_position = self.prune_player_pool(by_position)
-    return self.optimizer.optimize(by_position, iter, None, locked_players)
-  
-  def optimize_top_n(self, by_position, n, iter = int(60000)):
-    by_position = self.prune_player_pool(by_position)
-    result = self.optimizer.optimize_top_n(by_position, n, iter)
-    return result
-
-  def optimize_top_n_diverse(self, by_position, n, value_tolerance, iter):
-    initial_set = self.optimize_top_n(by_position, 5000, iter)
-    initial_set_sorted = sorted(initial_set, key=lambda a:a.value, reverse=True)
-    value_couttoff = initial_set_sorted[0].value - value_tolerance
-    filtered_rosters = [r for r in initial_set_sorted if r.value > value_couttoff]
-    print("INITIAL CT: {} FILTERED: {} CUTOOFF: {}".format(len(initial_set), len(filtered_rosters), value_couttoff))
-    player_exposures = utils.get_player_exposures(filtered_rosters)
-    player_to_new_value = {}
-
-    for player, ct in player_exposures.items():
-      player_to_new_value[player] = 1 / ct
-
-    roster_and_new_value = []
-    idx = 0
-    for roster in filtered_rosters:
-
-      new_roster_value = sum([player_to_new_value[pl.name] for pl in roster.players])
-      roster_and_new_value.append((roster, new_roster_value, idx))
-      idx += 1
-        
-    roster_and_new_value_sorted = sorted(roster_and_new_value, key=lambda a: a[1], reverse=True)
-    
-    all_the_new_rosters = [r[0] for r in roster_and_new_value_sorted]
-    to_return = all_the_new_rosters[:n]
-    print("BEST ROSTER: {}".format(initial_set_sorted[0]))
-    return (to_return, initial_set_sorted[0])
-
-class FD_NBA_Optimizer:
-  def __init__(self, by_position=None):
-    self.optimizer = Optimizer(60000, ["PG", "PG", "SG", "SG", "SF", "SF", "PF", "PF", "C"])
-
-  def prune_player_pool(self, by_position):
-    by_position_copied = {}
-    for position, players in by_position.items():
-      by_position_copied[position] = []
-
-      all_value_per_dollars = [pl.value_per_dollar for pl in players]
-      cuttoff = 0
-      if len(all_value_per_dollars) > 18:
-        best_value = max(all_value_per_dollars)
-        cuttoff = best_value / 3
-
-
-      # best_value = max(all_value_per_dollars)
-      # worst_value = min(all_value_per_dollars)
-      # value_range = best_value - worst_value
-      # cuttoff = best_value - value_range / 1.5
-      if len(players) < PRUNE_PLAYER_SET_THRESHOLD:
-        by_position_copied[position] = players
-        continue
-
-      for player in players:
-        if player.value_per_dollar < cuttoff:
-          # print("Filtered out: {}".format(player))
-          continue
-        by_position_copied[position].append(player)
-
-      # print("{} Player ct before: {} after: {}".format(position, len(players), len(by_position_copied[position])))
-    
-    return by_position_copied
-
-  def optimize(self, by_position, locked_players, iter=int(100000), lineup_validator=None):
-    by_position = self.prune_player_pool(by_position)
-    return self.optimizer.optimize(by_position, iter, lineup_validator, locked_players)
-  
-  def optimize_top_n(self, by_position, n, iter = int(60000), locked_players=None, lineup_validator=None):
-    by_position = self.prune_player_pool(by_position)
-    result = self.optimizer.optimize_top_n(by_position, n, iter, lineup_validator, locked_players)
-    return result
-
-class FD_WNBA_Optimizer:
-  def __init__(self):
-    self.optimizer = Optimizer(40000, ["G", "G", "G", "F", "F", "F", "F"])
-
-  def prune_player_pool(self, by_position):
-    by_position_copied = {}
-    for position, players in by_position.items():
-      by_position_copied[position] = []
-
-      all_value_per_dollars = [pl.value_per_dollar for pl in players]
-
-      best_value = max(all_value_per_dollars)
-      cuttoff = best_value / 3
-
-      if len(players) < PRUNE_PLAYER_SET_THRESHOLD:
-        by_position_copied[position] = players
-        continue
-
-      for player in players:
-        if player.value_per_dollar < cuttoff:
-          print("Filtered out: {}".format(player))
-          continue
-        by_position_copied[position].append(player)
-
-      print("{} Player ct before: {} after: {}".format(position, len(players), len(by_position_copied[position])))
-    
-    return by_position_copied
-
-  def optimize(self, by_position):
-    by_position = self.prune_player_pool(by_position)
-    return self.optimizer.optimize(by_position, iter_count = int(800000 / 0.6))
-
-  def optimize_top_n(self, by_position, n):
-    by_position = self.prune_player_pool(by_position)
-    result = self.optimizer.optimize_top_n(by_position, n, iter_count = int(200000))
-    return result
-
-
-class MLB_Optimizer:
-  def __init__(self):
-    self.optimizer = Optimizer(35000, ["P", "C/1B", "2B", "3B", "SS", "OF", "OF", "OF", "UTIL"])
-
-  def optimize(self, by_position, iter_count, seed_roster=None):
-
-    def lineup_validator(lineup):
-      team_ct = {}
-      team_ct_including_p = {}
-      for player in lineup.players:
-        pl_team = player.team
-        if not pl_team in team_ct:
-          team_ct_including_p[pl_team] = 1
-        else:
-          team_ct_including_p[pl_team] += 1
-        if player.position == "P":
-          continue
-        if not pl_team in team_ct:
-          team_ct[pl_team] = 1
-        else:
-          team_ct[pl_team] += 1
-
-      makes_per_team_limit = max(team_ct.values()) <= 4
-      min_teams_constraint = len(team_ct_including_p.values()) > 2
-      return makes_per_team_limit and min_teams_constraint
-
-
-    return self.optimizer.optimize(by_position, iter_count, lineup_validator=lineup_validator, seed_roster=seed_roster)
-
-class NFL_Optimizer:
-  def __init__(self, salary_cap=60000):
-    self.optimizer = Optimizer(salary_cap, ["QB", "RB", "RB", "WR", "WR", "WR", "TE", "FLEX", "D"])
-
-
-    def lineup_validator(roster):
-      # the selected defense can't be playing against any of the other player teams
-      defense_opp = roster.players[-1].opp
-      is_valid = True
-      for pl in roster.players:
-        if pl.team == defense_opp:
-          is_valid = False
-          break
-      
-      return is_valid
-
-    self.lineup_validator = lineup_validator
-    
-
-  def optimize(self, by_position, locked_players, iter):
-    return self.optimizer.optimize(by_position, iter, self.lineup_validator, locked_players)
-
-  def optimize_top_n(self, by_position, n, iter):
-    result = self.optimizer.optimize_top_n(by_position, n, iter, self.lineup_validator)
-    return result
-
-class CFB_Optimizer:
-  def __init__(self):
-    self.optimizer = Optimizer(60000, ["QB", "RB", "RB", "WR", "WR", "WR", "FLEX"])
-
-  def optimize(self, by_position, locked_players):
-    return self.optimizer.optimize(by_position, int(90000), None, locked_players)
-
-  def optimize_top_n(self, by_position, n):
-    result = self.optimizer.optimize_top_n(by_position, n, int(90000 / 1))
-    return result
-
-class NASCAR_Optimizer:
-  def __init__(self):
-    self.optimizer = Optimizer(50000, ["D", "D", "D", "D", "D"])
-
-  def optimize(self, by_position, locked_players):
-    return self.optimizer.optimize(by_position, int(800000 / 3.6), None, locked_players)
-
-  def optimize_top_n(self, by_position, n):
-    result = self.optimizer.optimize_top_n(by_position, n, iter_count = int(200000 / 3))
-    return result
-
-class NHL_Optimizer:
-  def __init__(self):
-    self.optimizer = Optimizer(55000, ['C', 'C', 'W', 'W', 'D', 'D', 'UTIL', 'UTIL', 'G'])
-
-  def optimize(self, by_position, locked_players):
-    return self.optimizer.optimize(by_position, int(800000 / 1.6), None, locked_players)
-
-  def optimize_top_n(self, by_position, n):
-    result = self.optimizer.optimize_top_n(by_position, n, iter_count = int(200000 / 0.6))
-    return result
+    return results

@@ -4,7 +4,7 @@ import itertools
 import sys
 sys.path.append('/Users/amichailevy/Documents/spikes/dfs_web/backend/source/')
 
-from optimizer import NFL_Optimizer
+from optimizer_library import NFL_Optimizer
 import utils
 
 DB_ROOT = 'DBs/'
