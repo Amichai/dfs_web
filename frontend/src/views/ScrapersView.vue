@@ -77,15 +77,24 @@ const scrapers = ref(scrapeOptions.map((option) => option.displayName))
 const scrapedLines = ref([])
 const columns = ref(['time', 'line_score', 'name', 'stat', 'team', 'updated_at'])
 
-onMounted(async () => {
-  const lines = await getScrapedLines('PrizePicks_NFL')
+const parseScrapedLines = (lines) => {
+  const name_stats = Object.keys(lines)
 
-  scrapedLines.value = lines.map((row) => {
+  return name_stats.map((name_stat) => {
     return columns.value.reduce((acc, value, index) => {
-      acc[value] = row[value]
+      if(!lines[name_stat].current) {
+        return acc
+      }
+
+      acc[value] = lines[name_stat].current[value]
       return acc
     }, {})
   })
+}
+
+onMounted(async () => {
+  const lines = await getScrapedLines('PrizePicks_NFL')
+  scrapedLines.value = parseScrapedLines(lines)
 })
 
 const selectedScraperChanged = async () => {
@@ -96,12 +105,7 @@ const selectedScraperChanged = async () => {
 
   const lines = await getScrapedLines(matched.scraperName)
 
-  scrapedLines.value = lines.map((row) => {
-    return columns.value.reduce((acc, value, index) => {
-      acc[value] = row[value]
-      return acc
-    }, {})
-  })
+  scrapedLines.value = scrapedLines.value = parseScrapedLines(lines)
 }
 
 const toEpochSeconds = (dateString) => {

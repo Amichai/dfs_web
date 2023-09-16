@@ -1,6 +1,7 @@
 from name_mapper import name_mapper_pp_to_fd, name_mapper
 import utils
 from optimizer_library import DK_NBA_Optimizer
+import itertools
 
 def normalize_name(name):
     if name in name_mapper:
@@ -111,7 +112,12 @@ def get_player_projection_data(scraped_lines, teams_to_include):
         'name': 'FSComputed',
         'stats': ['Fantasy Score', 'Receptions'],
         'weights': [1, -0.5]
-      }
+      },
+      {
+        'name': 'FSComputed',
+        'stats': ['Kicking Points'],
+        'weights': [1]
+      },
     ]
 
     for name, stats in name_to_stats.items():
@@ -165,72 +171,41 @@ def get_player_projection(scraped_lines, name):
     return float(pts)
     # return float(pts) + float(rebounds) * 1.5
 
+
 def optimize_for_single_game_fd(all_players, ct, locks=None):
-    player_ct = len(all_players)
     all_rosters = []
 
     roster_keys = set()
-    for i1 in range(player_ct):
-        p1 = all_players[i1]
-        if locks != None and p1[0] != locks[i1]:
+
+    candidates = itertools.permutations(all_players, 5)
+    for candidate in candidates:
+        total_cost = sum(pl[1] for pl in candidate)
+        if total_cost > 60000:
+            continue
+        
+        p1 = candidate[0]
+        p2 = candidate[1]
+        p3 = candidate[2]
+        p4 = candidate[3]
+        p5 = candidate[4]
+
+        # total_value = p1[2] * 2 + p2[2] * 1.5 +  p3[2] * 1.2 + p4[2] + p5[2]
+        total_value = p1[2] * 1.5 + p2[2]+  p3[2] + p4[2] + p5[2]
+
+        roster_key = "|".join(sorted([a[0] for a in candidate])) + "|" + str(round(total_value, 5))
+        if roster_key in roster_keys:
             continue
 
-        for i2 in range(player_ct):
-            if i2 == i1:
-                continue
-            p2 = all_players[i2]
+        roster_keys.add(roster_key)
+        all_rosters.append((candidate, total_value, total_cost))
 
-            if locks != None and p2[0] != locks[i2]:
-                continue
-
-
-            for i3 in range(player_ct):
-                if i3 == i1 or i3 == i2:
-                    continue
-                
-                p3 = all_players[i3]
-                if locks != None and p3[0] != locks[i3]:
-                    continue
-
-                for i4 in range(player_ct):
-                    if i4 == i1 or i4 == i2 or i4 == i3:
-                        continue
-                    
-                    p4 = all_players[i4]
-                    if locks != None and p4[0] != locks[i4]:
-                        continue
-
-                    for i5 in range(player_ct):
-                        if i5 == i1 or i5 == i2 or i5 == i3 or i5 == i4:
-                            continue
-                        
-                        p5 = all_players[i5]
-
-                        if locks != None and p5[0] != locks[i5]:
-                            continue
-                        roster_set = [p1, p2, p3, p4, p5]
-                        
-                        total_cost = sum(pl[1] for pl in roster_set)
-                        if total_cost > 60000 or total_cost <= 59000:
-                            continue
-                        
-                        total_value = p1[2] * 2 + p2[2] * 1.5 +  p3[2] * 1.2 + p4[2] + p5[2]
-
-                        # if all(x.team == roster_set[0].team for x in roster_set):
-                        #     continue
-
-                        roster_key = "|".join(sorted([a[0] for a in roster_set])) + "|" + str(round(total_value, 1))
-                        if roster_key in roster_keys:
-                            continue
-
-                        roster_keys.add(roster_key)
-                        all_rosters.append((roster_set, total_value, total_cost))
     all_rosters_sorted = sorted(all_rosters, key=lambda a: a[1], reverse=True)
     to_return = all_rosters_sorted[:ct]
     for roster in to_return:
         print(roster)
         
     return to_return
+
 
 def optimize_FIBA_dk(slate_players, scraped_lines):
     dk_positions_mapper = {"PG": ["PG", "G", "UTIL"], "SG": ["SG", "G", "UTIL"], "SF": ["SF", "F", "UTIL"], "PF": ["PF", "F", "UTIL"], "C": ["C", "UTIL"]}

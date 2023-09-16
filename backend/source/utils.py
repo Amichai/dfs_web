@@ -920,3 +920,27 @@ def name_to_player_id(slate_players):
         name_to_player_id[name] = player_id
 
     return name_to_player_id
+
+
+def map_pp_defense_to_fd_defense_name(name_to_id):
+
+    mappings = {
+        'Eagles DST': 'Philadelphia Eagles',
+        'Vikings DST': 'Minnesota Vikings',
+        'Bears DST': 'Chicago Bears',
+        'Bills DST': 'Buffalo Bills',
+        'Browns DST': 'Cleveland Browns',
+        'Buccaneers DST': 'Tampa Bay Buccaneers',
+        'Cardinals DST': 'Arizona Cardinals',
+        'Chargers DST': 'Los Angeles Chargers',
+        'Chiefs DST': 'Kansas City Chiefs',
+        'Colts DST': 'Indianapolis Colts',
+        'Cowboys DST': 'Dallas Cowboys',
+        'Dolphins DST': 'Miami Dolphins',
+    }
+
+    for name, val in mappings.items():
+        if val in name_to_id:
+            name_to_id[name] = name_to_id[val]
+
+    return name_to_id

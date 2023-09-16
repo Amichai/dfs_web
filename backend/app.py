@@ -70,6 +70,56 @@ def search_data():
     return jsonify(results)
 
 
+def _get_scraped_lines_with_history(scraper):
+    query = Query()
+    db = TinyDB(DB_ROOT + SCRAPE_OPERATIONS_TABLE)
+    results = db.search(query['scraper'] == scraper)
+    results_sorted = sorted(results, key=lambda a: a['scrape_time'])
+    if len(results_sorted) == 0:
+        return jsonify([])
+    most_recent_scrape = results_sorted[-1]
+
+    query = Query()
+    db = TinyDB(DB_ROOT + scraper)
+    results = db.search(query['time'] == most_recent_scrape['scrape_time'])
+
+    all_start_times = []
+    results_with_history = {}
+    for result in results:
+        start_time = result['start_time']
+        if not start_time in all_start_times:
+            all_start_times.append(start_time)
+
+        name = result['name']
+        stat = result['stat']
+        name_stat = "{}_{}".format(name, stat)
+        results_with_history[name_stat] = {
+            'current': result,
+            'changes': []
+        }
+    
+    for start_time in all_start_times:
+        query = Query()
+        results = db.search(query['start_time'] == start_time)
+        for result in results:
+            name = result['name']
+            stat = result['stat']
+            name_stat = "{}_{}".format(name, stat)
+            if not name_stat in results_with_history:
+                results_with_history[name_stat] = {
+                    'current': None,
+                    'changes': []
+                }
+            
+            time = result['time']
+            val = result['line_score']
+            results_with_history[name_stat]['changes'].append((val, time))
+            if len(results_with_history[name_stat]['changes']) > 1:
+                print("Adding change: {} - {} - {}".format(name_stat, val, time))
+        
+
+    return results_with_history
+
 def _get_scraped_lines(scraper):
     query = Query()
     db = TinyDB(DB_ROOT + SCRAPE_OPERATIONS_TABLE)
@@ -90,11 +140,20 @@ def _get_scraped_lines(scraper):
     return all_results
 
 
+@app.route('/getscrapedlineswithhistory')
+def get_scraped_lines_with_history():
+    scraper = request.args.get('scraper', '')
+
+    all_results = _get_scraped_lines_with_history(scraper)
+    return jsonify(all_results)
+
+
 @app.route('/getscrapedlines')
 def get_scraped_lines():
     scraper = request.args.get('scraper', '')
 
     all_results = _get_scraped_lines(scraper)
+    _get_scraped_lines_with_history(scraper)
     return jsonify(all_results)
 
 
@@ -111,28 +170,39 @@ def optimize():
     # get player projections
     # run optimizer
 
+    slate_id = '93782'
+
     query = Query()
     if sport == 'FIBA' and site == 'DK':
         db = TinyDB(DB_ROOT + "DKSlatePlayers_FIBA")
         scraped_lines = _get_scraped_lines('PrizePicks_FIBA')
-        slate_players = db.search((query['slateId'] == '91834'))
+        slate_players = db.search((query['slateId'] == slate_id))
 
         results = optimizer.optimize_FIBA_dk(slate_players, scraped_lines)
     elif sport == "NFL" and site == 'fd' and game_type == 'single_game':
         db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
         scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
-        slate_players = db.search((query['slateId'] == '93773'))
-        name_stat_to_val, seen_names, seen_stats = optimizer.get_player_projection_data(scraped_lines, ['BUF', 'NYJ'])
+        slate_players = db.search((query['slateId'] == slate_id))
+        name_stat_to_val, seen_names, seen_stats = optimizer.get_player_projection_data(scraped_lines, ['MIN', 'PHI'])
 
         name_to_id = utils.name_to_player_id(slate_players)
+
+        name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
+
+
+        #find a way to validate my player pool!
+
         print(name_to_id)
 
         player_pool = optimizer.get_player_pool(name_stat_to_val, seen_names, slate_players)
         print(player_pool)
-        results = optimizer.optimize_for_single_game_fd(player_pool, 10)
+        results = optimizer.optimize_for_single_game_fd(player_pool, 30)
         for result in results:
             to_print = ["{}:{}".format(name_to_id[a[0]], a[0]) for a in result[0]]
             print(",".join(to_print) + "," + str(result[1]))
+
+    elif sport == "NFL" and site == 'dk' and game_type == 'single_game':
+        pass
             # print(result)
         # optimizer.optimize_fd_single_game(slate_players, projection_data)
 
@@ -170,14 +240,16 @@ def run_scraper():
         if len(existing_results) > 0:        
             sorted_by_time = sorted(existing_results, key=lambda a: a['time'])
             most_recent = sorted_by_time[-1]
-            if most_recent['line_score'] != result['line_score']:
-                print("Updating line score: {} -> {}".format(most_recent['line_score'], result['line_score']))
+            most_recent_line_score = most_recent['line_score']
+            line_score = result['line_score']
+            name = result['name']
+            if most_recent_line_score != line_score:
+                print("{} Updating line score: {} -> {}".format(name, most_recent_line_score, line_score))
             else:
                 document = Query()
-                remove_result = db.remove(document['line_id'] == result['line_id'])
-                print("removed document {} - {}".format(result['line_id'], remove_result))
-                # figure out a strategy for purging old redudant lines
-                pass
+                # db.remove(document['line_id'] == result['line_id'])
+                remove_result = db.remove(doc_ids=[most_recent.doc_id])
+                print("removed {}, {} - {}".format(name, most_recent['line_id'], remove_result))
 
         # diff the most recent result with the current value
         # log this diff
