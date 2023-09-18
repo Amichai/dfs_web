@@ -500,7 +500,15 @@ class NFL_Optimizer:
           is_valid = False
           break
       
-      return is_valid
+      # team_ct = {}
+      # for player in roster.players:
+      #   pl_team = player.team
+      #   if not pl_team in team_ct:
+      #     team_ct[pl_team] = 1
+      #   else:
+      #     team_ct[pl_team] += 1
+
+      return is_valid #and max(team_ct.values()) <= 4
 
     self.lineup_validator = lineup_validator
     

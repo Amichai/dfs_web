@@ -1,6 +1,7 @@
-from name_mapper import name_mapper_pp_to_fd, name_mapper
+from name_mapper import name_mapper_pp_to_fd_dk, name_mapper
+from tinydb import Query
 import utils
-from optimizer_library import DK_NBA_Optimizer
+from optimizer_library import DK_NBA_Optimizer, NFL_Optimizer
 import itertools
 
 def normalize_name(name):
@@ -10,15 +11,13 @@ def normalize_name(name):
     return name
 
 
-def get_player_pool(name_stat_to_val, seen_names, slate_lines):
+def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site):
   player_pool = []
 
   for name in seen_names:
       unmapped_name = name
-      if name in name_mapper_pp_to_fd:
-          name = name_mapper_pp_to_fd[name]
-      # if name == "D.K. Metcalf":
-      #     name = "DK Metcalf"
+      if name in name_mapper_pp_to_fd_dk:
+          name = name_mapper_pp_to_fd_dk[name]
 
       if 'DST' in name:
           parsed_name = name.split(' ')[0]
@@ -26,12 +25,12 @@ def get_player_pool(name_stat_to_val, seen_names, slate_lines):
       else:
           matched_names = [a for a in slate_lines if a['name'] == name]
 
+        
       if len(matched_names) == 0:
-          print("Missing projection for: ", name)
-          assert name != "D.K. Metcalf"
+          if not '+' in name:
+            print("Missing projection for: ", name)
           continue
       
-      # fantasy_score = 0
       if len(matched_names) > 1:
         salary1 = float(matched_names[0]['salary'])
         salary2 = float(matched_names[1]['salary'])
@@ -63,11 +62,7 @@ def get_player_pool(name_stat_to_val, seen_names, slate_lines):
       player_pool.append([name, salary, proj, position, team])
   return player_pool
 
-def optimize_NFL_FD_single_game(slate_players, scraped_lines):
-    pass
-
-def get_player_projection_data(scraped_lines, teams_to_include):
-      
+def get_player_projection_data(scraped_lines, teams_to_include, computed_stats=[]):
     seen_names = []
     seen_stats = []
 
@@ -96,29 +91,6 @@ def get_player_projection_data(scraped_lines, teams_to_include):
         if not stat in seen_stats:
             seen_stats.append(stat) 
 
-
-    computed_stats = [
-      # {
-      #   'name': 'FSComputed', # for QBs missing a fantasy score
-      #   'stats': ['Pass Yards', 'Pass TDs', 'Rush Yards'],
-      #   'weights': [0.04, 4, 0.1]
-      # },
-      # {
-      #   'name': 'FSComputed', # for QBs missing a fantasy score
-      #   'stats': ['Pass Yards', 'Pass+Rush+Rec TDs', 'Rush Yards'],
-      #   'weights': [0.04, 4, 0.1]
-      # },
-      {
-        'name': 'FSComputed',
-        'stats': ['Fantasy Score', 'Receptions'],
-        'weights': [1, -0.5]
-      },
-      {
-        'name': 'FSComputed',
-        'stats': ['Kicking Points'],
-        'weights': [1]
-      },
-    ]
 
     for name, stats in name_to_stats.items():
         for computed_stat in computed_stats:
@@ -188,8 +160,16 @@ def optimize_for_single_game_fd(all_players, ct, locks=None):
         p3 = candidate[2]
         p4 = candidate[3]
         p5 = candidate[4]
+        all_players = [p1, p2, p3, p4, p5]
+        seen_teams = []
+        for p in all_players:
+            team = p[4]
+            if not team in seen_teams:
+                seen_teams.append(team)
 
-        # total_value = p1[2] * 2 + p2[2] * 1.5 +  p3[2] * 1.2 + p4[2] + p5[2]
+        if len(seen_teams) == 1:
+            continue
+
         total_value = p1[2] * 1.5 + p2[2]+  p3[2] + p4[2] + p5[2]
 
         roster_key = "|".join(sorted([a[0] for a in candidate])) + "|" + str(round(total_value, 5))
@@ -249,4 +229,163 @@ def optimize_FIBA_dk(slate_players, scraped_lines):
     print(results)
 
 
+    return results
+
+
+computed_stats = [
+    # {
+    #   'name': 'FSComputed', # for QBs missing a fantasy score
+    #   'stats': ['Pass Yards', 'Pass TDs', 'Rush Yards'],
+    #   'weights': [0.04, 4, 0.1]
+    # },
+    # {
+    #   'name': 'FSComputed', # for QBs missing a fantasy score
+    #   'stats': ['Pass Yards', 'Pass+Rush+Rec TDs', 'Rush Yards'],
+    #   'weights': [0.04, 4, 0.1]
+    # },
+    {
+    'name': 'FSComputed',
+    'stats': ['Fantasy Score', 'Receptions'],
+    'weights': [1, -0.5]
+    },
+    {
+    'name': 'FSComputed', # TODO: WE ONLY WANT TO APPLY THIS IF NO FANTASY SCORE VALUE IS PROVIDED!
+    'stats': ['Kicking Points'],
+    'weights': [1]
+    },
+]
+
+def get_player_pool(slate_players, scraped_lines, site, team_filter=None):
+    computed_stats_to_pass = []
+    if site == 'fd':
+        # computed_stats_to_pass = [computed_stats[0], computed_stats[1]]
+        computed_stats_to_pass = [computed_stats[0]]
+    else:
+        # computed_stats_to_pass = [computed_stats[1]]
+        computed_stats_to_pass = []
+
+    name_stat_to_val, seen_names, seen_stats = get_player_projection_data(scraped_lines, team_filter, computed_stats=computed_stats_to_pass)
+
+    player_pool = _get_player_pool(name_stat_to_val, seen_names, slate_players, site)
+
+    return player_pool
+
+def print_slate(slate_players, player_pool, slate_games, site):
+    team_to_start_time = {}
+    lines = slate_games.split('\n')
+    teams_in_order = []
+    print(lines)
+    for i in range(len(lines)):
+        if lines[i] == '':
+            continue
+        if lines[i][0] == '@':
+            team1 = lines[i - 1]
+            team2 = lines[i].strip('@')
+            timeString1 = lines[i + 1]
+            timeString2 = ''
+            if len(lines) > i + 2:
+                timeString2 = lines[i + 2]
+
+            team_to_start_time[team1] = "{} {}".format(timeString1, timeString2)
+            team_to_start_time[team2] = "{} {}".format(timeString1, timeString2)
+            teams_in_order.append(team1)
+            teams_in_order.append(team2)
+
+
+    for team in teams_in_order:
+        print("-----------------")
+        print(team, team_to_start_time[team])
+        print("-----------------")
+        if site == 'dk' and team == 'JAC':
+            team = 'JAX'
+        slate_players1 = [a for a in slate_players if a['team'] == team]
+        players_sorted = sorted(slate_players1, key=lambda a: a['salary'], reverse=True)
+        for player in players_sorted:
+            name = player['name']
+            position = player['position']
+
+            if position == 'DST' and site == 'dk':
+                name = name + position
+
+            matched = [a for a in player_pool if a[0] == name]
+            projected = ''
+            if len(matched) == 1:
+                projected = matched[0][2]
+            elif len(matched) > 1:
+                print("error name matched multiple times")
+                assert False
+
+            salary = player['salary']
+            
+            cuttoff_salary = 4000
+            if site == 'fd':
+                cuttoff_salary = 4500
+
+            # if 'DST' in position:
+            #     import pdb; pdb.set_trace()
+            if float(salary) >= cuttoff_salary or 'DST' in position:
+                print(name, salary, position, projected)
+
+        # team_players = [a for a in player_pool if a[4] == team]
+        # for player in team_players:
+        #     print(player)
+        # print()
+    # PARSE THE GAME TIMES
+    # SORT BY GAME TIME
+    # FOR EACH TEAM, SORT PLAYERS BY COST
+    # print("PRINT SLATE")
+    # for player in slate_players:
+    #     print(player)
+
+
+
+def optimize_fd_nfl(player_pool, ct):
+    by_position = {'QB': [], 'RB': [], 'WR': [], 'TE': [], 'FLEX': [], 'D': []}
+
+    for player in player_pool:
+        name = player[0]
+        cost = player[1]
+        proj = player[2]
+        position = player[3]
+        team = player[4]
+        player = utils.Player(name, player, cost, team, proj)
+
+        by_position[position].append(player)
+        if position != 'D' and position != 'QB':
+            by_position['FLEX'].append(player)
+
+
+    print(by_position)
+
+    optimizer = NFL_Optimizer()
+    # optimizer.optimize(by_position, None, 100000)
+    results = optimizer.optimize_top_n(by_position, ct, 140000)
+    print(results)
+    return results
+
+def optimize_dk_nfl(player_pool):
+    print(player_pool)
+
+    by_position = {'QB': [], 'RB': [], 'WR': [], 'TE': [], 'FLEX': [], 'D': []}
+
+    for player in player_pool:
+        name = player[0]
+        cost = player[1]
+        proj = player[2]
+        position = player[3]
+        if position == 'DST':
+            position = 'D'
+        team = player[4]
+        player = utils.Player(name, player, cost, team, proj)
+
+        by_position[position].append(player)
+        if position != 'D' and position != 'QB':
+            by_position['FLEX'].append(player)
+
+
+
+    optimizer = NFL_Optimizer(50000)
+    # optimizer.optimize(by_position, None, 100000)
+    results = optimizer.optimize_top_n(by_position, 20, 130000)
+    print(results)
     return results

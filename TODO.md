@@ -8,3 +8,4 @@ TODO:
 
 - optimizer
 
+ - show the number of rows in my table

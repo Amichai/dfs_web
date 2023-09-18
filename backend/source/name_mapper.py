@@ -32,10 +32,13 @@ name_mapper = {
   "Behnam Yakhchalidehkordi": "Behnam Yakhchali",
 }
 
-name_mapper_pp_to_fd = {
+name_mapper_pp_to_fd_dk = {
   # NFL
   'Gabriel Davis': 'Gabe Davis',
   'C.J Uzomah': 'C.J. Uzomah',
   'Mecole Hardman': 'Mecole Hardman Jr.',
+  'D.K. Metcalf': 'DK Metcalf',
+  'D.J. Moore': 'DJ Moore',
+  'Odell Beckham Jr': 'Odell Beckham Jr.',
 }
   

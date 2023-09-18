@@ -923,7 +923,6 @@ def name_to_player_id(slate_players):
 
 
 def map_pp_defense_to_fd_defense_name(name_to_id):
-
     mappings = {
         'Eagles DST': 'Philadelphia Eagles',
         'Vikings DST': 'Minnesota Vikings',
@@ -937,10 +936,71 @@ def map_pp_defense_to_fd_defense_name(name_to_id):
         'Colts DST': 'Indianapolis Colts',
         'Cowboys DST': 'Dallas Cowboys',
         'Dolphins DST': 'Miami Dolphins',
+        'Falcons DST': 'Atlanta Falcons',
+        '49ers DST': 'San Francisco 49ers',
+        'Giants DST': 'New York Giants',
+        'Jaguars DST': 'Jacksonville Jaguars',
+        'Jets DST': 'New York Jets',
+        'Lions DST': 'Detroit Lions',
+        'Packers DST': 'Green Bay Packers',
+        'Panthers DST': 'Carolina Panthers',
+        'Patriots DST': 'New England Patriots',
+        'Raiders DST': 'Las Vegas Raiders',
+        'Rams DST': 'Los Angeles Rams',
+        'Ravens DST': 'Baltimore Ravens',
+        'Saints DST': 'New Orleans Saints',
+        'Seahawks DST': 'Seattle Seahawks',
+        'Steelers DST': 'Pittsburgh Steelers',
+        'Texans DST': 'Houston Texans',
+        'Titans DST': 'Tennessee Titans',
+        'Washington DST': 'Washington Football Team',
+        'Broncos DST': 'Denver Broncos',
     }
 
     for name, val in mappings.items():
         if val in name_to_id:
             name_to_id[name] = name_to_id[val]
+
+    return name_to_id
+
+
+def map_pp_defense_to_dk_defense_name(name_to_id):
+    mappings = {
+        'Eagles ': 'Eagles DST',
+        'Vikings ': 'Vikings DST',
+        'Bears ': 'Bears DST',
+        'Bills ': 'Bills DST',
+        'Browns ': 'Browns DST',
+        'Buccaneers ': 'Buccaneers DST',
+        'Cardinals ': 'Cardinals DST',
+        'Chargers ': 'Chargers DST',
+        'Chiefs ': 'Chiefs DST',
+        'Colts ': 'Colts DST',
+        'Cowboys ': 'Cowboys DST',
+        'Dolphins ': 'Dolphins DST',
+        'Falcons ': 'Falcons DST',
+        '49ers ': '49ers DST',
+        'Giants ': 'Giants DST',
+        'Jaguars ': 'Jaguars DST',
+        'Jets ': 'Jets DST',
+        'Lions ': 'Lions DST',
+        'Packers ': 'Packers DST',
+        'Panthers ': 'Panthers DST',
+        'Patriots ': 'Patriots DST',
+        'Raiders ': 'Raiders DST',
+        'Rams ': 'Rams DST',
+        'Ravens ': 'Ravens DST',
+        'Saints ': 'Saints DST',
+        'Seahawks ': 'Seahawks DST',
+        'Steelers ': 'Steelers DST',
+        'Texans ': 'Texans DST',
+        'Titans ': 'Titans DST',
+        'Washington ': 'Washington DST',
+        'Broncos ': 'Broncos DST',
+    }
+
+    for name, val in mappings.items():
+        if name in name_to_id:
+            name_to_id[val] = name_to_id[name]
 
     return name_to_id

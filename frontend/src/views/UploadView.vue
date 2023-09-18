@@ -26,7 +26,6 @@ const slatesToParsers = {
   'FD NBA': new FDParser(),
   'FD NFL': new FDParser(),
   'FD MLB': new FDParser(),
-  'DK': new DKParser(),
   'DK NFL': new DKParser(),
   'DK FIBA': new DKParser(),
 }
@@ -41,7 +40,8 @@ const selectedSlate = ref('')
 const sport = ref('')
 
 const uploadSlate = () => {
-  parser.upload(slateId.value, date.value, sport.value)
+  parser = slatesToParsers[selectedSlate.value]
+  parser.upload(slateId.value, date.value, selectedSlate.value.split(' ')[1])
 }
 
 const fileUploaded = (evt) => {
@@ -60,7 +60,7 @@ const fileUploaded = (evt) => {
     slateId.value = parts[5];
     selectedSlate.value = 'FD ' + sport.value
   } else if(name.includes('DKSalaries') ) {
-    selectedSlate.value = 'DK'
+    // selectedSlate.value = 'DK'
     date.value = ''
     slateId.value = ''
   } else {
