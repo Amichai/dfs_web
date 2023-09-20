@@ -94,7 +94,7 @@ const parseScrapedLines = (lines) => {
 
 onMounted(async () => {
   const lines = await getScrapedLines('PrizePicks_NFL')
-  scrapedLines.value = parseScrapedLines(lines)
+  scrapedLines.value = parseScrapedLines(lines).filter((line) => Object.keys(line).length)
 })
 
 const selectedScraperChanged = async () => {
