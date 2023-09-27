@@ -31,13 +31,15 @@ const scrapeOptions = [{
 },
 ]
 
-const scrape = () => {
+const scrape = async () => {
   const matched = scrapeOptions.find((option) => option.displayName === selectedScraper.value)
   if(!matched) {
     alert('scraper not found')
   }
 
-  runScraper(matched.sport, matched.site)
+  await runScraper(matched.sport, matched.site)
+
+  await selectedScraperChanged()
 }
 
 const timeAgo = (secondsFromEpoch) => {

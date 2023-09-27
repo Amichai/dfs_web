@@ -258,17 +258,51 @@ computed_stats = [
 def get_player_pool(slate_players, scraped_lines, site, team_filter=None):
     computed_stats_to_pass = []
     if site == 'fd':
-        # computed_stats_to_pass = [computed_stats[0], computed_stats[1]]
-        computed_stats_to_pass = [computed_stats[0]]
+        computed_stats_to_pass = [computed_stats[0], computed_stats[1]]
     else:
-        # computed_stats_to_pass = [computed_stats[1]]
-        computed_stats_to_pass = []
+        computed_stats_to_pass = [computed_stats[1]]
 
     name_stat_to_val, seen_names, seen_stats = get_player_projection_data(scraped_lines, team_filter, computed_stats=computed_stats_to_pass)
 
     player_pool = _get_player_pool(name_stat_to_val, seen_names, slate_players, site)
 
     return player_pool
+
+def print_slate_new(slate_players, player_pool, site, teams):
+    for team in teams:
+        print("-----------------")
+        print(team)
+        print("-----------------")
+        if site == 'dk' and team == 'JAC':
+            team = 'JAX'
+        slate_players1 = [a for a in slate_players if a['team'] == team]
+        players_sorted = sorted(slate_players1, key=lambda a: a['salary'], reverse=True)
+        for player in players_sorted:
+            name = player['name']
+            position = player['position']
+
+            if position == 'DST' and site == 'dk':
+                name = name + position
+
+            matched = [a for a in player_pool if a[0] == name]
+            projected = ''
+            if len(matched) == 1:
+                projected = matched[0][2]
+            elif len(matched) > 1:
+                print("error name matched multiple times")
+                assert False
+
+            salary = player['salary']
+            
+            cuttoff_salary = 4000
+            if site == 'fd':
+                cuttoff_salary = 4500
+
+            # if 'DST' in position:
+            #     import pdb; pdb.set_trace()
+            if float(salary) >= cuttoff_salary or 'DST' in position:
+                print(name, salary, position, projected)
+
 
 def print_slate(slate_players, player_pool, slate_games, site):
     team_to_start_time = {}

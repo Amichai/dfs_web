@@ -16,6 +16,7 @@ CORS(app)
 DB_ROOT = 'DBs/'
 
 SCRAPE_OPERATIONS_TABLE = 'scrape_operations'
+SLATES_TABLE = 'slates'
 
 def write_to_db(table, data):
     db = TinyDB(DB_ROOT + table)
@@ -151,6 +152,34 @@ def get_scraped_lines():
     _get_scraped_lines_with_history(scraper)
     return jsonify(all_results)
 
+@app.route('/getslates')
+def get_slates():
+    cutoffDate = request.args.get('cutoffDate', '')
+    db = TinyDB(DB_ROOT + SLATES_TABLE)
+    results = db.all()
+    print(cutoffDate)
+    print(results)
+    filtered_results = [a for a in results if a['date'] >= cutoffDate]
+
+    return jsonify(filtered_results)
+
+
+@app.route('/getSlatePlayers')
+def getSlatePlayers():
+    slateId = request.args.get('slateId', '')
+    site = request.args.get('site', '')
+    sport = request.args.get('sport', '')
+    print(slateId)
+
+    if site == 'FD':
+        db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
+    if site == 'DK':
+        db = TinyDB(DB_ROOT + "DKSlatePlayers_" + sport)
+
+    query = Query()
+    slate_players = db.search((query['slateId'] == slateId))
+
+    return jsonify(slate_players)
 
 @app.route('/optimize', methods=['POST'])
 def optimize():
@@ -193,7 +222,7 @@ def optimize():
         upcoming_slates = db.search(query['sport'] == sport)
         print(upcoming_slates[-1])
 
-        optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'dk')
+        optimizer.print_slate_new(slate_players, player_pool, 'fd', ["NYG", "SF"])
 
         #find a way to validate my player pool!
 
@@ -250,13 +279,14 @@ def optimize():
 
         player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
 
-        db = TinyDB(DB_ROOT + "slates")
-        query = Query()
-        upcoming_slates = db.search(query['sport'] == sport)
-        # TODO: we should be filtering on slate id here
-        print(upcoming_slates[-1])
+        # db = TinyDB(DB_ROOT + "slates")
+        # query = Query()
+        # upcoming_slates = db.search(query['sport'] == sport)
+        # # TODO: we should be filtering on slate id here
+        # print(upcoming_slates[-1])
 
-        optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'fd')
+        # optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'fd')
+        optimizer.print_slate_new(slate_players, player_pool, 'fd', ["CAR", "SEA", "DAL", "ARI", "CHI", "KC"])
         name_to_id = utils.name_to_player_id(slate_players)
         name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
         results = optimizer.optimize_fd_nfl(player_pool, 55)

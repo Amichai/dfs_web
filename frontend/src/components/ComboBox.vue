@@ -5,7 +5,7 @@
       
       />
     <datalist id="elements">
-      <option v-for="element in array" :key="element" :value="element" />
+      <option v-for="element in array" :key="element" :value="renderer(element)" />
     </datalist>
   </div>
 </template>
@@ -25,6 +25,10 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: ''
+  },
+  renderer: {
+    type: Function,
+    default: (val) => val
   }
 })
 
