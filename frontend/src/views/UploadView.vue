@@ -22,6 +22,27 @@ onMounted(async () => {
   await fetchData();
 })
 
+const inputChanged = () => {
+  const lines = slateInput.value.split('\n')
+
+  for(var i = 0; i < lines.length; i += 1) {
+    if(lines[i][0] === '@'){
+      console.log(lines[i])
+      const timeString1 = lines[i + 1]
+      const timeString2 = lines[i + 2] ?? ''
+      const isString1Time = !isNaN(parseInt(timeString1[0]))
+      const isString2Time = !isNaN(parseInt(timeString2[0]))
+      if((isString1Time && isString2Time)
+        || (!isString1Time && !isString2Time)
+      ) {
+        alert('failed to parse slate')
+      }
+    }
+  }
+
+  console.log(lines)
+}
+
 const slatesToParsers = {
   'FD NBA': new FDParser(),
   'FD NFL': new FDParser(),
@@ -29,6 +50,8 @@ const slatesToParsers = {
   'DK NFL': new DKParser(),
   'DK FIBA': new DKParser(),
 }
+
+const slateInput = ref('')
 
 const parsedContent = ref({})
 
@@ -120,13 +143,20 @@ const clearFile = () => {
       <input class="form-control" @change="fileUploaded" type="file" id="formFile">
       <button class="btn btn-outline-danger" type="button" @click="clearFile">×</button>
     </div>
+
+    <textarea name="slate-input" class="slate-input" rows="3" placeholder="start times" v-model="slateInput" @change="inputChanged"></textarea>
+    
     
     <div class="upload-data-row">
       <input type="text" placeholder="slate id" v-model="slateId">
       <button class="btn upload-data-button" type="button" @click="uploadSlate"
       :disabled="!slateId || !date"
       >Upload</button>
+
+
     </div>
+    <br>
+    
     <br>
     <TableComponent 
       :columns="parsedContent?.columns ?? []"
@@ -172,5 +202,10 @@ const clearFile = () => {
   flex-direction: row;
   align-items: center;
   gap: 1rem;
+}
+
+.slate-input {
+  width: 100%;
+  resize: vertical;
 }
 </style>
