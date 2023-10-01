@@ -53,6 +53,12 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site):
           proj = name_stat_to_val[key2]
 
       if proj is None:
+          key3 = "{}_{}".format(unmapped_name, "FSInferred")
+          if key3 in name_stat_to_val:
+            proj = name_stat_to_val[key3]
+
+
+      if proj is None:
           continue
       
       # print("{},{},{}".format(name, salary, proj))
@@ -249,16 +255,26 @@ computed_stats = [
     'weights': [1, -0.5]
     },
     {
-    'name': 'FSComputed', # TODO: WE ONLY WANT TO APPLY THIS IF NO FANTASY SCORE VALUE IS PROVIDED!
+    'name': 'FSInferred', # TODO: WE ONLY WANT TO APPLY THIS IF NO FANTASY SCORE VALUE IS PROVIDED!
     'stats': ['Kicking Points'],
     'weights': [1]
+    },
+    {
+    'name': 'FSInferred',
+    'stats': ['Receiving Yards', 'Receptions'],
+    'weights': [0.1, 0.5]
+    },
+    {
+    'name': 'FSInferred',
+    'stats': ['Rush+Rec Yds', 'Receptions'],
+    'weights': [0.1, 0.5]
     },
 ]
 
 def get_player_pool(slate_players, scraped_lines, site, team_filter=None):
     computed_stats_to_pass = []
     if site == 'fd':
-        computed_stats_to_pass = [computed_stats[0], computed_stats[1]]
+        computed_stats_to_pass = computed_stats
     else:
         computed_stats_to_pass = [computed_stats[1]]
 

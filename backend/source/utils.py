@@ -955,6 +955,7 @@ def map_pp_defense_to_fd_defense_name(name_to_id):
         'Titans DST': 'Tennessee Titans',
         'Washington DST': 'Washington Football Team',
         'Broncos DST': 'Denver Broncos',
+        'Bengals DST': 'Cincinnati Bengals',
     }
 
     for name, val in mappings.items():
@@ -997,6 +998,7 @@ def map_pp_defense_to_dk_defense_name(name_to_id):
         'Titans ': 'Titans DST',
         'Washington ': 'Washington DST',
         'Broncos ': 'Broncos DST',
+        'Bengals ': 'Bengals DST',
     }
 
     for name, val in mappings.items():

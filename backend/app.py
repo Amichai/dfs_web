@@ -279,14 +279,14 @@ def optimize():
 
         player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
 
-        # db = TinyDB(DB_ROOT + "slates")
-        # query = Query()
-        # upcoming_slates = db.search(query['sport'] == sport)
+        db = TinyDB(DB_ROOT + "slates")
+        query = Query()
+        upcoming_slates = db.search(query['sport'] == sport)
         # # TODO: we should be filtering on slate id here
         # print(upcoming_slates[-1])
 
-        # optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'fd')
-        optimizer.print_slate_new(slate_players, player_pool, 'fd', ["CAR", "SEA", "DAL", "ARI", "CHI", "KC"])
+        optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'fd')
+        # optimizer.print_slate_new(slate_players, player_pool, 'fd', [])
         name_to_id = utils.name_to_player_id(slate_players)
         name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
         results = optimizer.optimize_fd_nfl(player_pool, 55)

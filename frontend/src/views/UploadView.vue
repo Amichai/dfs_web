@@ -8,18 +8,8 @@ import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import TableComponent from '../components/TableComponent.vue'
 
-const fetchData = async () => {
-  searchData('test1', 'test', 'test3').then((res) => {
-    console.log(res);
-  })
-
-  // searchData('test1', 'time', '2023-08-17T02' ).then((res) => {
-  //   console.log(res);
-  // })
-}
 
 onMounted(async () => {
-  await fetchData();
 })
 
 const inputChanged = () => {
@@ -65,6 +55,18 @@ const sport = ref('')
 const uploadSlate = () => {
   parser = slatesToParsers[selectedSlate.value]
   parser.upload(slateId.value, date.value, selectedSlate.value.split(' ')[1])
+
+  console.log(slateInput.value)
+  if(!sport.value) {
+    alert('select a sport')
+    return
+  }
+
+  writeData('slates', {
+    date: date.value,
+    slate: slateInput.value,
+    sport: sport.value
+  })
 }
 
 const fileUploaded = (evt) => {

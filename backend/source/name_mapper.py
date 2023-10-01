@@ -40,5 +40,7 @@ name_mapper_pp_to_fd_dk = {
   'D.K. Metcalf': 'DK Metcalf',
   'D.J. Moore': 'DJ Moore',
   'Odell Beckham Jr': 'Odell Beckham Jr.',
+  'Devon Achane': "De'Von Achane",
+  'Josh Palmer': 'Joshua Palmer',
 }
   
