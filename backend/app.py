@@ -189,6 +189,8 @@ def optimize():
     site = data['site']
     game_type = data['type']
     slate_id = data['slateId']
+    roster_count = int(data['rosterCount'])
+    iter_count = int(data['iterCount'])
     
     
     # read player prices/positions
@@ -229,7 +231,7 @@ def optimize():
         print(name_to_id)
 
         print(player_pool)
-        results = optimizer.optimize_for_single_game_fd(player_pool, 30)
+        results = optimizer.optimize_for_single_game_fd(player_pool, roster_count)
         for result in results:
             to_print = ["{}:{}".format(name_to_id[a[0]], a[0]) for a in result[0]]
             print(",".join(to_print) + "," + str(result[1]))
@@ -289,14 +291,20 @@ def optimize():
         # optimizer.print_slate_new(slate_players, player_pool, 'fd', [])
         name_to_id = utils.name_to_player_id(slate_players)
         name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
-        results = optimizer.optimize_fd_nfl(player_pool, 55)
+
+        results = optimizer.optimize_fd_nfl(player_pool, roster_count, iter_count)
+
+        roster_data = []
         for result in results:
             to_print = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
             print(",".join(to_print) + "," + str(result.value))
+            roster_data.append({
+                'players': to_print,
+                'value': result.value,
+                'cost': result.cost
+            })
 
-
-
-    return jsonify([])
+    return jsonify(roster_data)
 
 @app.route('/runscraper', methods=['POST'])
 def run_scraper():

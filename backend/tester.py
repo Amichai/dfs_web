@@ -49,7 +49,7 @@ def test_optimizer1(sport, slate_id):
 
   name_to_id = utils.name_to_player_id(slate_players)
   name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
-  results = optimizer.optimize_fd_nfl(player_pool, 10)
+  results = optimizer.optimize_fd_nfl(player_pool, 10, 12)
 
   for result in results:
       to_print = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
@@ -175,7 +175,7 @@ def test_optimizer2(sport, slate_id):
 
 
 sport = "NFL"
-slate_id = "92765"
+slate_id = "94274"
 test_optimizer1(sport, slate_id)
 # test_optimizer2(sport, slate_id)
 

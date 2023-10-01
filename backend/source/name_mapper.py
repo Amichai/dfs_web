@@ -43,4 +43,3 @@ name_mapper_pp_to_fd_dk = {
   'Devon Achane': "De'Von Achane",
   'Josh Palmer': 'Joshua Palmer',
 }
-  

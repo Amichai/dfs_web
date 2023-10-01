@@ -389,7 +389,7 @@ def print_slate(slate_players, player_pool, slate_games, site):
 
 
 
-def optimize_fd_nfl(player_pool, ct):
+def optimize_fd_nfl(player_pool, ct, iterCount):
     by_position = {'QB': [], 'RB': [], 'WR': [], 'TE': [], 'FLEX': [], 'D': []}
 
     for player in player_pool:
@@ -409,7 +409,7 @@ def optimize_fd_nfl(player_pool, ct):
 
     optimizer = NFL_Optimizer()
     # optimizer.optimize(by_position, None, 100000)
-    results = optimizer.optimize_top_n(by_position, ct, 140000)
+    results = optimizer.optimize_top_n(by_position, ct, iterCount * 10000)
     print(results)
     return results
 
