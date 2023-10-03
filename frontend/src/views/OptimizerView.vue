@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
-import { runOptimizer } from '../apiHelper';
+import { runOptimizer, runReoptimizer } from '../apiHelper';
   
 const props = defineProps({
   msg: {
@@ -18,6 +18,13 @@ const optimize = async (sport, site, type) => {
   console.log(result)
 }
 
+const reoptimize = async  (sport, site, type) => {
+  const result = await runReoptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value, rosters.value)
+  // debugger
+  // todo render this result
+  console.log(result)
+}
+
 const sport = ref('NFL')
 const slateId = ref('')
 const rosters = ref('')
@@ -28,6 +35,8 @@ onMounted(() => {
   sport.value = localStorage.getItem('sport', sport.value)
   slateId.value = localStorage.getItem('slateId', slateId.value)
   rosterCount.value = localStorage.getItem('rosterCount', slateId.value)
+  iterCount.value = localStorage.getItem('iterCount', slateId.value)
+  rosters.value = localStorage.getItem('rosters', slateId.value)
 })
 
 watch(() => sport.value, (newVal, oldVal) => {
@@ -40,6 +49,14 @@ watch(() => slateId.value, (newVal, oldVal) => {
 
 watch(() => rosterCount.value, (newVal, oldVal) => {
   localStorage.setItem('rosterCount', newVal)
+})
+
+watch(() => iterCount.value, (newVal, oldVal) => {
+  localStorage.setItem('iterCount', newVal)
+})
+
+watch(() => rosters.value, (newVal, oldVal) => {
+  localStorage.setItem('rosters', newVal)
 })
 
 /// show a table with every player's projcetions (source of the projection, last updated, etc.)
@@ -73,7 +90,9 @@ watch(() => rosterCount.value, (newVal, oldVal) => {
     </div>
     <button class="button" @click="() => optimize('NFL', 'fd', 'single_game')">Optimize Single Game FD</button>
     <br>
-    <textarea name="rosters" class="roster-results" rows="3" placeholder="rosters" v-model="rosters" readonly></textarea>
+    <textarea name="rosters" class="roster-results" rows="3" placeholder="rosters" v-model="rosters"></textarea>
+    <br>
+    <button class="button" @click="() => reoptimize('NFL', 'fd', '')">Reoptimize</button>
   </main>
 </template>
 
@@ -94,6 +113,6 @@ watch(() => rosterCount.value, (newVal, oldVal) => {
   height: 10rem;
   padding: 0;
   border-radius: 0.25rem;
-  resize: none;
+  /* resize: none; */
 }
 </style>

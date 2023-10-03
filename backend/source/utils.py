@@ -294,6 +294,60 @@ def team_to_start_time(path, input_team):
 DOWNLOAD_FOLDER = "/Users/amichailevy/Downloads/"
 
 
+def parse_start_times_from_slate(slate):
+    lines = slate.split('\n')
+    first_team = None
+    second_team = None
+    time_conversion = {
+        '12:00pm ET': 0, '12:30pm ET': 0.5,
+        '1:00pm ET': 1, '1:30pm ET': 1.5,
+        '2:00pm ET': 2, '2:30pm ET': 2.5,
+        '3:00pm ET': 3, '3:30pm ET': 3.5,
+        '4:00pm ET': 4, '4:30pm ET': 4.5,
+        '4:05pm ET': 4.02,
+        '4:25pm ET': 4.48,
+        '5:00pm ET': 5, '5:30pm ET': 5.5,
+        '6:00pm ET': 6, '6:30pm ET': 6.5, 
+        '7:00pm ET': 7, '7:30pm ET': 7.5, 
+        '7:15pm ET': 7.15, '7:45pm ET': 7.85,
+        '8:00pm ET': 8, '8:30pm ET': 8.5, 
+        '8:15pm ET': 8.15, '8:45pm ET': 8.85,
+        '8:20pm ET': 8.2,
+        '9:00pm ET': 9, '9:30pm ET': 9.5, 
+        '9:15pm ET': 9.15, '9:45pm ET': 9.85,
+        '10:00pm ET': 10, '10:30pm ET': 10.5, 
+        '10:15pm ET': 10.15, '10:45pm ET': 10.85,
+        '11:00pm ET': 11, '11:30pm ET': 11.5,
+        '11:15pm ET': 11.15
+    }
+
+    time_to_teams = {}
+    idx = -1
+    for line in lines:
+        idx += 1
+
+        line = line.strip().strip('\n')
+
+        if line == "":
+            continue
+
+        if line[0].isdigit():
+            time_key = time_conversion[line]
+            if not time_key in time_to_teams:
+                time_to_teams[time_key] = []
+            time_to_teams[time_key] += [first_team, second_team]
+            continue
+
+        if line[0] == '@':
+            # second team
+            first_team = lines[idx - 1]
+            second_team = line.strip('@')
+            continue
+
+
+    return time_to_teams
+
+
 def load_start_times_and_slate_path(path):
     start_times = open(path, "r")
     lines = start_times.readlines()

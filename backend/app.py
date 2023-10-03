@@ -181,6 +181,94 @@ def getSlatePlayers():
 
     return jsonify(slate_players)
 
+@app.route('/reoptimize', methods=['POST'])
+def reoptimize():
+    data = request.json
+    print(data)
+    sport = data['sport']
+    site = data['site']
+    game_type = data['type']
+    slate_id = data['slateId']
+    roster_count = int(data['rosterCount'])
+    iter_count = int(data['iterCount'])
+    rosters = data['rosters']
+
+
+    db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
+    scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
+
+    query = Query()
+    slate_players = db.search((query['slateId'] == slate_id))
+
+    player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
+    # print(player_pool)
+
+    db = TinyDB(DB_ROOT + "slates")
+    query = Query()
+    upcoming_slates = db.search(query['sport'] == sport)
+    current_slate = upcoming_slates[-1]
+
+    start_times = utils.parse_start_times_from_slate(current_slate['slate'])
+    print(start_times)
+
+    locked_teams = []
+    current_time = 2
+
+    for key, value in start_times.items():
+        if key < current_time:
+            locked_teams += value
+
+
+    print(locked_teams)
+
+    # print(rosters)
+    # print(current_slate)
+    # print(sport, site, game_type, slate_id, roster_count, iter_count)
+
+    locked_rosters = []
+    lines = rosters.split('\n')
+    for line in lines:
+        players = line.split('	')
+        # print(players)
+        locked_roster_players = []
+        for player in players:
+            name = player.split(':')[1]
+            matched_player = [a for a in player_pool if a[0] == name][0]
+            team = matched_player[4]
+            if team in locked_teams:
+
+                name = matched_player[0]
+                cost = matched_player[1]
+                proj = matched_player[2]
+                team = matched_player[4]
+                player_new = utils.Player(name, '', cost, team, proj)
+                
+                locked_roster_players.append(player_new)
+            else:
+                locked_roster_players.append('')
+            
+            locked_rosters.append(locked_roster_players)
+        
+
+        # lookup team
+        # lookup team start times
+
+
+
+
+
+        # for each player determined if we're locked or not
+        # if locked, add it to the locked players array
+    
+    player_pool_new = [a for a in player_pool if a[4] not in locked_teams]
+    
+    results = optimizer.reoptimize_fd_nfl(player_pool_new, iter_count, locked_rosters)
+    print(results)
+
+    return jsonify([])
+    
+
+
 @app.route('/optimize', methods=['POST'])
 def optimize():
     data = request.json
@@ -219,12 +307,18 @@ def optimize():
         name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
 
 
-        db = TinyDB(DB_ROOT + "slates")
-        query = Query()
-        upcoming_slates = db.search(query['sport'] == sport)
-        print(upcoming_slates[-1])
+        # db = TinyDB(DB_ROOT + "slates")
+        # query = Query()
+        # upcoming_slates = db.search(query['sport'] == sport)
+        # print(upcoming_slates[-1])
 
-        optimizer.print_slate_new(slate_players, player_pool, 'fd', ["NYG", "SF"])
+        teams = []
+        for player in player_pool:
+            team = player[4]
+            if not team in teams:
+                teams.append(team)
+
+        optimizer.print_slate_new(slate_players, player_pool, 'fd', teams)
 
         #find a way to validate my player pool!
 
@@ -234,7 +328,7 @@ def optimize():
         results = optimizer.optimize_for_single_game_fd(player_pool, roster_count)
         for result in results:
             to_print = ["{}:{}".format(name_to_id[a[0]], a[0]) for a in result[0]]
-            print(",".join(to_print) + "," + str(result[1]))
+            print(",".join(to_print) + "," + str(result[1]) + "," + str(60000 - result[2]))
 
     elif sport == "NFL" and site == 'dk' and game_type == 'single_game':
         pass
@@ -304,7 +398,8 @@ def optimize():
                 'cost': result.cost
             })
 
-    return jsonify(roster_data)
+    # return jsonify(roster_data)
+    return jsonify([])
 
 @app.route('/runscraper', methods=['POST'])
 def run_scraper():

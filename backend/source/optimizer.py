@@ -292,7 +292,7 @@ def print_slate_new(slate_players, player_pool, site, teams):
         if site == 'dk' and team == 'JAC':
             team = 'JAX'
         slate_players1 = [a for a in slate_players if a['team'] == team]
-        players_sorted = sorted(slate_players1, key=lambda a: a['salary'], reverse=True)
+        players_sorted = sorted(slate_players1, key=lambda a: int(a['salary']), reverse=True)
         for player in players_sorted:
             name = player['name']
             position = player['position']
@@ -387,6 +387,35 @@ def print_slate(slate_players, player_pool, slate_games, site):
     # for player in slate_players:
     #     print(player)
 
+
+def reoptimize_fd_nfl(player_pool, iterCount, rosters):
+    by_position = {'QB': [], 'RB': [], 'WR': [], 'TE': [], 'FLEX': [], 'D': []}
+
+    for player in player_pool:
+        name = player[0]
+        cost = player[1]
+        proj = player[2]
+        position = player[3]
+        team = player[4]
+        player = utils.Player(name, player, cost, team, proj)
+
+        by_position[position].append(player)
+        if position != 'D' and position != 'QB':
+            by_position['FLEX'].append(player)
+
+
+    print(by_position)
+
+    optimizer = NFL_Optimizer()
+    results = []
+
+    for locks in rosters:
+        roster = optimizer.optimize(by_position, locks, iterCount * 10000)
+
+        results += [roster]
+    
+    print(results)
+    return results
 
 
 def optimize_fd_nfl(player_pool, ct, iterCount):
