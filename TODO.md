@@ -11,3 +11,9 @@ TODO:
 - optimizer
 
  - show the number of rows in my table
+
+ -----
+
+ Create a report for downloading the returned optimized rosters. With a hash that can be tracked for uniqueness
+
+ 

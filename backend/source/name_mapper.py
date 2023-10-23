@@ -42,4 +42,11 @@ name_mapper_pp_to_fd_dk = {
   'Odell Beckham Jr': 'Odell Beckham Jr.',
   'Devon Achane': "De'Von Achane",
   'Josh Palmer': 'Joshua Palmer',
+  'Juju Smith-Schuster': 'JuJu Smith-Schuster',
+  'D.J. Chark': 'DJ Chark Jr.',
+  'Odell Beckham Jr': 'Odell Beckham Jr.',
+  'Allen Robinson': 'Allen Robinson II',
+  'Kenny Gainwell': 'Kenneth Gainwell',
+  
+  
 }

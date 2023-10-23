@@ -41,6 +41,9 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site):
 
 
       position = matched_names[0]['position']
+
+    #   print(position)
+
       team = matched_names[0]['team']
       
       proj = None
@@ -49,6 +52,11 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site):
       key2 = "{}_{}".format(unmapped_name, "FSComputed")
       if key1 in name_stat_to_val:
           proj = name_stat_to_val[key1]
+
+          if position == 'WR' and site == 'fd':
+            proj *= 0.86
+
+
       if key2 in name_stat_to_val:
           proj = name_stat_to_val[key2]
 

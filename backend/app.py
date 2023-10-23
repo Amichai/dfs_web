@@ -72,12 +72,15 @@ def search_data():
 
 
 def _get_scraped_lines_with_history(scraper):
+
     query = Query()
     db = TinyDB(DB_ROOT + SCRAPE_OPERATIONS_TABLE)
     results = db.search(query['scraper'] == scraper)
+
     results_sorted = sorted(results, key=lambda a: a['scrape_time'])
     if len(results_sorted) == 0:
-        return jsonify([])
+        return []
+
     most_recent_scrape = results_sorted[-1]
 
     query = Query()
@@ -398,6 +401,8 @@ def optimize():
                 'cost': result.cost
             })
 
+
+    utils.print_player_exposures(results)
     # return jsonify(roster_data)
     return jsonify([])
 

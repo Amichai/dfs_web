@@ -569,8 +569,9 @@ def print_player_exposures(rosters_sorted, locked_teams=None):
             continue
 
         team = pl.team
-        start_time = team_to_start_time('start_times.txt', team)
+        # start_time = team_to_start_time('start_times.txt', team)
         # print("st {},{} - {}".format(player_name, team, start_time))
+        start_time = 'n/a'
         rows.append([player_name, ct, pl.team, round(pl.value, 2), round(pl.value / pl.cost * 100, 2), pl.projection_source, start_time])
 
     rows_sorted = sorted(rows, key=lambda a: a[1], reverse=True)

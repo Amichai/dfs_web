@@ -29,6 +29,12 @@ const scrapeOptions = [{
   displayName: 'PP FIBA',
   scraperName: 'PrizePicks_FIBA',
 },
+{
+  sport: 'NBA',
+  site: 'PrizePicks',
+  displayName: 'PP NBA',
+  scraperName: 'PrizePicks_NBA',
+},
 ]
 
 const scrape = async () => {
