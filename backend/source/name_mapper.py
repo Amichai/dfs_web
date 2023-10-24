@@ -51,4 +51,5 @@ name_mapper_pp_to_fd_dk = {
 
   #NBA
   'Michael Porter Jr.': 'Michael Porter',
+  'Gary Payton II': 'Gary Payton',
 }

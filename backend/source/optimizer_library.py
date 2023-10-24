@@ -377,7 +377,7 @@ class DK_CBB_Optimizer:
     return (to_return, initial_set_sorted[0])
 
 class FD_NBA_Optimizer:
-  def __init__(self, by_position=None):
+  def __init__(self):
     self.optimizer = Optimizer(60000, ["PG", "PG", "SG", "SG", "SF", "SF", "PF", "PF", "C"])
 
   def prune_player_pool(self, by_position):

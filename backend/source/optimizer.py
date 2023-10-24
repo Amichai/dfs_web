@@ -3,6 +3,7 @@ from tinydb import Query
 import utils
 from optimizer_library import DK_NBA_Optimizer, NFL_Optimizer, FD_NBA_Optimizer
 import itertools
+from tabulate import tabulate
 
 def normalize_name(name):
     if name in name_mapper:
@@ -347,6 +348,7 @@ def print_slate_new(slate_players, player_pool, site, teams):
             team = 'JAX'
         slate_players1 = [a for a in slate_players if a['team'] == team]
         players_sorted = sorted(slate_players1, key=lambda a: int(a['salary']), reverse=True)
+        rows = []
         for player in players_sorted:
             name = player['name']
             position = player['position']
@@ -371,7 +373,9 @@ def print_slate_new(slate_players, player_pool, site, teams):
             # if 'DST' in position:
             #     import pdb; pdb.set_trace()
             if float(salary) >= cuttoff_salary or 'DST' in position:
-                print(name, salary, position, projected)
+                rows.append([name, salary, position, projected])
+
+        print(tabulate(rows, headers=['Name', 'Salary', 'Position', 'Projected']))
 
 
 def print_slate(slate_players, player_pool, slate_games, site):
@@ -548,7 +552,6 @@ def reoptimize_fd_nba(player_pool, iterCount, rosters):
 
         results += [roster]
     
-    print(results)
     return results
 
 
@@ -569,7 +572,22 @@ def optimize_fd_nba(player_pool, ct, iterCount):
     print(by_position)
 
     optimizer = FD_NBA_Optimizer()
+
+    def lineup_validator(roster):
+        team_to_count = {}
+        for player in roster.players:
+            if not player.team in team_to_count:
+                team_to_count[player.team] = 1
+            else:
+                team_to_count[player.team] += 1
+
+        for team, ct in team_to_count.items():
+            if ct > 4:
+                return False
+        return True
+
+
     # optimizer.optimize(by_position, None, 100000)
-    results = optimizer.optimize_top_n(by_position, ct, iterCount * 10000)
+    results = optimizer.optimize_top_n(by_position, ct, iterCount * 10000, locked_players=None, lineup_validator=lineup_validator)
     print(results)
     return results
