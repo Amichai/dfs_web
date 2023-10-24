@@ -35,6 +35,12 @@ const scrapeOptions = [{
   displayName: 'PP NBA',
   scraperName: 'PrizePicks_NBA',
 },
+{
+  sport: 'NBA',
+  site: 'Caesars',
+  displayName: 'Caesars NBA',
+  scraperName: 'Caesars_NBA',
+},
 ]
 
 const scrape = async () => {
@@ -83,7 +89,7 @@ const selectedScraper = ref('')
 const scrapers = ref(scrapeOptions.map((option) => option.displayName))
 
 const scrapedLines = ref([])
-const columns = ref(['time', 'line_score', 'name', 'stat', 'team', 'updated_at'])
+const columns = ref(['time', 'line_score', 'name', 'stat', 'team', 'updated_at', 'active'])
 
 const parseScrapedLines = (lines) => {
   const name_stats = Object.keys(lines)

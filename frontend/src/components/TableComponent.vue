@@ -61,8 +61,7 @@ const clickedColumn = (evt) => {
 
   sortColumn.value = columnKey
   sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'
-
-  rows.value = rows.value.sort((a, b) => {
+  rows.value = rows.value.filter(a => Object.keys(a).length).sort((a, b) => {
     if(typeof a[columnKey] === 'number') {
       if(sortDirection.value === 'asc')
         return b[columnKey] - a[columnKey]

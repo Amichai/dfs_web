@@ -7,7 +7,7 @@ def scrape(sport, site, scrape_time):
   if site == 'PrizePicks':
     scraper = PPScraper(sport)
   elif site == 'Caesars':
-    scraper = CaesarsScraper(sport)
+    scraper = CaesarsScraper(sport, isGameday=True)
   else:
     assert False
 

@@ -41,9 +41,15 @@ class CaesarsScraper:
     self.all_team_names = ["Atlanta Hawks","Boston Celtics","Brooklyn Nets","Charlotte Hornets","Chicago Bulls","Cleveland Cavaliers","Dallas Mavericks","Denver Nuggets","Detroit Pistons","Golden State Warriors","Houston Rockets","Indiana Pacers","Los Angeles Clippers","Los Angeles Lakers","Memphis Grizzlies","Miami Heat","Milwaukee Bucks","Minnesota Timberwolves","New Orleans Pelicans","New York Knicks","Oklahoma City Thunder","Orlando Magic","Philadelphia 76ers","Phoenix Suns","Portland Trail Blazers","Sacramento Kings","San Antonio Spurs","Toronto Raptors","Utah Jazz","Washington Wizards"]
 
   def _get_game_guids_today(self):
-    url = "https://www.williamhill.com/us/nj/bet/api/v3/sports/{}/events/schedule".format(self.sport_name)
-    result = requests.get(url)
-    as_json = result.json()
+    # url = "https://www.williamhill.com/us/nj/bet/api/v3/sports/{}/events/schedule".format(self.sport_name)
+    url = "https://api.americanwagering.com/regions/us/locations/nj/brands/czr/sb/v3/sports/{}/events/schedule".format(self.sport_name)
+    print(url)
+    # result = requests.get(url)
+    as_json  = utils.get_with_selenium(url)
+
+    id_to_start_time = {}
+    # print(result)
+    # as_json = result.json()
 
     # __import__('pdb').set_trace()
     all_sports = [a['name'] for a in as_json['competitions']]
@@ -61,8 +67,11 @@ class CaesarsScraper:
     to_return = []
     for event in events:
         event_id = event["id"]
+
+
         name = event["name"]
         start_time = event["startTime"]
+        id_to_start_time[event_id] = start_time
         start_time_parsed = dateutil.parser.isoparse(start_time)
         time_shifted = start_time_parsed - timedelta(hours=4)
         today = date.today()
@@ -78,17 +87,27 @@ class CaesarsScraper:
           print("{} - {}, {}, {}".format(counter, name, time_shifted.strftime('%m/%d %H:%M'), event_id))
           to_return.append(event_id)
 
-    return to_return
+    return to_return, id_to_start_time
 
   def run(self, scrape_time):
+    whitelisted_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', 'Turnovers',  
+                         "Points + Assists + Rebounds", 
+                         "Points + Assists",
+                         "Points + Rebounds",
+                         "Rebounds + Assists",
+                         "Blocks + Steals"
+                         ]
+
+    filtered_stats = []
+
     projections = []
 
     if self.game_guids == None:
-      self.game_guids = self._get_game_guids_today()
+      self.game_guids, id_to_start_time = self._get_game_guids_today()
 
     for guid in self.game_guids:
       print("GUID: {}".format(guid))
-      url = 'https://www.williamhill.com/us/nj/bet/api/v3/events/{}'.format(guid)
+      url = "https://api.americanwagering.com/regions/us/locations/nj/brands/czr/sb/v3/events/{}".format(guid)
 
       self.driver.get(url)
 
@@ -145,6 +164,13 @@ class CaesarsScraper:
           else:
             stat = name_parts[0]
 
+
+          if stat not in whitelisted_stats:
+             if not stat in filtered_stats:
+                filtered_stats.append(stat)
+                print('filtering: {}'.format(stat))
+             continue
+          
           under_faction = None
           over_fraction = None
 
@@ -171,14 +197,24 @@ class CaesarsScraper:
           odds2 = 1.0 / odds2
 
           odds_percentage = odds1 / (odds1  + odds2)
+          
+          if not 'line' in market:
+             continue
 
           line = market['line']
+          # print(market)
+          startTime = id_to_start_time[guid]
   
           line_adjusted = round(float(line) + (float(odds_percentage) - 0.5) * float(line), 3)
+
+          team = ''
+          if 'metadata' in market and 'teamName' in market['metadata']:
+            team = market['metadata']['teamName'].strip('|')
 
           projections.append({
             "line_score": line_adjusted,
             "stat": stat,
+            "start_time": startTime,
             "eventId": guid,
             "line_original": line,
             "under_fraction": under_faction,
@@ -186,7 +222,8 @@ class CaesarsScraper:
             "active": is_active,
             "name": name,
             "time": scrape_time,
-            "line_id": "{}_{}".format(name, stat)
+            "team": team,
+            "line_id": "{}_{}_{}".format(name, stat, startTime)
         })
         
     return projections

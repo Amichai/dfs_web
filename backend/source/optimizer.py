@@ -1,7 +1,7 @@
 from name_mapper import name_mapper_pp_to_fd_dk, name_mapper
 from tinydb import Query
 import utils
-from optimizer_library import DK_NBA_Optimizer, NFL_Optimizer
+from optimizer_library import DK_NBA_Optimizer, NFL_Optimizer, FD_NBA_Optimizer
 import itertools
 
 def normalize_name(name):
@@ -11,8 +11,51 @@ def normalize_name(name):
     return name
 
 
+def _add_casesar_projections(name_stat_to_val, all_names):
+    get_key = lambda a, b: "{}_{}".format(a, b)
+    key_generators = [
+        lambda a: get_key(a, 'Points'),
+        lambda a: get_key(a, 'Assists'),
+        lambda a: get_key(a, 'Rebounds'),
+        lambda a: get_key(a, 'Blocks'),
+        lambda a: get_key(a, 'Steals'),
+        lambda a: get_key(a, 'Turnovers'),
+    ]
+
+    for name in all_names:
+        stat_vals = []
+        for key_generator in key_generators:
+            key = key_generator(name)
+            if key in name_stat_to_val:
+                stat_vals.append(name_stat_to_val[key])
+            else:
+                stat_vals.append(0)
+
+        if sum(stat_vals) > 0:
+            val = stat_vals[0] + stat_vals[1] * 1.5 + stat_vals[2] * 1.2 + stat_vals[3] * 3 + stat_vals[4] * 3 - (stat_vals[5] / 3)
+            name_stat_to_val["{}_{}".format(name, 'CaesarsComputed')] = round(val, 3)
+
+    # for name, stats in name_to_stats.items():
+    #     for computed_stat in computed_stats:
+    #         computed_stat_name = computed_stat['name']
+    #         if all([a in stats for a in computed_stat['stats']]):
+    #             new_stat_name = "{}_{}".format(name, computed_stat_name)
+    #             new_val = 0
+    #             for i, stat in enumerate(computed_stat['stats']):
+    #                 new_val += name_stat_to_val["{}_{}".format(name, stat)] * computed_stat['weights'][i]
+
+    #             name_stat_to_val[new_stat_name] = new_val
+
+    #             if not computed_stat_name in seen_stats:
+    #                 seen_stats.append(computed_stat_name)
+    #     pass
+
 def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site):
   player_pool = []
+
+  _add_casesar_projections(name_stat_to_val, seen_names)
+
+
 
   for name in seen_names:
       unmapped_name = name
@@ -49,7 +92,8 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site):
       proj = None
 
       key1 = "{}_{}".format(unmapped_name, "Fantasy Score")
-      key2 = "{}_{}".format(unmapped_name, "FSComputed")
+    #   key2 = "{}_{}".format(unmapped_name, "FSComputed")
+      key2 = "{}_{}".format(unmapped_name, "CaesarsComputed")
       if key1 in name_stat_to_val:
           proj = name_stat_to_val[key1]
 
@@ -281,12 +325,14 @@ computed_stats = [
 
 def get_player_pool(slate_players, scraped_lines, site, team_filter=None):
     computed_stats_to_pass = []
-    if site == 'fd':
-        computed_stats_to_pass = computed_stats
-    else:
-        computed_stats_to_pass = [computed_stats[1]]
+    # if site == 'fd':
+    #     computed_stats_to_pass = computed_stats
+    # else:
+    #     computed_stats_to_pass = [computed_stats[1]]
 
     name_stat_to_val, seen_names, seen_stats = get_player_projection_data(scraped_lines, team_filter, computed_stats=computed_stats_to_pass)
+
+
 
     player_pool = _get_player_pool(name_stat_to_val, seen_names, slate_players, site)
 
@@ -318,9 +364,9 @@ def print_slate_new(slate_players, player_pool, site, teams):
 
             salary = player['salary']
             
-            cuttoff_salary = 4000
-            if site == 'fd':
-                cuttoff_salary = 4500
+            cuttoff_salary = 2000
+            # if site == 'fd':
+            #     cuttoff_salary = 4500
 
             # if 'DST' in position:
             #     import pdb; pdb.set_trace()
@@ -474,5 +520,56 @@ def optimize_dk_nfl(player_pool):
     optimizer = NFL_Optimizer(50000)
     # optimizer.optimize(by_position, None, 100000)
     results = optimizer.optimize_top_n(by_position, 20, 130000)
+    print(results)
+    return results
+
+
+def reoptimize_fd_nba(player_pool, iterCount, rosters):
+    by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': []}
+
+    for player in player_pool:
+        name = player[0]
+        cost = player[1]
+        proj = player[2]
+        position = player[3]
+        team = player[4]
+        pos_parts = position.split('/')
+        for pos in pos_parts:
+            player = utils.Player(name, player, cost, team, proj)
+            by_position[pos].append(player)
+
+    print(by_position)
+
+    optimizer = FD_NBA_Optimizer()
+    results = []
+
+    for locks in rosters:
+        roster = optimizer.optimize(by_position, locks, iterCount * 10000)
+
+        results += [roster]
+    
+    print(results)
+    return results
+
+
+def optimize_fd_nba(player_pool, ct, iterCount):
+    by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': []}
+
+    for player in player_pool:
+        name = player[0]
+        cost = player[1]
+        proj = player[2]
+        position = player[3]
+        team = player[4]
+        pos_parts = position.split('/')
+        for pos in pos_parts:
+            player = utils.Player(name, player, cost, team, proj)
+            by_position[pos].append(player)
+
+    print(by_position)
+
+    optimizer = FD_NBA_Optimizer()
+    # optimizer.optimize(by_position, None, 100000)
+    results = optimizer.optimize_top_n(by_position, ct, iterCount * 10000)
     print(results)
     return results

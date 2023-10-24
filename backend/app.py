@@ -400,6 +400,40 @@ def optimize():
                 'value': result.value,
                 'cost': result.cost
             })
+    elif sport == "NBA" and site == 'fd' and game_type == '':
+        print("FD NBA", slate_id)
+        db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
+        scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
+        print(len(scraped_lines))
+        scraped_lines += _get_scraped_lines('Caesars_' + sport)
+        print(len(scraped_lines))
+
+        query = Query()
+        slate_players = db.search((query['slateId'] == slate_id))
+
+        player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
+
+        db = TinyDB(DB_ROOT + "slates")
+        query = Query()
+        upcoming_slates = db.search(query['sport'] == sport)
+        # # TODO: we should be filtering on slate id here
+        # print(upcoming_slates[-1])
+
+        # optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'fd')
+        optimizer.print_slate_new(slate_players, player_pool, 'fd', ['DEN', 'LAL', 'GS', 'PHO'])
+        name_to_id = utils.name_to_player_id(slate_players)
+
+        results = optimizer.optimize_fd_nba(player_pool, roster_count, iter_count)
+
+        roster_data = []
+        for result in results:
+            to_print = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
+            print(",".join(to_print) + "," + str(result.value))
+            roster_data.append({
+                'players': to_print,
+                'value': result.value,
+                'cost': result.cost
+            })
 
 
     utils.print_player_exposures(results)
@@ -443,8 +477,8 @@ def run_scraper():
                 # db.remove(document['line_id'] == result['line_id'])
                 remove_result = db.remove(doc_ids=[most_recent.doc_id])
                 # print("removed {}, {} - {}".format(name, most_recent['line_id'], remove_result))
-        if len(existing_results) == 0:
-            print("New line: {}".format(result))
+        # if len(existing_results) == 0:
+        #     print("New line: {}".format(result))
 
         # diff the most recent result with the current value
         # log this diff

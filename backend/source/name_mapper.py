@@ -48,5 +48,7 @@ name_mapper_pp_to_fd_dk = {
   'Allen Robinson': 'Allen Robinson II',
   'Kenny Gainwell': 'Kenneth Gainwell',
   
-  
+
+  #NBA
+  'Michael Porter Jr.': 'Michael Porter',
 }
