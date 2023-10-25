@@ -88,11 +88,11 @@ watch(() => rosters.value, (newVal, oldVal) => {
       <button class="button" @click="() => optimize(sport, 'fd', '')">Optimize FD</button>
       <button class="button" @click="() => optimize(sport, 'dk', '')">Optimize DK</button>
     </div>
-    <button class="button" @click="() => optimize('NFL', 'fd', 'single_game')">Optimize Single Game FD</button>
+    <button class="button" @click="() => optimize(sport, 'fd', 'single_game')">Optimize Single Game FD</button>
     <br>
     <textarea name="rosters" class="roster-results" rows="3" placeholder="rosters" v-model="rosters"></textarea>
     <br>
-    <button class="button" @click="() => reoptimize('NFL', 'fd', '')">Reoptimize</button>
+    <button class="button" @click="() => reoptimize(sport, 'fd', '')">Reoptimize</button>
   </main>
 </template>
 

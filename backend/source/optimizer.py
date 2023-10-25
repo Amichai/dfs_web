@@ -51,7 +51,7 @@ def _add_casesar_projections(name_stat_to_val, all_names):
     #                 seen_stats.append(computed_stat_name)
     #     pass
 
-def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site):
+def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude):
   player_pool = []
 
   _add_casesar_projections(name_stat_to_val, seen_names)
@@ -117,6 +117,8 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site):
       # print("{},{},{}".format(name, salary, proj))
       # fantasy_score = 
       # get the player cost
+      if name in to_exclude:
+          continue
 
       player_pool.append([name, salary, proj, position, team])
   return player_pool
@@ -335,7 +337,7 @@ def get_player_pool(slate_players, scraped_lines, site, team_filter=None):
 
 
 
-    player_pool = _get_player_pool(name_stat_to_val, seen_names, slate_players, site)
+    player_pool = _get_player_pool(name_stat_to_val, seen_names, slate_players, site, to_exclude=["Draymond Green", "Bradley Beal", "Julian Strawther"])
 
     return player_pool
 
@@ -589,5 +591,4 @@ def optimize_fd_nba(player_pool, ct, iterCount):
 
     # optimizer.optimize(by_position, None, 100000)
     results = optimizer.optimize_top_n(by_position, ct, iterCount * 10000, locked_players=None, lineup_validator=lineup_validator)
-    print(results)
     return results

@@ -199,23 +199,27 @@ def reoptimize():
 
     db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
     scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
+    scraped_lines += _get_scraped_lines('Caesars_' + sport)
 
     query = Query()
     slate_players = db.search((query['slateId'] == slate_id))
 
     player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
-    # print(player_pool)
+    print(player_pool)
 
     db = TinyDB(DB_ROOT + "slates")
     query = Query()
     upcoming_slates = db.search(query['sport'] == sport)
     current_slate = upcoming_slates[-1]
 
+    print(slate_id)
+    print(current_slate)
+
     start_times = utils.parse_start_times_from_slate(current_slate['slate'])
     print(start_times)
 
     locked_teams = []
-    current_time = 2
+    current_time = 8.5
 
     for key, value in start_times.items():
         if key < current_time:
@@ -236,6 +240,7 @@ def reoptimize():
         locked_roster_players = []
         for player in players:
             name = player.split(':')[1]
+            print(name)
             matched_player = [a for a in player_pool if a[0] == name][0]
             team = matched_player[4]
             if team in locked_teams:
@@ -265,7 +270,11 @@ def reoptimize():
     
     player_pool_new = [a for a in player_pool if a[4] not in locked_teams]
     
-    results = optimizer.reoptimize_fd_nfl(player_pool_new, iter_count, locked_rosters)
+    if sport == 'NFL':
+        results = optimizer.reoptimize_fd_nfl(player_pool_new, iter_count, locked_rosters)
+    elif sport == 'NBA':
+        results = optimizer.reoptimize_fd_nba(player_pool_new, int(iter_count / 10.0), locked_rosters)
+
     print(results)
 
     return jsonify([])
