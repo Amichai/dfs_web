@@ -336,8 +336,8 @@ def get_player_pool(slate_players, scraped_lines, site, team_filter=None):
     name_stat_to_val, seen_names, seen_stats = get_player_projection_data(scraped_lines, team_filter, computed_stats=computed_stats_to_pass)
 
 
-
-    player_pool = _get_player_pool(name_stat_to_val, seen_names, slate_players, site, to_exclude=["Draymond Green", "Bradley Beal", "Julian Strawther"])
+    ## TODO: this is the current exclude list
+    player_pool = _get_player_pool(name_stat_to_val, seen_names, slate_players, site, to_exclude=[])
 
     return player_pool
 
@@ -530,8 +530,38 @@ def optimize_dk_nfl(player_pool):
     return results
 
 
+def get_locked_players_key(players):
+  to_return = ""
+  for player in players:
+    if player != '':
+      to_return += player.name
+
+    to_return += "|"
+
+  return to_return
+
+def get_roster_keys_from_rosters(rosters):
+  #  [b.name for b in [a.players for a in candidate_rosters][0]]
+  roster_keys = []
+  for roster in rosters:
+    players = roster.players
+    names = [a.name for a in players]
+    roster_keys.append(",".join(sorted(names)))
+
+  return roster_keys
+
 def reoptimize_fd_nba(player_pool, iterCount, rosters):
     by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': []}
+
+    def lineup_validator(roster):
+        team_ct = {}
+        for player in roster.players:
+            pl_team = player.team
+            if not pl_team in team_ct:
+                team_ct[pl_team] = 1
+            else:
+                team_ct[pl_team] += 1
+        return max(team_ct.values()) <= 4
 
     for player in player_pool:
         name = player[0]
@@ -547,14 +577,63 @@ def reoptimize_fd_nba(player_pool, iterCount, rosters):
     print(by_position)
 
     optimizer = FD_NBA_Optimizer()
-    results = []
+    all_results = []
 
-    for locks in rosters:
-        roster = optimizer.optimize(by_position, locks, iterCount * 10000)
+    seen_roster_strings = []
+    seen_roster_string_to_optimized_roster = {}
+    roster_idx = 0
+    locked_players_to_top_n_optimized = {}
+    seen_roster_keys = []
+    is_se_roster_or_h2h = False
 
-        results += [roster]
+    for players in rosters:
+        lock_ct = sum([1 for a in players if a is not ''])
+        if lock_ct != 9:
+            locked_players_key = get_locked_players_key(players)
+
+            if not locked_players_key in locked_players_to_top_n_optimized:
+                candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(12950), players, lineup_validator=lineup_validator)
+                # TODO: 6050
+                # candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(11050), players5, is_roster_valid)
+
+                candidate_rosters_keys = get_roster_keys_from_rosters(candidate_rosters)
+                # TODO: consider filtering out currently in-play rosters from these candidates to avoid collisions?
+
+                locked_players_to_top_n_optimized[locked_players_key] = candidate_rosters
+            else:
+                candidate_rosters = locked_players_to_top_n_optimized[locked_players_key]   
+                    # result = optimizer.optimize(by_position, players, int(2500), lineup_validator=lineup_validator)
+                    # result = optimizer.optimize(by_position, players, int(5000), lineup_validator=lineup_validator)
+
+            top_roster = candidate_rosters[0]
+            top_val = top_roster.value
+            candidate_rosters_filtered = [a for a in candidate_rosters if a.value >= top_val - 10]
+            if not is_se_roster_or_h2h:
+                counter = 0
+                for roster in candidate_rosters_filtered:
+                    names1 = [p.name for p in roster.players]
+                    candidate_roster_key = ",".join(sorted(names1))
+                    if not candidate_roster_key in seen_roster_keys:
+                        result = roster
+                        print("TAKING CANDIDATE ROSTER: {}".format(counter))
+                        break
+
+                    counter += 1
+                
+                names1 = [p.name for p in result.players]
+                optimized_roster_key = ",".join(sorted(names1))
+                seen_roster_keys.append(optimized_roster_key)
+            else:
+                result = None
+
+        else:
+            result = None
+        all_results.append(result)
+        print("{}/{}".format(len(all_results), len(rosters)))
     
-    return results
+
+    import pdb; pdb.set_trace()
+    return all_results
 
 
 def optimize_fd_nba(player_pool, ct, iterCount):

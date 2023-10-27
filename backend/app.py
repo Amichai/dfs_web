@@ -8,6 +8,7 @@ import time
 import optimizer
 import random
 import utils
+import datetime
 
 
 app = Flask(__name__)
@@ -219,12 +220,15 @@ def reoptimize():
     print(start_times)
 
     locked_teams = []
-    current_time = 8.5
+    # current_time = 8.5
+    now = datetime.datetime.now()
+    current_time = (now.hour - 12) + (now.minute / 60)
+    current_time = round(current_time, 2)
+    print("CURRENT TIME: {}".format(current_time))
 
     for key, value in start_times.items():
         if key < current_time:
             locked_teams += value
-
 
     print(locked_teams)
 
@@ -255,18 +259,7 @@ def reoptimize():
             else:
                 locked_roster_players.append('')
             
-            locked_rosters.append(locked_roster_players)
-        
-
-        # lookup team
-        # lookup team start times
-
-
-
-
-
-        # for each player determined if we're locked or not
-        # if locked, add it to the locked players array
+        locked_rosters.append(locked_roster_players)
     
     player_pool_new = [a for a in player_pool if a[4] not in locked_teams]
     
@@ -275,7 +268,26 @@ def reoptimize():
     elif sport == 'NBA':
         results = optimizer.reoptimize_fd_nba(player_pool_new, int(iter_count / 10.0), locked_rosters)
 
+
+    name_to_id = utils.name_to_player_id(slate_players)
     print(results)
+    roster_data = []
+    idx = 0
+    for result in results:
+        if result == None:
+            # roster is unchanged.
+            import pdb; pdb.set_trace()
+        to_print = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
+        print(",".join(to_print) + "," + str(result.value))
+        roster_data.append({
+            'players': to_print,
+            'value': result.value,
+            'cost': result.cost
+        })
+
+        idx += 1
+
+    utils.print_player_exposures(results)
 
     return jsonify([])
     
@@ -419,7 +431,15 @@ def optimize():
 
         query = Query()
         slate_players = db.search((query['slateId'] == slate_id))
+        slate_players = [a for a in slate_players if a['injury'] != 'O']
 
+        team_list = []
+        for player in slate_players:
+            team = player['team']
+            if not team in team_list:
+                team_list.append(team)
+
+        
         player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
 
         db = TinyDB(DB_ROOT + "slates")
@@ -429,7 +449,7 @@ def optimize():
         # print(upcoming_slates[-1])
 
         # optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'fd')
-        optimizer.print_slate_new(slate_players, player_pool, 'fd', ['DEN', 'LAL', 'GS', 'PHO'])
+        optimizer.print_slate_new(slate_players, player_pool, 'fd', team_list)
         name_to_id = utils.name_to_player_id(slate_players)
 
         results = optimizer.optimize_fd_nba(player_pool, roster_count, iter_count)
