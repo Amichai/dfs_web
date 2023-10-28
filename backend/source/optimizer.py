@@ -1,16 +1,15 @@
 from name_mapper import name_mapper_pp_to_fd_dk, name_mapper
-from tinydb import Query
 import utils
 from optimizer_library import DK_NBA_Optimizer, NFL_Optimizer, FD_NBA_Optimizer
 import itertools
 from tabulate import tabulate
+import data_utils
 
 def normalize_name(name):
     if name in name_mapper:
         name = name_mapper[name]
 
     return name
-
 
 def _add_casesar_projections(name_stat_to_val, all_names):
     get_key = lambda a, b: "{}_{}".format(a, b)
@@ -56,8 +55,6 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude
 
   _add_casesar_projections(name_stat_to_val, seen_names)
 
-
-
   for name in seen_names:
       unmapped_name = name
       if name in name_mapper_pp_to_fd_dk:
@@ -72,7 +69,7 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude
         
       if len(matched_names) == 0:
           if not '+' in name:
-            print("Missing projection for: ", name)
+            print("Can't find target to apply projection for (excluded or injured?): ", name)
           continue
       
       if len(matched_names) > 1:
@@ -345,7 +342,7 @@ def get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjust
 
     return player_pool
 
-def print_slate_new(slate_players, player_pool, site, teams):
+def print_slate(slate_players, player_pool, site, teams):
     for team in teams:
         print("-----------------")
         print(team)
@@ -382,75 +379,6 @@ def print_slate_new(slate_players, player_pool, site, teams):
                 rows.append([name, salary, position, projected])
 
         print(tabulate(rows, headers=['Name', 'Salary', 'Position', 'Projected']))
-
-
-def print_slate(slate_players, player_pool, slate_games, site):
-    team_to_start_time = {}
-    lines = slate_games.split('\n')
-    teams_in_order = []
-    print(lines)
-    for i in range(len(lines)):
-        if lines[i] == '':
-            continue
-        if lines[i][0] == '@':
-            team1 = lines[i - 1]
-            team2 = lines[i].strip('@')
-            timeString1 = lines[i + 1]
-            timeString2 = ''
-            if len(lines) > i + 2:
-                timeString2 = lines[i + 2]
-
-            team_to_start_time[team1] = "{} {}".format(timeString1, timeString2)
-            team_to_start_time[team2] = "{} {}".format(timeString1, timeString2)
-            teams_in_order.append(team1)
-            teams_in_order.append(team2)
-
-
-    for team in teams_in_order:
-        print("-----------------")
-        print(team, team_to_start_time[team])
-        print("-----------------")
-        if site == 'dk' and team == 'JAC':
-            team = 'JAX'
-        slate_players1 = [a for a in slate_players if a['team'] == team]
-        players_sorted = sorted(slate_players1, key=lambda a: a['salary'], reverse=True)
-        for player in players_sorted:
-            name = player['name']
-            position = player['position']
-
-            if position == 'DST' and site == 'dk':
-                name = name + position
-
-            matched = [a for a in player_pool if a[0] == name]
-            projected = ''
-            if len(matched) == 1:
-                projected = matched[0][2]
-            elif len(matched) > 1:
-                print("error name matched multiple times")
-                assert False
-
-            salary = player['salary']
-            
-            cuttoff_salary = 4000
-            if site == 'fd':
-                cuttoff_salary = 4500
-
-            # if 'DST' in position:
-            #     import pdb; pdb.set_trace()
-            if float(salary) >= cuttoff_salary or 'DST' in position:
-                print(name, salary, position, projected)
-
-        # team_players = [a for a in player_pool if a[4] == team]
-        # for player in team_players:
-        #     print(player)
-        # print()
-    # PARSE THE GAME TIMES
-    # SORT BY GAME TIME
-    # FOR EACH TEAM, SORT PLAYERS BY COST
-    # print("PRINT SLATE")
-    # for player in slate_players:
-    #     print(player)
-
 
 def reoptimize_fd_nfl(player_pool, iterCount, rosters):
     by_position = {'QB': [], 'RB': [], 'WR': [], 'TE': [], 'FLEX': [], 'D': []}
@@ -673,3 +601,25 @@ def optimize_fd_nba(player_pool, ct, iterCount):
     # optimizer.optimize(by_position, None, 100000)
     results = optimizer.optimize_top_n(by_position, ct, iterCount * 10000, locked_players=None, lineup_validator=lineup_validator)
     return results
+
+
+
+def optimize(sport, site, slate_id, projection_sources, roster_count, iter_count):
+    assert site == 'fd'
+    print("FD NBA", slate_id)
+
+    scraped_lines = data_utils.get_scraped_lines_multiple(projection_sources)
+
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams("FDSlatePlayers_", sport, slate_id)
+    
+    ## TODO - refactor this into a component?
+    player_pool = get_player_pool(slate_players, scraped_lines, 'fd', team_filter=None, adjustments={
+    })
+
+    print_slate(slate_players, player_pool, 'fd', team_list)
+
+    results = optimize_fd_nba(player_pool, roster_count, iter_count)
+
+    return results, name_to_id
+
+

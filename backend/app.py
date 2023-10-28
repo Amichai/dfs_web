@@ -7,9 +7,12 @@ import source.scraper as scraper
 import time
 import optimizer
 import random
-import utils
 import datetime
 
+import sys
+sys.path.append('/Users/amichailevy/Documents/spikes/dfs_web/backend/source/')
+import data_utils
+import utils
 
 app = Flask(__name__)
 CORS(app)
@@ -122,23 +125,6 @@ def _get_scraped_lines_with_history(scraper):
 
     return results_with_history
 
-def _get_scraped_lines(scraper):
-    query = Query()
-    db = TinyDB(DB_ROOT + SCRAPE_OPERATIONS_TABLE)
-    results = db.search(query['scraper'] == scraper)
-
-    results_sorted = sorted(results, key=lambda a: a['scrape_time'])
-    if len(results_sorted) == 0:
-        return jsonify([])
-    most_recent_scrape = results_sorted[-1]
-
-    query2 = Query()
-    db2 = TinyDB(DB_ROOT + scraper)
-
-    all_results = db2.search(query2['time'] == most_recent_scrape['scrape_time'])
-
-    return all_results
-
 
 @app.route('/getscrapedlineswithhistory')
 def get_scraped_lines_with_history():
@@ -152,7 +138,7 @@ def get_scraped_lines_with_history():
 def get_scraped_lines():
     scraper = request.args.get('scraper', '')
 
-    all_results = _get_scraped_lines(scraper)
+    all_results = data_utils.get_scraped_lines(scraper)
     _get_scraped_lines_with_history(scraper)
     return jsonify(all_results)
 
@@ -199,8 +185,8 @@ def reoptimize():
 
 
     db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
-    scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
-    scraped_lines += _get_scraped_lines('Caesars_' + sport)
+
+    scraped_lines = data_utils.get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])
 
     query = Query()
     slate_players = db.search((query['slateId'] == slate_id))
@@ -320,24 +306,22 @@ def optimize():
     query = Query()
     if sport == 'FIBA' and site == 'DK':
         db = TinyDB(DB_ROOT + "DKSlatePlayers_FIBA")
-        scraped_lines = _get_scraped_lines('PrizePicks_FIBA')
+        scraped_lines = data_utils.get_scraped_lines('PrizePicks_FIBA')
         slate_players = db.search((query['slateId'] == slate_id))
 
         results = optimizer.optimize_FIBA_dk(slate_players, scraped_lines)
     elif sport == "NFL" and site == 'fd' and game_type == 'single_game':
 
         db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
-        scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
+        scraped_lines = data_utils.get_scraped_lines('PrizePicks_' + sport)
 
         query = Query()
         slate_players = db.search((query['slateId'] == slate_id))
 
         player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
         
-
         name_to_id = utils.name_to_player_id(slate_players)
         name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
-
 
         # db = TinyDB(DB_ROOT + "slates")
         # query = Query()
@@ -350,7 +334,7 @@ def optimize():
             if not team in teams:
                 teams.append(team)
 
-        optimizer.print_slate_new(slate_players, player_pool, 'fd', teams)
+        optimizer.print_slate(slate_players, player_pool, 'fd', teams)
 
         #find a way to validate my player pool!
 
@@ -361,7 +345,6 @@ def optimize():
         for result in results:
             to_print = ["{}:{}".format(name_to_id[a[0]], a[0]) for a in result[0]]
             print(",".join(to_print) + "," + str(result[1]) + "," + str(60000 - result[2]))
-
     elif sport == "NFL" and site == 'dk' and game_type == 'single_game':
         pass
             # print(result)
@@ -373,7 +356,7 @@ def optimize():
     elif sport == "NFL" and site == 'dk' and game_type == '':
         print("DK NFL", slate_id)
         db = TinyDB(DB_ROOT + "DKSlatePlayers_" + sport)
-        scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
+        scraped_lines = data_utils.get_scraped_lines('PrizePicks_' + sport)
         query = Query()
         slate_players = db.search((query['slateId'] == slate_id))
 
@@ -385,7 +368,7 @@ def optimize():
         # TODO: we should be filtering on slate id here
         print(upcoming_slates[-1])
 
-        optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'dk')
+        # optimizer.print_slate_old(slate_players, player_pool, upcoming_slates[-1]['slate'], 'dk')
 
         name_to_id = utils.name_to_player_id(slate_players)
         name_to_id = utils.map_pp_defense_to_dk_defense_name(name_to_id)
@@ -400,7 +383,7 @@ def optimize():
     elif sport == "NFL" and site == 'fd' and game_type == '':
         print("FD NFL", slate_id)
         db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
-        scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
+        scraped_lines = data_utils.get_scraped_lines('PrizePicks_' + sport)
 
         query = Query()
         slate_players = db.search((query['slateId'] == slate_id))
@@ -413,8 +396,8 @@ def optimize():
         # # TODO: we should be filtering on slate id here
         # print(upcoming_slates[-1])
 
-        optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'fd')
-        # optimizer.print_slate_new(slate_players, player_pool, 'fd', [])
+        # optimizer.print_slate_old(slate_players, player_pool, upcoming_slates[-1]['slate'], 'fd')
+        # optimizer.print_slate(slate_players, player_pool, 'fd', [])
         name_to_id = utils.name_to_player_id(slate_players)
         name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
 
@@ -430,40 +413,9 @@ def optimize():
                 'cost': result.cost
             })
     elif sport == "NBA" and site == 'fd' and game_type == '':
-        print("FD NBA", slate_id)
-        db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
-        scraped_lines = _get_scraped_lines('PrizePicks_' + sport)
-        print(len(scraped_lines))
-        scraped_lines += _get_scraped_lines('Caesars_' + sport)
-        print(len(scraped_lines))
-
-        query = Query()
-        slate_players = db.search((query['slateId'] == slate_id))
-        slate_players = [a for a in slate_players if a['injury'] != 'O']
-
-        team_list = []
-        for player in slate_players:
-            team = player['team']
-            if not team in team_list:
-                team_list.append(team)
-
-        
-
-
-        player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd', team_filter=None, adjustments={
-        })
-
-        db = TinyDB(DB_ROOT + "slates")
-        query = Query()
-        upcoming_slates = db.search(query['sport'] == sport)
-        # # TODO: we should be filtering on slate id here
-        # print(upcoming_slates[-1])
-
-        # optimizer.print_slate(slate_players, player_pool, upcoming_slates[-1]['slate'], 'fd')
-        optimizer.print_slate_new(slate_players, player_pool, 'fd', team_list)
-        name_to_id = utils.name_to_player_id(slate_players)
-
-        results = optimizer.optimize_fd_nba(player_pool, roster_count, iter_count)
+        results, name_to_id = optimizer.optimize(sport, site, slate_id, 
+            ['PrizePicks_' + sport, 'Caesars_' + sport],
+            roster_count, iter_count)
 
         roster_data = []
         for result in results:
