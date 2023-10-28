@@ -12,35 +12,11 @@ def normalize_name(name):
 
     return name
 
-def _add_casesar_projections(name_stat_to_val, all_names):
-    get_key = lambda a, b: "{}_{}".format(a, b)
-    key_generators = [
-        lambda a: get_key(a, 'Points'),
-        lambda a: get_key(a, 'Assists'),
-        lambda a: get_key(a, 'Rebounds'),
-        lambda a: get_key(a, 'Blocks'),
-        lambda a: get_key(a, 'Steals'),
-        lambda a: get_key(a, 'Turnovers'),
-    ]
-
-    for name in all_names:
-        stat_vals = []
-        for key_generator in key_generators:
-            key = key_generator(name)
-            if key in name_stat_to_val:
-                stat_vals.append(name_stat_to_val[key])
-            else:
-                stat_vals.append(0)
-
-        if sum(stat_vals) > 0:
-            val = stat_vals[0] + stat_vals[1] * 1.5 + stat_vals[2] * 1.2 + stat_vals[3] * 3 + stat_vals[4] * 3 - (stat_vals[5] / 3)
-            name_stat_to_val["{}_{}".format(name, 'CaesarsComputed')] = round(val, 3)
-
 
 def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude):
   player_pool = []
 
-  _add_casesar_projections(name_stat_to_val, seen_names)
+  data_utils.add_casesar_projections(name_stat_to_val, seen_names)
 
   for name in seen_names:
       unmapped_name = name

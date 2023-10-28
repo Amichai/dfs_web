@@ -91,11 +91,11 @@ class CaesarsScraper:
 
   def run(self, scrape_time):
     whitelisted_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', 'Turnovers',  
-                         "Points + Assists + Rebounds", 
-                         "Points + Assists",
-                         "Points + Rebounds",
-                         "Rebounds + Assists",
-                         "Blocks + Steals"
+                        #  "Points + Assists + Rebounds", 
+                        #  "Points + Assists",
+                        #  "Points + Rebounds",
+                        #  "Rebounds + Assists",
+                        #  "Blocks + Steals"
                          ]
 
     filtered_stats = []

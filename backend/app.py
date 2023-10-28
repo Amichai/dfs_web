@@ -221,9 +221,9 @@ def optimize():
     roster_count = int(data['rosterCount'])
     iter_count = int(data['iterCount'])
 
-    excludePlayers = data.get('excludePlayers', '')
-    print(excludePlayers)
-    
+    excluded_players = data.get('excludePlayers', '')
+    print(excluded_players)
+    excluded_names = excluded_players.split(',')
     # read player prices/positions
     # get player projections
     # run optimizer
@@ -333,7 +333,7 @@ def optimize():
                 'cost': result.cost
             })
     elif sport == "NBA" and site == 'fd' and game_type == '':
-        results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count)
+        results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excluded_names)
 
         roster_data = []
         for result in results:
@@ -345,7 +345,7 @@ def optimize():
                 'cost': result.cost
             })
     elif sport == "NBA" and site == 'dk' and game_type == '':
-        results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excludePlayers.split(','))
+        results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excluded_names)
 
         roster_data = []
         for result in results:
@@ -366,6 +366,9 @@ def optimize():
 def run_scraper():
     sport = request.args.get('sport', '')
     scraper_name = request.args.get('scraper', '')
+
+    initial_projections = data_utils.get_current_projections(sport)
+
     print(sport, scraper_name)
     scrape_time = int(time.time())
     write_to_db(SCRAPE_OPERATIONS_TABLE, {
@@ -408,7 +411,11 @@ def run_scraper():
             else:
                 document = Query()
                 # db.remove(document['line_id'] == result['line_id'])
-                remove_result = db.remove(doc_ids=[most_recent.doc_id])
+                try:
+                    remove_result = db.remove(doc_ids=[most_recent.
+                    doc_id])
+                except:
+                    print("Error removing: {}. This could be a because of a duplicate PP card".format(most_recent))
                 # print("removed {}, {} - {}".format(name, most_recent['line_id'], remove_result))
         # if len(existing_results) == 0:
         #     print("New line: {}".format(result))
@@ -423,6 +430,19 @@ def run_scraper():
         
         seen_ids.append(line_id)
         write_to_db(table_name, result)
+    
+    new_projections = data_utils.get_current_projections(sport)
+
+    for key in set(initial_projections.keys()).union(new_projections.keys()):
+        initial_p = initial_projections.get(key)
+        new_p = new_projections.get(key)
+        if initial_p == None:
+            print("New projection: {}".format(new_p))
+        if new_p == None:
+            print("Lost projection: {}".format(initial_p))
+        if float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 2:
+            print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
+
 
     return jsonify('success')
 

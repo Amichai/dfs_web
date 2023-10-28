@@ -76,12 +76,7 @@ name_mapper_pp_to_fd = {
   'Jaren Jackson Jr.': 'Jaren Jackson',
   'Kenneth Lofton Jr.': 'Kenneth Lofton',
   'Vince Williams Jr.': 'Vince Williams',
-
-
-
-
-
-
+  'Kelly Oubre Jr.': 'Kelly Oubre',
 
 
 }
