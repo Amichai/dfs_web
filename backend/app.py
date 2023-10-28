@@ -204,7 +204,7 @@ def reoptimize():
 
     query = Query()
     slate_players = db.search((query['slateId'] == slate_id))
-
+    slate_players = [a for a in slate_players if a['injury'] != 'O']
     player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
     print(player_pool)
 
@@ -244,8 +244,16 @@ def reoptimize():
         locked_roster_players = []
         for player in players:
             name = player.split(':')[1]
-            print(name)
-            matched_player = [a for a in player_pool if a[0] == name][0]
+            # TODO fix this bug
+            # if name == 'Jarrett Allen':
+            #     matched_players = [['Jarrett Allen', 7100.0, 0, 'CLE', 'OKC']]
+            matched_players = [a for a in player_pool if a[0] == name]
+            if len(matched_players) != 1:
+                print(matched_players)
+                print("Missing", name)
+                import pdb; pdb.set_trace()
+                assert False
+            matched_player = matched_players[0]
             team = matched_player[4]
             if team in locked_teams:
 
@@ -440,7 +448,10 @@ def optimize():
                 team_list.append(team)
 
         
-        player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
+
+
+        player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd', team_filter=None, adjustments={
+        })
 
         db = TinyDB(DB_ROOT + "slates")
         query = Query()
@@ -487,10 +498,21 @@ def run_scraper():
     query = Query()
     db = TinyDB(DB_ROOT + table_name)
 
+    all_records = db.all()
+    line_id_to_records = {}
+    for record in all_records:
+        line_id = record['line_id']
+        if not line_id in line_id_to_records:
+            line_id_to_records[line_id] = []
+        line_id_to_records[line_id].append(record)
+
     seen_ids = []
     # write this to our db
     for result in scrape_results:
-        existing_results = db.search((query['line_id'] == result['line_id']))
+        line_id = result['line_id']
+        existing_results = []
+        if line_id in line_id_to_records:
+            existing_results = line_id_to_records[line_id]
 
         if len(existing_results) > 0:        
             sorted_by_time = sorted(existing_results, key=lambda a: a['time'])

@@ -168,7 +168,6 @@ class CaesarsScraper:
           if stat not in whitelisted_stats:
              if not stat in filtered_stats:
                 filtered_stats.append(stat)
-                print('filtering: {}'.format(stat))
              continue
           
           under_faction = None

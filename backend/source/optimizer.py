@@ -110,7 +110,6 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude
           if key3 in name_stat_to_val:
             proj = name_stat_to_val[key3]
 
-
       if proj is None:
           continue
       
@@ -326,7 +325,7 @@ computed_stats = [
     },
 ]
 
-def get_player_pool(slate_players, scraped_lines, site, team_filter=None):
+def get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments={}):
     computed_stats_to_pass = []
     # if site == 'fd':
     #     computed_stats_to_pass = computed_stats
@@ -338,6 +337,11 @@ def get_player_pool(slate_players, scraped_lines, site, team_filter=None):
 
     ## TODO: this is the current exclude list
     player_pool = _get_player_pool(name_stat_to_val, seen_names, slate_players, site, to_exclude=[])
+
+    for player in player_pool:
+        name = player[0]
+        if name in adjustments:
+            player[2] = adjustments[name] * player[2]
 
     return player_pool
 
@@ -631,8 +635,6 @@ def reoptimize_fd_nba(player_pool, iterCount, rosters):
         all_results.append(result)
         print("{}/{}".format(len(all_results), len(rosters)))
     
-
-    import pdb; pdb.set_trace()
     return all_results
 
 
