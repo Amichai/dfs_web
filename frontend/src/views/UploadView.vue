@@ -39,6 +39,7 @@ const slatesToParsers = {
   'FD MLB': new FDParser(),
   'DK NFL': new DKParser(),
   'DK FIBA': new DKParser(),
+  'DK NBA': new DKParser(),
 }
 
 const slateInput = ref('')
@@ -86,8 +87,9 @@ const fileUploaded = (evt) => {
     selectedSlate.value = 'FD ' + sport.value
   } else if(name.includes('DKSalaries') ) {
     // selectedSlate.value = 'DK'
-    date.value = ''
-    slateId.value = ''
+    // date.value = ''
+    // slateId.value = ''
+    sport.value = selectedSlate.value.split(' ')[1]
   } else {
     alert('file name not recognized')
     return

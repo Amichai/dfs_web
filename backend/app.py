@@ -246,11 +246,6 @@ def optimize():
         name_to_id = utils.name_to_player_id(slate_players)
         name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
 
-        # db = TinyDB(DB_ROOT + "slates")
-        # query = Query()
-        # upcoming_slates = db.search(query['sport'] == sport)
-        # print(upcoming_slates[-1])
-
         teams = []
         for player in player_pool:
             team = player[4]
@@ -341,6 +336,18 @@ def optimize():
         roster_data = []
         for result in results:
             to_print = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
+            print(",".join(to_print) + "," + str(result.value))
+            roster_data.append({
+                'players': to_print,
+                'value': result.value,
+                'cost': result.cost
+            })
+    elif sport == "NBA" and site == 'dk' and game_type == '':
+        results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count)
+
+        roster_data = []
+        for result in results:
+            to_print = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
             print(",".join(to_print) + "," + str(result.value))
             roster_data.append({
                 'players': to_print,

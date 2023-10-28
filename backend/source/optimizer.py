@@ -36,20 +36,6 @@ def _add_casesar_projections(name_stat_to_val, all_names):
             val = stat_vals[0] + stat_vals[1] * 1.5 + stat_vals[2] * 1.2 + stat_vals[3] * 3 + stat_vals[4] * 3 - (stat_vals[5] / 3)
             name_stat_to_val["{}_{}".format(name, 'CaesarsComputed')] = round(val, 3)
 
-    # for name, stats in name_to_stats.items():
-    #     for computed_stat in computed_stats:
-    #         computed_stat_name = computed_stat['name']
-    #         if all([a in stats for a in computed_stat['stats']]):
-    #             new_stat_name = "{}_{}".format(name, computed_stat_name)
-    #             new_val = 0
-    #             for i, stat in enumerate(computed_stat['stats']):
-    #                 new_val += name_stat_to_val["{}_{}".format(name, stat)] * computed_stat['weights'][i]
-
-    #             name_stat_to_val[new_stat_name] = new_val
-
-    #             if not computed_stat_name in seen_stats:
-    #                 seen_stats.append(computed_stat_name)
-    #     pass
 
 def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude):
   player_pool = []
@@ -605,21 +591,117 @@ def optimize_fd_nba(player_pool, ct, iterCount):
 
 
 
+def optimize_dk_nba(player_pool, ct, iterCount):
+    dk_positions_mapper = {"PG": ["PG", "G", "UTIL"], "SG": ["SG", "G", "UTIL"], "SF": ["SF", "F", "UTIL"], "PF": ["PF", "F", "UTIL"], "C": ["C", "UTIL"]}
+
+    by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': [], "G": [], "F": [], "UTIL": []}
+
+    for player in player_pool:
+        name = player[0]
+        cost = player[1]
+        proj = player[2]
+        position = player[3]
+        team = player[4]
+        pos_parts = position.split('/')
+        for pos in pos_parts:
+            eligible_positions = dk_positions_mapper[pos]
+            for eligible_position in eligible_positions:
+                player = utils.Player(name, player, cost, team, proj)
+                by_position[eligible_position].append(player)
+
+    print(by_position)
+
+    name_to_positions = {}
+    for pos, players in by_position.items():
+        for player in players:
+            name = player.name
+            if not name in name_to_positions:
+                name_to_positions[name] = []
+            name_to_positions[name].append(pos)
+
+    optimizer = DK_NBA_Optimizer()
+
+    results = optimizer.optimize_top_n(by_position, ct, locked_players=None, iter=iterCount * 10000)
+    return results, name_to_positions
+
+
+dk_positions = ["PG", "SG", "SF", "PF", "C", "G", "F", "UTIL"]
+
+def consider_swap(idx1, idx2, team_to_start_time, players, name_to_positions, locked_players):
+    if locked_players != None and (locked_players[idx1] != '' or locked_players[idx2] != ''):
+        return
+    # if one of these players is locked (zero projection) abort the swap
+    player1 = players[idx1]
+    player2 = players[idx2]
+    # player 1 is specific
+    # player 1 is general
+    # we want specific to be before the general
+    team1 = player1.team
+    team2 = player2.team
+
+    team1 = utils.normalize_team_name(team1)
+    team2 = utils.normalize_team_name(team2)
+
+    if team_to_start_time[team1] > team_to_start_time[team2]:
+        # make sure the swap is valid!
+        positions = name_to_positions[player2.name]
+        if any([p == dk_positions[idx1] for p in positions]):
+            # execute swap
+            players[idx2] = player1
+            players[idx1] = player2
+
+def optimize_dk_roster_for_late_swap(roster, start_times, name_to_positions, locked_players = None):
+    team_to_start_time = {}
+    for time, teams in start_times.items():
+        for team in teams:
+            team_to_start_time[team] = time
+
+    players = roster.players
+
+    consider_swap(0, 5, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(1, 5, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(2, 6, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(3, 6, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(0, 7, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(1, 7, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(2, 7, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(3, 7, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(4, 7, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(5, 7, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(6, 7, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(0, 5, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(1, 5, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(2, 6, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(3, 6, team_to_start_time, players, name_to_positions, locked_players)
+    consider_swap(0, 7, team_to_start_time, players, name_to_positions, locked_players)
+
 def optimize(sport, site, slate_id, roster_count, iter_count):
-    assert site == 'fd'
-    print("FD NBA", slate_id)
+    assert site == 'fd' or site == 'dk'
+    print("{} NBA {}".format(site, slate_id))
 
     scraped_lines = data_utils.get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])
 
-    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams("FDSlatePlayers_", sport, slate_id)
+    table_root = "FDSlatePlayers_"
+    if site == 'dk':
+        table_root = "DKSlatePlayers_"
+
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(table_root, sport, slate_id, exclude_injured=site == 'fd')
     
     ## TODO - refactor this into a component?
-    player_pool = get_player_pool(slate_players, scraped_lines, 'fd', team_filter=None, adjustments={
+    player_pool = get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments={
     })
 
-    print_slate(slate_players, player_pool, 'fd', team_list)
+    print_slate(slate_players, player_pool, site, team_list)
 
-    results = optimize_fd_nba(player_pool, roster_count, iter_count)
+    if site == 'fd':
+        results = optimize_fd_nba(player_pool, roster_count, iter_count)
+    elif site == 'dk':
+        results, name_to_positions = optimize_dk_nba(player_pool, roster_count, iter_count)
+        most_recent_slate = data_utils.get_most_recent_slate(sport)
+        start_times = utils.parse_start_times_from_slate(most_recent_slate['slate'])
+        for roster in results:
+            optimize_dk_roster_for_late_swap(roster,
+                                             start_times, name_to_positions)
 
     return results, name_to_id
 
@@ -638,7 +720,7 @@ def reoptimize(sport, site, slate_id, rosters):
 
     scraped_lines = data_utils.get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])
 
-    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams("FDSlatePlayers_", sport, slate_id)
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams("FDSlatePlayers_", sport, slate_id, site == 'fd')
 
 
     player_pool = get_player_pool(slate_players, scraped_lines, 'fd', team_filter=None, adjustments={

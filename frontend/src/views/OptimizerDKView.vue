@@ -32,31 +32,31 @@ const iterCount = ref(0)
 const rosterCount = ref(0)
 
 onMounted(() => {
-  sport.value = localStorage.getItem('sport', sport.value)
-  slateId.value = localStorage.getItem('slateId', slateId.value)
-  rosterCount.value = localStorage.getItem('rosterCount', slateId.value)
-  iterCount.value = localStorage.getItem('iterCount', slateId.value)
-  rosters.value = localStorage.getItem('rosters', slateId.value)
+  sport.value = localStorage.getItem('sport_dk', sport.value)
+  slateId.value = localStorage.getItem('slateId_dk', slateId.value)
+  rosterCount.value = localStorage.getItem('rosterCount_dk', slateId.value)
+  iterCount.value = localStorage.getItem('iterCount_dk', slateId.value)
+  rosters.value = localStorage.getItem('rosters_dk', slateId.value)
 })
 
 watch(() => sport.value, (newVal, oldVal) => {
-  localStorage.setItem('sport', newVal)
+  localStorage.setItem('sport_dk', newVal)
 })
 
 watch(() => slateId.value, (newVal, oldVal) => {
-  localStorage.setItem('slateId', newVal)
+  localStorage.setItem('slateId_dk', newVal)
 })
 
 watch(() => rosterCount.value, (newVal, oldVal) => {
-  localStorage.setItem('rosterCount', newVal)
+  localStorage.setItem('rosterCount_dk', newVal)
 })
 
 watch(() => iterCount.value, (newVal, oldVal) => {
-  localStorage.setItem('iterCount', newVal)
+  localStorage.setItem('iterCount_dk', newVal)
 })
 
 watch(() => rosters.value, (newVal, oldVal) => {
-  localStorage.setItem('rosters', newVal)
+  localStorage.setItem('rosters_dk', newVal)
 })
 
 /// show a table with every player's projcetions (source of the projection, last updated, etc.)
@@ -85,13 +85,12 @@ watch(() => rosters.value, (newVal, oldVal) => {
       <p>iter count:</p>
       <input type="text" placeholder="iter" v-model="iterCount">
       
-      <button class="button" @click="() => optimize(sport, 'fd', '')">Optimize FD</button>
+      <button class="button" @click="() => optimize(sport, 'dk', '')">Optimize DK</button>
     </div>
-    <button class="button" @click="() => optimize(sport, 'fd', 'single_game')">Optimize Single Game FD</button>
     <br>
     <textarea name="rosters" class="roster-results" rows="3" placeholder="rosters" v-model="rosters"></textarea>
     <br>
-    <button class="button" @click="() => reoptimize(sport, 'fd', '')">Reoptimize</button>
+    <button class="button" @click="() => reoptimize(sport, 'dk', '')">Reoptimize</button>
   </main>
 </template>
 

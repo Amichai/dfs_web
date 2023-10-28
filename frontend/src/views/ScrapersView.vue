@@ -43,6 +43,12 @@ const scrapeOptions = [{
 },
 ]
 
+const scrapeSport = async (sport, site) => {
+  await runScraper(sport, site)
+
+  await selectedScraperChanged()
+}
+
 const scrape = async () => {
   const matched = scrapeOptions.find((option) => option.displayName === selectedScraper.value)
   if(!matched) {
@@ -142,6 +148,8 @@ const toEpochSeconds = (dateString) => {
           placeholder="site" />
       <button class="btn btn-primary scrape-button" @click="scrape">Scrape</button>
     </div>
+    <button class="btn btn-primary scrape-button button-margin" @click="() => scrapeSport('NBA', 'Caesars')">Caesars NBA</button>
+    <button class="btn btn-primary scrape-button button-margin" @click="() => scrapeSport('NBA', 'PrizePicks')">PP NBA</button>
     <br>
     <hr>
     <br>
@@ -164,6 +172,10 @@ const toEpochSeconds = (dateString) => {
   font-size: var(--fs-0);
   padding: 0.3rem 1.1rem;
   color: white;
+}
+
+.button-margin {
+  margin: 0.6rem 1rem;
 }
 
 .scrapers-area {

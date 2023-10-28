@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import('../views/OptimizerView.vue')
     },
     {
+      path: '/optimizerdk',
+      name: 'optimizerdk',
+      component: () => import('../views/OptimizerDKView.vue')
+    },
+    {
       path: '/optimizernew',
       name: 'optimizernew',
       component: () => import('../views/OptimizerViewNew.vue')
