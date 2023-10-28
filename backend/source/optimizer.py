@@ -483,7 +483,7 @@ def get_roster_keys_from_rosters(rosters):
 
   return roster_keys
 
-def reoptimize_fd_nba(player_pool, rosters):
+def reoptimize_fd_nba(player_pool, locked_rosters, original_rosters):
     by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': []}
 
     def lineup_validator(roster):
@@ -519,7 +519,7 @@ def reoptimize_fd_nba(player_pool, rosters):
     seen_roster_keys = []
     is_se_roster_or_h2h = False
 
-    for players in rosters:
+    for players in locked_rosters:
         lock_ct = sum([1 for a in players if a is not ''])
         if lock_ct != 9:
             locked_players_key = get_locked_players_key(players)
@@ -562,7 +562,7 @@ def reoptimize_fd_nba(player_pool, rosters):
         else:
             result = None
         all_results.append(result)
-        print("{}/{}".format(len(all_results), len(rosters)))
+        print("{}/{}".format(len(all_results), len(locked_rosters)))
     
     return all_results
 
@@ -653,7 +653,7 @@ def reoptimize(sport, site, slate_id, rosters):
     current_time = (now.hour - 12) + (now.minute / 60)
     current_time = round(current_time, 2)
 
-    current_time = 10.6
+    # current_time = 8.6
     print("CURRENT TIME: {}".format(current_time))
 
     locked_teams = []
@@ -668,14 +668,10 @@ def reoptimize(sport, site, slate_id, rosters):
     lines = rosters.split('\n')
     for line in lines:
         players = line.split('	')
-        # print(players)
         locked_roster_players = []
         original_roster_players = []
         for player in players:
             name = player.split(':')[1]
-            # TODO fix this bug
-            # if name == 'Jarrett Allen':
-            #     matched_players = [['Jarrett Allen', 7100.0, 0, 'CLE', 'OKC']]
             matched_players = [a for a in player_pool if a[0] == name]
             if len(matched_players) == 0:
                 matched_player = _get_player_from_slate(slate_players, name)
@@ -704,7 +700,7 @@ def reoptimize(sport, site, slate_id, rosters):
     if sport == 'NFL':
         results = reoptimize_fd_nfl(player_pool_new, 8, locked_rosters)
     elif sport == 'NBA':
-        results = reoptimize_fd_nba(player_pool_new,locked_rosters)
+        results = reoptimize_fd_nba(player_pool_new, locked_rosters, original_rosters)
 
 
     name_to_id = utils.name_to_player_id(slate_players)
