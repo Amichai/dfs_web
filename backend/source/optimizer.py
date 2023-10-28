@@ -4,6 +4,7 @@ from optimizer_library import DK_NBA_Optimizer, NFL_Optimizer, FD_NBA_Optimizer
 import itertools
 from tabulate import tabulate
 import data_utils
+import datetime
 
 def normalize_name(name):
     if name in name_mapper:
@@ -482,7 +483,7 @@ def get_roster_keys_from_rosters(rosters):
 
   return roster_keys
 
-def reoptimize_fd_nba(player_pool, iterCount, rosters):
+def reoptimize_fd_nba(player_pool, rosters):
     by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': []}
 
     def lineup_validator(roster):
@@ -604,11 +605,11 @@ def optimize_fd_nba(player_pool, ct, iterCount):
 
 
 
-def optimize(sport, site, slate_id, projection_sources, roster_count, iter_count):
+def optimize(sport, site, slate_id, roster_count, iter_count):
     assert site == 'fd'
     print("FD NBA", slate_id)
 
-    scraped_lines = data_utils.get_scraped_lines_multiple(projection_sources)
+    scraped_lines = data_utils.get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])
 
     slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams("FDSlatePlayers_", sport, slate_id)
     
@@ -622,4 +623,90 @@ def optimize(sport, site, slate_id, projection_sources, roster_count, iter_count
 
     return results, name_to_id
 
+def _get_player_from_slate(slate_players, name):
+    for player in slate_players:
+        if player['name'] == name:
+            return [name, float(player['salary']), 0, player['position'], player['team']]
+    
+    print(name)
+    import pdb; pdb.set_trace()
 
+
+def reoptimize(sport, site, slate_id, rosters):
+    assert site == 'fd'
+    print("Reoptimize FD NBA", slate_id)
+
+    scraped_lines = data_utils.get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])
+
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams("FDSlatePlayers_", sport, slate_id)
+
+
+    player_pool = get_player_pool(slate_players, scraped_lines, 'fd', team_filter=None, adjustments={
+    })
+    
+    most_recent_slate = data_utils.get_most_recent_slate(sport)
+
+    start_times = utils.parse_start_times_from_slate(most_recent_slate['slate'])
+    print(start_times)
+
+    now = datetime.datetime.now()
+    current_time = (now.hour - 12) + (now.minute / 60)
+    current_time = round(current_time, 2)
+
+    current_time = 10.6
+    print("CURRENT TIME: {}".format(current_time))
+
+    locked_teams = []
+    for key, value in start_times.items():
+        if key < current_time:
+            locked_teams += value
+
+    print(locked_teams)
+
+    locked_rosters = []
+    original_rosters = []
+    lines = rosters.split('\n')
+    for line in lines:
+        players = line.split('	')
+        # print(players)
+        locked_roster_players = []
+        original_roster_players = []
+        for player in players:
+            name = player.split(':')[1]
+            # TODO fix this bug
+            # if name == 'Jarrett Allen':
+            #     matched_players = [['Jarrett Allen', 7100.0, 0, 'CLE', 'OKC']]
+            matched_players = [a for a in player_pool if a[0] == name]
+            if len(matched_players) == 0:
+                matched_player = _get_player_from_slate(slate_players, name)
+            elif len(matched_players) > 1:
+                print("Error", name)
+                import pdb; pdb.set_trace()
+                assert False
+            else:
+                matched_player = matched_players[0]
+            name = matched_player[0]
+            cost = matched_player[1]
+            proj = matched_player[2]
+            team = matched_player[4]
+            player_new = utils.Player(name, '', cost, team, proj)
+            original_roster_players.append(player_new.clone())
+            if team in locked_teams:
+                locked_roster_players.append(player_new)
+            else:
+                locked_roster_players.append('')
+            
+        locked_rosters.append(locked_roster_players)
+        original_rosters.append(utils.Roster(original_roster_players))
+    
+    player_pool_new = [a for a in player_pool if a[4] not in locked_teams]
+    
+    if sport == 'NFL':
+        results = reoptimize_fd_nfl(player_pool_new, 8, locked_rosters)
+    elif sport == 'NBA':
+        results = reoptimize_fd_nba(player_pool_new,locked_rosters)
+
+
+    name_to_id = utils.name_to_player_id(slate_players)
+
+    return results, original_rosters, name_to_id

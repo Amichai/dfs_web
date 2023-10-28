@@ -174,7 +174,6 @@ def getSlatePlayers():
 @app.route('/reoptimize', methods=['POST'])
 def reoptimize():
     data = request.json
-    print(data)
     sport = data['sport']
     site = data['site']
     game_type = data['type']
@@ -182,95 +181,19 @@ def reoptimize():
     roster_count = int(data['rosterCount'])
     iter_count = int(data['iterCount'])
     rosters = data['rosters']
+    results, original_rosters, name_to_id = optimizer.reoptimize(sport, site, slate_id, rosters)
 
+    for i in range(len(results)):
+        result = results[i]
+        if result == None:
+            # roster is fully locked.
+            import pdb; pdb.set_trace()
+            results[i] = original_rosters[i]
 
-    db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
-
-    scraped_lines = data_utils.get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])
-
-    query = Query()
-    slate_players = db.search((query['slateId'] == slate_id))
-    slate_players = [a for a in slate_players if a['injury'] != 'O']
-    player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
-    print(player_pool)
-
-    db = TinyDB(DB_ROOT + "slates")
-    query = Query()
-    upcoming_slates = db.search(query['sport'] == sport)
-    current_slate = upcoming_slates[-1]
-
-    print(slate_id)
-    print(current_slate)
-
-    start_times = utils.parse_start_times_from_slate(current_slate['slate'])
-    print(start_times)
-
-    locked_teams = []
-    # current_time = 8.5
-    now = datetime.datetime.now()
-    current_time = (now.hour - 12) + (now.minute / 60)
-    current_time = round(current_time, 2)
-    print("CURRENT TIME: {}".format(current_time))
-
-    for key, value in start_times.items():
-        if key < current_time:
-            locked_teams += value
-
-    print(locked_teams)
-
-    # print(rosters)
-    # print(current_slate)
-    # print(sport, site, game_type, slate_id, roster_count, iter_count)
-
-    locked_rosters = []
-    lines = rosters.split('\n')
-    for line in lines:
-        players = line.split('	')
-        # print(players)
-        locked_roster_players = []
-        for player in players:
-            name = player.split(':')[1]
-            # TODO fix this bug
-            # if name == 'Jarrett Allen':
-            #     matched_players = [['Jarrett Allen', 7100.0, 0, 'CLE', 'OKC']]
-            matched_players = [a for a in player_pool if a[0] == name]
-            if len(matched_players) != 1:
-                print(matched_players)
-                print("Missing", name)
-                import pdb; pdb.set_trace()
-                assert False
-            matched_player = matched_players[0]
-            team = matched_player[4]
-            if team in locked_teams:
-
-                name = matched_player[0]
-                cost = matched_player[1]
-                proj = matched_player[2]
-                team = matched_player[4]
-                player_new = utils.Player(name, '', cost, team, proj)
-                
-                locked_roster_players.append(player_new)
-            else:
-                locked_roster_players.append('')
-            
-        locked_rosters.append(locked_roster_players)
-    
-    player_pool_new = [a for a in player_pool if a[4] not in locked_teams]
-    
-    if sport == 'NFL':
-        results = optimizer.reoptimize_fd_nfl(player_pool_new, iter_count, locked_rosters)
-    elif sport == 'NBA':
-        results = optimizer.reoptimize_fd_nba(player_pool_new, int(iter_count / 10.0), locked_rosters)
-
-
-    name_to_id = utils.name_to_player_id(slate_players)
     print(results)
     roster_data = []
     idx = 0
     for result in results:
-        if result == None:
-            # roster is unchanged.
-            import pdb; pdb.set_trace()
         to_print = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
         print(",".join(to_print) + "," + str(result.value))
         roster_data.append({
@@ -413,9 +336,7 @@ def optimize():
                 'cost': result.cost
             })
     elif sport == "NBA" and site == 'fd' and game_type == '':
-        results, name_to_id = optimizer.optimize(sport, site, slate_id, 
-            ['PrizePicks_' + sport, 'Caesars_' + sport],
-            roster_count, iter_count)
+        results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count)
 
         roster_data = []
         for result in results:

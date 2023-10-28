@@ -47,3 +47,10 @@ def get_slate_players_and_teams(table_root, sport, slate_id, exclude_injured=Tru
     name_to_id = utils.name_to_player_id(slate_players)
 
     return slate_players, team_list, name_to_id
+
+def get_most_recent_slate(sport):
+    db = TinyDB(DB_ROOT + "slates")
+    query = Query()
+    upcoming_slates = db.search(query['sport'] == sport)
+    most_recent_slate = upcoming_slates[-1]
+    return most_recent_slate
