@@ -220,7 +220,9 @@ def optimize():
     slate_id = data['slateId']
     roster_count = int(data['rosterCount'])
     iter_count = int(data['iterCount'])
-    
+
+    excludePlayers = data.get('excludePlayers', '')
+    print(excludePlayers)
     
     # read player prices/positions
     # get player projections
@@ -343,7 +345,7 @@ def optimize():
                 'cost': result.cost
             })
     elif sport == "NBA" and site == 'dk' and game_type == '':
-        results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count)
+        results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excludePlayers.split(','))
 
         roster_data = []
         for result in results:

@@ -32,11 +32,11 @@ const iterCount = ref(0)
 const rosterCount = ref(0)
 
 onMounted(() => {
-  sport.value = localStorage.getItem('sport', sport.value)
-  slateId.value = localStorage.getItem('slateId', slateId.value)
-  rosterCount.value = localStorage.getItem('rosterCount', slateId.value)
-  iterCount.value = localStorage.getItem('iterCount', slateId.value)
-  rosters.value = localStorage.getItem('rosters', slateId.value)
+  sport.value = localStorage.getItem('sport')
+  slateId.value = localStorage.getItem('slateId')
+  rosterCount.value = localStorage.getItem('rosterCount')
+  iterCount.value = localStorage.getItem('iterCount')
+  rosters.value = localStorage.getItem('rosters')
 })
 
 watch(() => sport.value, (newVal, oldVal) => {

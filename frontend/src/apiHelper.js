@@ -47,7 +47,7 @@ export const getScrapedLines = async (scraper) => {
   return result.data
 }
 
-export const runOptimizer = async (sport, site, type, slateId, rosterCount, iterCount) => {
+export const runOptimizer = async (sport, site, type, slateId, rosterCount, iterCount, excludePlayers) => {
   const result = await axios.post(`${URL_BASE}/optimize`,
   {
     sport,
@@ -56,6 +56,7 @@ export const runOptimizer = async (sport, site, type, slateId, rosterCount, iter
     slateId,
     rosterCount,
     iterCount,
+    excludePlayers,
   })
   console.log(result.data)
   return result.data

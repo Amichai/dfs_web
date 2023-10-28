@@ -56,16 +56,8 @@ name_mapper_pp_to_fd_dk = {
   'Dereck Lively II': 'Dereck Lively',
   'Tim Hardaway Jr.': 'Tim Hardaway',
   'Derrick Jones Jr.': 'Derrick Jones',
-  'Craig Porter Jr.': 'Craig Porter',
-  'Jaime Jaquez Jr.': 'Jaime Jaquez',
   'Nick Smith Jr.': 'Nick Smith',
-  'Jaren Jackson Jr.': 'Jaren Jackson',
-  'Kenneth Lofton Jr.': 'Kenneth Lofton',
   'Gregory Jackson': 'GG Jackson',
-  'Vince Williams Jr.': 'Vince Williams',
-  'Gary Trent Jr.': 'Gary Trent',
-  'Otto Porter Jr.': 'Otto Porter',
-  'Marvin Bagley III': 'Marvin Bagley',
   'KJ Martin': 'Kenyon Martin',
   'Marcus Morris Sr.': 'Marcus Morris',
   'Dennis Smith Jr.': 'Dennis Smith',
@@ -73,6 +65,19 @@ name_mapper_pp_to_fd_dk = {
   'Lonnie Walker IV': 'Lonnie Walker',
   'Jabari Smith Jr.': 'Jabari Smith',
   'Wendell Carter Jr.': 'Wendell Carter',
+}
+
+name_mapper_pp_to_fd = {
+  'Gary Trent Jr.': 'Gary Trent',
+  'Otto Porter Jr.': 'Otto Porter',
+  'Craig Porter Jr.': 'Craig Porter',
+  'Marvin Bagley III': 'Marvin Bagley',
+  'Jaime Jaquez Jr.': 'Jaime Jaquez',
+  'Jaren Jackson Jr.': 'Jaren Jackson',
+  'Kenneth Lofton Jr.': 'Kenneth Lofton',
+  'Vince Williams Jr.': 'Vince Williams',
+
+
 
 
 

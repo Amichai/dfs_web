@@ -12,7 +12,7 @@ const props = defineProps({
 const emits = defineEmits([])
 
 const optimize = async (sport, site, type) => {
-  const result = await runOptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value)
+  const result = await runOptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value, excludedPlayers.value)
   // debugger
   // todo render this result
   console.log(result)
@@ -30,13 +30,15 @@ const slateId = ref('')
 const rosters = ref('')
 const iterCount = ref(0)
 const rosterCount = ref(0)
+const excludedPlayers = ref('')
 
 onMounted(() => {
   sport.value = localStorage.getItem('sport_dk', sport.value)
-  slateId.value = localStorage.getItem('slateId_dk', slateId.value)
-  rosterCount.value = localStorage.getItem('rosterCount_dk', slateId.value)
-  iterCount.value = localStorage.getItem('iterCount_dk', slateId.value)
-  rosters.value = localStorage.getItem('rosters_dk', slateId.value)
+  slateId.value = localStorage.getItem('slateId_dk')
+  rosterCount.value = localStorage.getItem('rosterCount_dk')
+  iterCount.value = localStorage.getItem('iterCount_dk')
+  rosters.value = localStorage.getItem('rosters_dk')
+  excludedPlayers.value = localStorage.getItem('excludedPlayers_dk')
 })
 
 watch(() => sport.value, (newVal, oldVal) => {
@@ -57,6 +59,10 @@ watch(() => iterCount.value, (newVal, oldVal) => {
 
 watch(() => rosters.value, (newVal, oldVal) => {
   localStorage.setItem('rosters_dk', newVal)
+})
+
+watch(() => excludedPlayers.value, (newVal, oldVal) => {
+  localStorage.setItem('excludedPlayers_dk', newVal)
 })
 
 /// show a table with every player's projcetions (source of the projection, last updated, etc.)
@@ -86,6 +92,8 @@ watch(() => rosters.value, (newVal, oldVal) => {
       <input type="text" placeholder="iter" v-model="iterCount">
       
       <button class="button" @click="() => optimize(sport, 'dk', '')">Optimize DK</button>
+
+      <textarea name="" id="" cols="30" rows="2" placeholder="exclude players" v-model="excludedPlayers"></textarea>
     </div>
     <br>
     <textarea name="rosters" class="roster-results" rows="3" placeholder="rosters" v-model="rosters"></textarea>

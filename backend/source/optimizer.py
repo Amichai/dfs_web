@@ -1,4 +1,4 @@
-from name_mapper import name_mapper_pp_to_fd_dk, name_mapper
+from name_mapper import name_mapper_pp_to_fd_dk, name_mapper_pp_to_fd, name_mapper
 import utils
 from optimizer_library import DK_NBA_Optimizer, NFL_Optimizer, FD_NBA_Optimizer
 import itertools
@@ -46,6 +46,9 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude
       unmapped_name = name
       if name in name_mapper_pp_to_fd_dk:
           name = name_mapper_pp_to_fd_dk[name]
+    
+      elif site == 'fd' and name in name_mapper_pp_to_fd:
+          name = name_mapper_pp_to_fd[name]
 
       if 'DST' in name:
           parsed_name = name.split(' ')[0]
@@ -591,13 +594,16 @@ def optimize_fd_nba(player_pool, ct, iterCount):
 
 
 
-def optimize_dk_nba(player_pool, ct, iterCount):
+def optimize_dk_nba(player_pool, ct, iterCount, excluded):
     dk_positions_mapper = {"PG": ["PG", "G", "UTIL"], "SG": ["SG", "G", "UTIL"], "SF": ["SF", "F", "UTIL"], "PF": ["PF", "F", "UTIL"], "C": ["C", "UTIL"]}
 
     by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': [], "G": [], "F": [], "UTIL": []}
 
     for player in player_pool:
         name = player[0]
+        if name in excluded:
+            continue
+
         cost = player[1]
         proj = player[2]
         position = player[3]
@@ -675,7 +681,7 @@ def optimize_dk_roster_for_late_swap(roster, start_times, name_to_positions, loc
     consider_swap(3, 6, team_to_start_time, players, name_to_positions, locked_players)
     consider_swap(0, 7, team_to_start_time, players, name_to_positions, locked_players)
 
-def optimize(sport, site, slate_id, roster_count, iter_count):
+def optimize(sport, site, slate_id, roster_count, iter_count, excluded):
     assert site == 'fd' or site == 'dk'
     print("{} NBA {}".format(site, slate_id))
 
@@ -696,7 +702,7 @@ def optimize(sport, site, slate_id, roster_count, iter_count):
     if site == 'fd':
         results = optimize_fd_nba(player_pool, roster_count, iter_count)
     elif site == 'dk':
-        results, name_to_positions = optimize_dk_nba(player_pool, roster_count, iter_count)
+        results, name_to_positions = optimize_dk_nba(player_pool, roster_count, iter_count, excluded)
         most_recent_slate = data_utils.get_most_recent_slate(sport)
         start_times = utils.parse_start_times_from_slate(most_recent_slate['slate'])
         for roster in results:
