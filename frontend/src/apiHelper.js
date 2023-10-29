@@ -62,7 +62,7 @@ export const runOptimizer = async (sport, site, type, slateId, rosterCount, iter
   return result.data
 }
 
-export const runReoptimizer = async (sport, site, type, slateId, rosterCount, iterCount, rosters) => {
+export const runReoptimizer = async (sport, site, type, slateId, rosterCount, iterCount, rosters, excludePlayers) => {
   const result = await axios.post(`${URL_BASE}/reoptimize`,
   {
     sport,
@@ -72,6 +72,7 @@ export const runReoptimizer = async (sport, site, type, slateId, rosterCount, it
     rosterCount,
     iterCount,
     rosters,
+    excludePlayers,
   })
   console.log(result.data)
   return result.data

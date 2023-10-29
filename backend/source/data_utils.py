@@ -56,7 +56,7 @@ def get_most_recent_slate(sport):
     return most_recent_slate
 
 
-def add_casesar_projections(name_stat_to_val, all_names):
+def add_casesar_projections(name_stat_to_val, all_names, site='fd'):
     get_key = lambda a, b: "{}_{}".format(a, b)
     key_generators = [
         lambda a: get_key(a, 'Points'),
@@ -65,6 +65,7 @@ def add_casesar_projections(name_stat_to_val, all_names):
         lambda a: get_key(a, 'Blocks'),
         lambda a: get_key(a, 'Steals'),
         lambda a: get_key(a, 'Turnovers'),
+        lambda a: get_key(a, '3pt Field Goals'),
     ]
 
     for name in all_names:
@@ -77,8 +78,14 @@ def add_casesar_projections(name_stat_to_val, all_names):
                 stat_vals.append(0)
 
         if sum(stat_vals) > 0:
-            val = stat_vals[0] + stat_vals[1] * 1.5 + stat_vals[2] * 1.2 + stat_vals[3] * 3 + stat_vals[4] * 3 - (stat_vals[5] / 3)
+            turnover_penalty = stat_vals[5] / 3
+            if site == 'dk':
+                turnover_penalty /= 2
+            val = stat_vals[0] + stat_vals[1] * 1.5 + stat_vals[2] * 1.2 + stat_vals[3] * 3 + stat_vals[4] * 3 - turnover_penalty
             name_stat_to_val["{}_{}".format(name, 'CaesarsComputed')] = round(val, 3)
+
+            if site == 'dk':
+                val += stat_vals[6] * 0.5
 
 def get_current_projections(sport):
   scraped_lines = get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])

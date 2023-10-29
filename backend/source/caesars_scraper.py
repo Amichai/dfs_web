@@ -90,7 +90,7 @@ class CaesarsScraper:
     return to_return, id_to_start_time
 
   def run(self, scrape_time):
-    whitelisted_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', 'Turnovers',  
+    whitelisted_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', 'Turnovers', '3pt Field Goals'
                         #  "Points + Assists + Rebounds", 
                         #  "Points + Assists",
                         #  "Points + Rebounds",
@@ -159,8 +159,8 @@ class CaesarsScraper:
 
           if len(name_parts) > 1:
             stat = name_parts[1].strip('|').replace('Total ', '')
-            if stat == "3pt Field Goals":
-              continue
+            # if stat == "3pt Field Goals":
+            #   continue
           else:
             stat = name_parts[0]
 

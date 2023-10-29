@@ -181,20 +181,23 @@ def reoptimize():
     roster_count = int(data['rosterCount'])
     iter_count = int(data['iterCount'])
     rosters = data['rosters']
-    results, original_rosters, name_to_id = optimizer.reoptimize(sport, site, slate_id, rosters)
+
+    excluded_players = data.get('excludePlayers', '')
+    print(excluded_players)
+    excluded_names = excluded_players.split(',')
+    results, original_rosters, name_to_id = optimizer.reoptimize(sport, site, slate_id, rosters, excluded_names)
 
     for i in range(len(results)):
         result = results[i]
         if result == None:
             # roster is fully locked.
-            import pdb; pdb.set_trace()
             results[i] = original_rosters[i]
 
     print(results)
     roster_data = []
     idx = 0
     for result in results:
-        to_print = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
+        to_print = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
         print(",".join(to_print) + "," + str(result.value))
         roster_data.append({
             'players': to_print,
@@ -440,8 +443,9 @@ def run_scraper():
             print("New projection: {}".format(new_p))
         if new_p == None:
             print("Lost projection: {}".format(initial_p))
-        if float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 2:
-            print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
+        # TODO: fix this
+        # if float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 2:
+        #     print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
 
 
     return jsonify('success')

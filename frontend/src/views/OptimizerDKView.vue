@@ -19,7 +19,7 @@ const optimize = async (sport, site, type) => {
 }
 
 const reoptimize = async  (sport, site, type) => {
-  const result = await runReoptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value, rosters.value)
+  const result = await runReoptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value, rosters.value, excludedPlayers.value)
   // debugger
   // todo render this result
   console.log(result)

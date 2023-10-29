@@ -287,9 +287,7 @@ class DK_NBA_Optimizer:
         continue
 
       for player in players:
-        if player.value_per_dollar < cuttoff:
-          if player.value >= 9:
-            print("Filtered out: {}".format(player))
+        if player.value_per_dollar < cuttoff and player.value < 17:
           continue
         by_position_copied[position].append(player)
 

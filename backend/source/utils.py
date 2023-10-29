@@ -1061,3 +1061,26 @@ def map_pp_defense_to_dk_defense_name(name_to_id):
             name_to_id[val] = name_to_id[name]
 
     return name_to_id
+
+def player_pool_to_by_position_dk_nba(player_pool, excluded):
+    dk_positions_mapper = {"PG": ["PG", "G", "UTIL"], "SG": ["SG", "G", "UTIL"], "SF": ["SF", "F", "UTIL"], "PF": ["PF", "F", "UTIL"], "C": ["C", "UTIL"]}
+
+    by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': [], "G": [], "F": [], "UTIL": []}
+
+    for player in player_pool:
+        name = player[0]
+        if name in excluded:
+            continue
+
+        cost = player[1]
+        proj = player[2]
+        position = player[3]
+        team = player[4]
+        pos_parts = position.split('/')
+        for pos in pos_parts:
+            eligible_positions = dk_positions_mapper[pos]
+            for eligible_position in eligible_positions:
+                player = Player(name, player, cost, team, proj)
+                by_position[eligible_position].append(player)
+
+    return by_position
