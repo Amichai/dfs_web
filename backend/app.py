@@ -444,8 +444,8 @@ def run_scraper():
         if new_p == None:
             print("Lost projection: {}".format(initial_p))
         # TODO: fix this
-        # if float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 2:
-        #     print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
+        if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 2:
+            print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
 
 
     return jsonify('success')

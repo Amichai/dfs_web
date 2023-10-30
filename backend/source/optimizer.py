@@ -465,7 +465,7 @@ def reoptimize_dk_nba(player_pool, locked_rosters, original_rosters, excluded):
     is_se_roster_or_h2h = False
 
     for players in locked_rosters:
-        lock_ct = sum([1 for a in players if a is not ''])
+        lock_ct = sum([1 for a in players if a != ''])
         if lock_ct != 9:
             locked_players_key = get_locked_players_key(players)
 
@@ -547,7 +547,7 @@ def reoptimize_fd_nba(player_pool, locked_rosters, original_rosters):
     is_se_roster_or_h2h = False
 
     for players in locked_rosters:
-        lock_ct = sum([1 for a in players if a is not ''])
+        lock_ct = sum([1 for a in players if a != ''])
         if lock_ct != 9:
             locked_players_key = get_locked_players_key(players)
 
@@ -719,7 +719,7 @@ def optimize(sport, site, slate_id, roster_count, iter_count, excluded):
     assert site == 'fd' or site == 'dk'
     print("{} NBA {}".format(site, slate_id))
 
-    scraped_lines = data_utils.get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])
+    scraped_lines = data_utils.get_scraped_lines_multiple(['Caesars_' + sport])
 
     table_root = "FDSlatePlayers_"
     if site == 'dk':
@@ -758,7 +758,7 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
     assert site == 'fd' or site == 'dk'
     print("Reoptimize {} NBA - {}".format(site, slate_id))
 
-    scraped_lines = data_utils.get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])
+    scraped_lines = data_utils.get_scraped_lines_multiple(['Caesars_' + sport])
 
     table_root = "FDSlatePlayers_"
     if site == 'dk':
@@ -797,9 +797,9 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
         locked_roster_players = []
         original_roster_players = []
         for player in players:
-            if site == 'fd':
+            if ':' in player:
                 name = player.split(':')[1]
-            elif site == 'dk':
+            else:
                 name = id_to_name[player]
             matched_players = [a for a in player_pool if a[0] == name]
             if len(matched_players) == 0:

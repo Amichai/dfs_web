@@ -88,7 +88,7 @@ def add_casesar_projections(name_stat_to_val, all_names, site='fd'):
                 val += stat_vals[6] * 0.5
 
 def get_current_projections(sport):
-  scraped_lines = get_scraped_lines_multiple(['PrizePicks_' + sport, 'Caesars_' + sport])
+  scraped_lines = get_scraped_lines_multiple(['Caesars_' + sport])
   seen_names = []
   seen_stats = []
 

@@ -10,7 +10,7 @@ const path = computed(() => {
 <template>
   <nav class="nav-bar">
     <a href="/upload" :class="['nav-item', path === 'upload' && 'selected']">Upload</a>
-    <a href="/slates" :class="['nav-item', path === 'slates' && 'selected']">Slates</a>
+    <!-- <a href="/slates" :class="['nav-item', path === 'slates' && 'selected']">Slates</a> -->
     <a href="/scrapers" :class="['nav-item', path === 'scrapers' && 'selected']">Scrapers</a>
     <a href="/optimizer" :class="['nav-item', path === 'optimizer' && 'selected']">Optimizer</a>
     <a href="/optimizerdk" :class="['nav-item', path === 'optimizerdk' && 'selected']">Optimizer DK</a>
