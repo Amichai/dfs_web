@@ -306,6 +306,10 @@ def get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjust
         if name in adjustments:
             player[2] = adjustments[name] * player[2]
 
+        # TODO:
+        # if name == "Brandon Ingram" or name == "Kyrie Irving" or name == "Klay Thompson":
+        #     player[2] = 0
+
     return player_pool
 
 def print_slate(slate_players, player_pool, site, teams):
@@ -609,11 +613,14 @@ def reoptimize_fd_nba(player_pool, locked_rosters, original_rosters):
     return all_results
 
 
-def optimize_fd_nba(player_pool, ct, iterCount):
+def optimize_fd_nba(player_pool, ct, iterCount, excluded):
     by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': []}
 
     for player in player_pool:
+        
         name = player[0]
+        if name in excluded:
+            continue
         cost = player[1]
         proj = player[2]
         position = player[3]
@@ -622,6 +629,7 @@ def optimize_fd_nba(player_pool, ct, iterCount):
         for pos in pos_parts:
             player = utils.Player(name, player, cost, team, proj)
             by_position[pos].append(player)
+
 
     print(by_position)
 
@@ -734,7 +742,7 @@ def optimize(sport, site, slate_id, roster_count, iter_count, excluded):
     print_slate(slate_players, player_pool, site, team_list)
 
     if site == 'fd':
-        results = optimize_fd_nba(player_pool, roster_count, iter_count)
+        results = optimize_fd_nba(player_pool, roster_count, iter_count, excluded)
     elif site == 'dk':
         results, name_to_positions = optimize_dk_nba(player_pool, roster_count, iter_count, excluded)
         most_recent_slate = data_utils.get_most_recent_slate(sport)
@@ -764,7 +772,7 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
     if site == 'dk':
         table_root = "DKSlatePlayers_"
 
-    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(table_root, sport, slate_id, site == 'fd')
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(table_root, sport, slate_id, exclude_injured=site == 'fd')
 
     id_to_name = {v: k for k, v in name_to_id.items()}
 

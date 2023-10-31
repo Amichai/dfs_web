@@ -98,6 +98,14 @@ const scrapedLines = ref([])
 const columns = ref(['time', 'line_score', 'name', 'stat', 'team', 'updated_at', 'active'])
 
 const parseScrapedLines = (lines) => {
+  return lines.map((line) => {
+    return columns.value.reduce((acc, value, index) => {
+      acc[value] = line[value]
+      return acc
+    }, {})
+  })
+
+  // return lines
   const name_stats = Object.keys(lines)
 
   return name_stats.map((name_stat) => {

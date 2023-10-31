@@ -50,18 +50,10 @@ name_mapper_pp_to_fd_dk = {
   
 
   #NBA
-  'Michael Porter Jr.': 'Michael Porter',
   
-  'Dereck Lively II': 'Dereck Lively',
-  'Tim Hardaway Jr.': 'Tim Hardaway',
-  'Derrick Jones Jr.': 'Derrick Jones',
-  'Nick Smith Jr.': 'Nick Smith',
-  'Gregory Jackson': 'GG Jackson',
-  'Dennis Smith Jr.': 'Dennis Smith',
-  'Harry Giles III': 'Harry Giles',
-  'Lonnie Walker IV': 'Lonnie Walker',
-  'Wendell Carter Jr.': 'Wendell Carter',
-  'AJ Green': 'A.J. Green',
+}
+
+name_mapper_pp_to_dk = {
 }
 
 name_mapper_pp_to_fd = {
@@ -77,12 +69,30 @@ name_mapper_pp_to_fd = {
   'Marjon Beauchamp': 'MarJon Beauchamp',
   'Gary Payton II': 'Gary Payton',
   'Marcus Morris Sr.': 'Marcus Morris',
+  'Andre Jackson Jr.': 'Andre Jackson',
+  'TyTy Washington Jr.': 'TyTy Washington',
 
   'KJ Martin': 'Kenyon Martin',
   'Jabari Smith Jr.': 'Jabari Smith',
+  'Troy Brown Jr.': 'Troy Brown',
+  'Wendell Moore Jr.': 'Wendell Moore',
+  'Larry Nance Jr.': 'Larry Nance',
+  'Kira Lewis Jr.': 'Kira Lewis',
+  'Patrick Baldwin Jr.': 'Patrick Baldwin',
+  'Dereck Lively II': 'Dereck Lively',
+  'Tim Hardaway Jr.': 'Tim Hardaway',
+  'Derrick Jones Jr.': 'Derrick Jones',
+  'Michael Porter Jr.': 'Michael Porter',
+  'AJ Green': 'A.J. Green',
+  'PJ Washington': 'P.J. Washington',
+  'Nick Smith Jr.': 'Nick Smith',
+  'Gregory Jackson': 'GG Jackson',
+  'Wendell Carter Jr.': 'Wendell Carter',
+  'Lonnie Walker IV': 'Lonnie Walker',
 
+  'Dennis Smith Jr.': 'Dennis Smith',
 
-
+  'Harry Giles III': 'Harry Giles',
 
 
 }

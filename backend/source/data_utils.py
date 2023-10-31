@@ -5,21 +5,28 @@ DB_ROOT = 'DBs/'
 SCRAPE_OPERATIONS_TABLE = 'scrape_operations'
 
 def get_scraped_lines(scraper):
-    query = Query()
-    db = TinyDB(DB_ROOT + SCRAPE_OPERATIONS_TABLE)
-    results = db.search(query['scraper'] == scraper)
+    
+    file_most_recent = open('DBs/{}/{}_current.txt'.format('NBA', scraper), 'r')
 
-    results_sorted = sorted(results, key=lambda a: a['scrape_time'])
-    if len(results_sorted) == 0:
-        return []
-    most_recent_scrape = results_sorted[-1]
+    all_results = []
+    lines = file_most_recent.readlines()
+    time = lines[0]
+    keys = lines[1].split(',')
+    rows = lines[2:]
 
-    query2 = Query()
-    db2 = TinyDB(DB_ROOT + scraper)
+    for row in rows:
+      obj = {}
+      for idx in range(len(keys)):
+          key = keys[idx].strip()
+          row_parts = row.split(',')
+          val = row_parts[idx]
 
-    all_results = db2.search(query2['time'] == most_recent_scrape['scrape_time'])
+          obj[key] = val
+
+      all_results.append(obj)
 
     return all_results
+
 
 def get_scraped_lines_multiple(projection_sources):
   scraped_lines = []
@@ -73,7 +80,7 @@ def add_casesar_projections(name_stat_to_val, all_names, site='fd'):
         for key_generator in key_generators:
             key = key_generator(name)
             if key in name_stat_to_val:
-                stat_vals.append(name_stat_to_val[key])
+                stat_vals.append(float(name_stat_to_val[key]))
             else:
                 stat_vals.append(0)
 

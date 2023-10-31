@@ -9,6 +9,9 @@ import optimizer
 import random
 import datetime
 
+import pyperclip
+
+
 import sys
 sys.path.append('/Users/amichailevy/Documents/spikes/dfs_web/backend/source/')
 import data_utils
@@ -76,7 +79,6 @@ def search_data():
 
 
 def _get_scraped_lines_with_history(scraper):
-
     query = Query()
     db = TinyDB(DB_ROOT + SCRAPE_OPERATIONS_TABLE)
     results = db.search(query['scraper'] == scraper)
@@ -227,6 +229,8 @@ def optimize():
     excluded_players = data.get('excludePlayers', '')
     print(excluded_players)
     excluded_names = excluded_players.split(',')
+    # excluded_names += ["Kyrie Irving"]
+
     # read player prices/positions
     # get player projections
     # run optimizer
@@ -339,26 +343,39 @@ def optimize():
         results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excluded_names)
 
         roster_data = []
+        save_to_clipboard = ''
         for result in results:
-            to_print = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
-            print(",".join(to_print) + "," + str(result.value))
+            to_print_data = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
+            to_print = ",".join(to_print_data) + "," + str(result.value)
+            print(to_print)
+            save_to_clipboard += to_print + '\n'
             roster_data.append({
                 'players': to_print,
                 'value': result.value,
                 'cost': result.cost
             })
+        print("Copied to clipboard")
+        pyperclip.copy(save_to_clipboard)
+
     elif sport == "NBA" and site == 'dk' and game_type == '':
         results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excluded_names)
 
         roster_data = []
+        save_to_clipboard = ''
         for result in results:
-            to_print = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
-            print(",".join(to_print) + "," + str(result.value))
+            to_print_data = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
+            to_print = ",".join(to_print_data) + "," + str(result.value)
+            print(to_print)
+            save_to_clipboard += to_print + '\n'
             roster_data.append({
                 'players': to_print,
                 'value': result.value,
                 'cost': result.cost
             })
+        
+        print("Copied to clipboard")
+        pyperclip.copy(save_to_clipboard)
+
 
 
     utils.print_player_exposures(results)
@@ -370,82 +387,42 @@ def run_scraper():
     sport = request.args.get('sport', '')
     scraper_name = request.args.get('scraper', '')
 
-    initial_projections = data_utils.get_current_projections(sport)
+    # TODO reimplement
+    # initial_projections = data_utils.get_current_projections(sport)
 
     print(sport, scraper_name)
-    scrape_time = int(time.time())
-    write_to_db(SCRAPE_OPERATIONS_TABLE, {
-        "scrape_time": scrape_time,
-        "scraper": "{}_{}".format(scraper_name, sport)
-    })
+
+    today_date =  str(datetime.datetime.now()).split(' ')[0]
+    file = open('DBs/{}/{}_{}.txt'.format(sport, scraper_name, today_date), 'a')
+    file_most_recent = open('DBs/{}/{}_{}_current.txt'.format(sport, scraper_name, sport), 'w')
+    
+    scrape_time = str(datetime.datetime.now()).split('.')[0]
+    utils.write_to_files('t:' + str(scrape_time) + '\n', file, file_most_recent)
+
+    # })
 
     scrape_results = scraper.scrape(sport, scraper_name, scrape_time)
 
-    table_name = "{}_{}".format(scraper_name, sport)
 
-    query = Query()
-    db = TinyDB(DB_ROOT + table_name)
+    utils.write_to_files(",".join([str(a) for a in scrape_results[0].keys()]) + '\n', file, file_most_recent)
 
-    all_records = db.all()
-    line_id_to_records = {}
-    for record in all_records:
-        line_id = record['line_id']
-        if not line_id in line_id_to_records:
-            line_id_to_records[line_id] = []
-        line_id_to_records[line_id].append(record)
-
-    seen_ids = []
-    # write this to our db
     for result in scrape_results:
-        line_id = result['line_id']
-        existing_results = []
-        if line_id in line_id_to_records:
-            existing_results = line_id_to_records[line_id]
+        utils.write_to_files(",".join([str(a) for a in result.values()]) + '\n', file, file_most_recent)
 
-        if len(existing_results) > 0:        
-            sorted_by_time = sorted(existing_results, key=lambda a: a['time'])
-            most_recent = sorted_by_time[-1]
-            most_recent_line_score = most_recent['line_score']
-            line_score = result['line_score']
-            name = result['name']
-            stat = result['stat']
-            if most_recent_line_score != line_score:
-                print("{} Updating line score: {} -> {} {}".format(name, most_recent_line_score, stat, line_score))
-            else:
-                document = Query()
-                # db.remove(document['line_id'] == result['line_id'])
-                try:
-                    remove_result = db.remove(doc_ids=[most_recent.
-                    doc_id])
-                except:
-                    print("Error removing: {}. This could be a because of a duplicate PP card".format(most_recent))
-                # print("removed {}, {} - {}".format(name, most_recent['line_id'], remove_result))
-        # if len(existing_results) == 0:
-        #     print("New line: {}".format(result))
-
-        # diff the most recent result with the current value
-        # log this diff
-        # update if diff exists
-        line_id = result['line_id']
-        if line_id in seen_ids:
-            print("Seen this id already: {}".format(line_id))
-            continue
-        
-        seen_ids.append(line_id)
-        write_to_db(table_name, result)
+        # write_to_db(table_name, result)
     
-    new_projections = data_utils.get_current_projections(sport)
+    # new_projections = data_utils.get_current_projections(sport)
 
-    for key in set(initial_projections.keys()).union(new_projections.keys()):
-        initial_p = initial_projections.get(key)
-        new_p = new_projections.get(key)
-        if initial_p == None:
-            print("New projection: {}".format(new_p))
-        if new_p == None:
-            print("Lost projection: {}".format(initial_p))
-        # TODO: fix this
-        if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 2:
-            print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
+    # for key in set(initial_projections.keys()).union(new_projections.keys()):
+    #     initial_p = initial_projections.get(key)
+    #     new_p = new_projections.get(key)
+    #     if initial_p == None:
+    #         print("New projection: {}".format(new_p))
+    #     if new_p == None:
+    #         print("Lost projection: {}".format(initial_p))
+    #     # TODO: fix this
+    #     if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 2:
+    #         print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
 
 
     return jsonify('success')

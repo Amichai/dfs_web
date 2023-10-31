@@ -85,8 +85,6 @@ class PPScraper:
             "player_id": player_id,
             "team": team,
             "name": player_name,
-            "time": scrape_time,
-            "line_id": "{}_{}_{}".format(player_id, stat_type, start_time)
         })
         
     return projections

@@ -220,9 +220,7 @@ class CaesarsScraper:
             "over_fraction": over_fraction,
             "active": is_active,
             "name": name,
-            "time": scrape_time,
             "team": team,
-            "line_id": "{}_{}_{}".format(name, stat, startTime)
         })
         
     return projections

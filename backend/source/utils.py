@@ -1084,3 +1084,8 @@ def player_pool_to_by_position_dk_nba(player_pool, excluded):
                 by_position[eligible_position].append(player)
 
     return by_position
+
+
+def write_to_files(to_write, *files):
+    for file in files:
+        file.write(to_write)

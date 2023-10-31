@@ -17,3 +17,9 @@ TODO:
  Create a report for downloading the returned optimized rosters. With a hash that can be tracked for uniqueness
 
  
+ -----
+ Track line history
+ Show how my lineups are distrbuted across start times for the slate
+ Use shark ownership to hedge lineups on PP
+
+ Fix the DK reoptimizer :(
