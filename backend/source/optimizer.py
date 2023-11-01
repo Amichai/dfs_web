@@ -824,6 +824,10 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
             team = matched_player[4]
             player_new = utils.Player(name, '', cost, team, proj)
             original_roster_players.append(player_new.clone())
+
+            if site == 'dk':
+                team = utils.normalize_team_name(team)
+
             if team in locked_teams:
                 locked_roster_players.append(player_new)
             else:

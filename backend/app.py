@@ -197,10 +197,13 @@ def reoptimize():
 
     print(results)
     roster_data = []
+    save_to_clipboard = ''
     idx = 0
     for result in results:
-        to_print = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
-        print(",".join(to_print) + "," + str(result.value))
+        to_print_data = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
+        to_print = ",".join(to_print_data) + "," + str(result.value)
+        print(to_print)
+        save_to_clipboard += to_print + '\n'
         roster_data.append({
             'players': to_print,
             'value': result.value,
@@ -208,6 +211,9 @@ def reoptimize():
         })
 
         idx += 1
+    
+    print("Copied to clipboard")
+    pyperclip.copy(save_to_clipboard)
 
     utils.print_player_exposures(results)
 
@@ -388,7 +394,7 @@ def run_scraper():
     scraper_name = request.args.get('scraper', '')
 
     # TODO reimplement
-    # initial_projections = data_utils.get_current_projections(sport)
+    initial_projections = data_utils.get_current_projections(sport)
 
     print(sport, scraper_name)
 
@@ -410,19 +416,21 @@ def run_scraper():
         utils.write_to_files(",".join([str(a) for a in result.values()]) + '\n', file, file_most_recent)
 
         # write_to_db(table_name, result)
-    
-    # new_projections = data_utils.get_current_projections(sport)
 
-    # for key in set(initial_projections.keys()).union(new_projections.keys()):
-    #     initial_p = initial_projections.get(key)
-    #     new_p = new_projections.get(key)
-    #     if initial_p == None:
-    #         print("New projection: {}".format(new_p))
-    #     if new_p == None:
-    #         print("Lost projection: {}".format(initial_p))
-    #     # TODO: fix this
-    #     if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 2:
-    #         print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
+    file.close()
+    file_most_recent.close()
+    
+    new_projections = data_utils.get_current_projections(sport)
+
+    for key in set(initial_projections.keys()).union(new_projections.keys()):
+        initial_p = initial_projections.get(key)
+        new_p = new_projections.get(key)
+        if initial_p == None:
+            print("New projection: {}".format(new_p))
+        if new_p == None:
+            print("Lost projection: {}".format(initial_p))
+        if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 1:
+            print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
 
 
     return jsonify('success')

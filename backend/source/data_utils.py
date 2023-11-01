@@ -89,55 +89,44 @@ def add_casesar_projections(name_stat_to_val, all_names, site='fd'):
             if site == 'dk':
                 turnover_penalty /= 2
             val = stat_vals[0] + stat_vals[1] * 1.5 + stat_vals[2] * 1.2 + stat_vals[3] * 3 + stat_vals[4] * 3 - turnover_penalty
-            name_stat_to_val["{}_{}".format(name, 'CaesarsComputed')] = round(val, 3)
 
             if site == 'dk':
                 val += stat_vals[6] * 0.5
+            
+            name_stat_to_val["{}_{}".format(name, 'CaesarsComputed')] = round(val, 3)
+
 
 def get_current_projections(sport):
-  scraped_lines = get_scraped_lines_multiple(['Caesars_' + sport])
-  seen_names = []
-  seen_stats = []
+    lines = get_scraped_lines('Caesars_NBA')
+    name_stat_to_val = {}
+    all_names = []
+    for line in lines:
+        name = line['name']
+        if not name in all_names:
+            all_names.append(name)
+        
+        stat = line['stat']
+        projection = line['line_score']
 
-  name_to_stats = {}
-  name_stat_to_val = {}
+        name_stat_to_val["{}_{}".format(name, stat)] = projection
+        pass
 
-  for result in scraped_lines:
-      name = result['name']
-      line = result['line_score']
-      team = result['team']
-      stat = result['stat']
-      
-      if not name in name_to_stats:
-          name_to_stats[name] = [stat]
-      else:
-          name_to_stats[name].append(stat)
+    add_casesar_projections(name_stat_to_val, all_names)
 
-      name_stat = "{}_{}".format(name, stat)
-      name_stat_to_val[name_stat] = line
+    to_return = {}
 
-      if not name in seen_names:
-          seen_names.append(name)
+    for name in all_names:
+        key1 = "{}_{}".format(name, "Fantasy Score")
+        key2 = "{}_{}".format(name, "CaesarsComputed")
+        proj = None
+        if key1 in name_stat_to_val:
+            proj = name_stat_to_val[key1]
 
-      if not stat in seen_stats:
-          seen_stats.append(stat) 
+        if key2 in name_stat_to_val:
+            proj = name_stat_to_val[key2]
 
-  add_casesar_projections(name_stat_to_val, seen_names)
-  to_return = {}
-
-
-  for name in seen_names:
-      key1 = "{}_{}".format(name, "Fantasy Score")
-      key2 = "{}_{}".format(name, "CaesarsComputed")
-      proj = None
-      if key1 in name_stat_to_val:
-          proj = name_stat_to_val[key1]
-
-      if key2 in name_stat_to_val:
-          proj = name_stat_to_val[key2]
-
-      if proj != None:
-        to_return[name] = proj
+        if proj != None:
+            to_return[name] = proj
 
 
-  return to_return
+    return to_return
