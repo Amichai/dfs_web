@@ -12,7 +12,7 @@ export class CSVParser {
     const result = Papa.parse(content)
     const mappedVals = result.data.map((row) => {
       const vals = this.indices.map((index) => {
-        return row[index]
+        return row[index] ?? ''
       })
 
       return vals

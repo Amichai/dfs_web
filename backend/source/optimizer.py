@@ -729,11 +729,7 @@ def optimize(sport, site, slate_id, roster_count, iter_count, excluded):
 
     scraped_lines = data_utils.get_scraped_lines_multiple(['Caesars_' + sport])
 
-    table_root = "FDSlatePlayers_"
-    if site == 'dk':
-        table_root = "DKSlatePlayers_"
-
-    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(table_root, sport, slate_id, exclude_injured=site == 'fd')
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(site, sport, slate_id, exclude_injured=site == 'fd')
     
     ## TODO - refactor this into a component?
     player_pool = get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments={
@@ -768,11 +764,7 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
 
     scraped_lines = data_utils.get_scraped_lines_multiple(['Caesars_' + sport])
 
-    table_root = "FDSlatePlayers_"
-    if site == 'dk':
-        table_root = "DKSlatePlayers_"
-
-    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(table_root, sport, slate_id, exclude_injured=site == 'fd')
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(site, sport, slate_id, exclude_injured=site == 'fd')
 
     id_to_name = {v: k for k, v in name_to_id.items()}
 

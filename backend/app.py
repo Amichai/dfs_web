@@ -35,6 +35,22 @@ def write_to_db(table, data):
 def hello_world():
     return jsonify(message='Hello, World!')
 
+@app.route('/writeslate', methods=['POST'])
+def write_slate():
+    data = request.json
+    print(data)
+    sport = data['sport']
+    slate_id = data['slateId']
+    site = data['site']
+    date = data['date']
+    columns = data['columns']
+    player_data = data['playerData']
+    game_data = data['gameData']
+
+    data_utils.write_slate(sport, slate_id, site, date, columns, player_data, game_data)
+
+    return jsonify(message='success')
+
 @app.route('/write', methods=['POST'])
 def write_data():
     data = request.json
@@ -163,13 +179,7 @@ def getSlatePlayers():
     sport = request.args.get('sport', '')
     print(slateId)
 
-    if site == 'FD':
-        db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
-    if site == 'DK':
-        db = TinyDB(DB_ROOT + "DKSlatePlayers_" + sport)
-
-    query = Query()
-    slate_players = db.search((query['slateId'] == slateId))
+    slate_players, _ = data_utils.get_slate_players(sport, site, slateId, utils.date_str())
 
     return jsonify(slate_players)
 
@@ -242,18 +252,14 @@ def optimize():
 
     query = Query()
     if sport == 'FIBA' and site == 'DK':
-        db = TinyDB(DB_ROOT + "DKSlatePlayers_FIBA")
         scraped_lines = data_utils.get_scraped_lines('PrizePicks_FIBA')
-        slate_players = db.search((query['slateId'] == slate_id))
+        slate_players, _ = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
 
         results = optimizer.optimize_FIBA_dk(slate_players, scraped_lines)
     elif sport == "NFL" and site == 'fd' and game_type == 'single_game':
-
-        db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
         scraped_lines = data_utils.get_scraped_lines('PrizePicks_' + sport)
 
-        query = Query()
-        slate_players = db.search((query['slateId'] == slate_id))
+        slate_players, _ = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
 
         player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
         
@@ -287,18 +293,14 @@ def optimize():
         # print(slate_players)
     elif sport == "NFL" and site == 'dk' and game_type == '':
         print("DK NFL", slate_id)
-        db = TinyDB(DB_ROOT + "DKSlatePlayers_" + sport)
         scraped_lines = data_utils.get_scraped_lines('PrizePicks_' + sport)
-        query = Query()
-        slate_players = db.search((query['slateId'] == slate_id))
+
+        slate_players, game_data = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
 
         player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'dk')
 
-        db = TinyDB(DB_ROOT + "slates")
-        query = Query()
-        upcoming_slates = db.search(query['sport'] == sport)
         # TODO: we should be filtering on slate id here
-        print(upcoming_slates[-1])
+        print(game_data)
 
         # optimizer.print_slate_old(slate_players, player_pool, upcoming_slates[-1]['slate'], 'dk')
 
@@ -314,11 +316,9 @@ def optimize():
         pass
     elif sport == "NFL" and site == 'fd' and game_type == '':
         print("FD NFL", slate_id)
-        db = TinyDB(DB_ROOT + "FDSlatePlayers_" + sport)
         scraped_lines = data_utils.get_scraped_lines('PrizePicks_' + sport)
 
-        query = Query()
-        slate_players = db.search((query['slateId'] == slate_id))
+        slate_players, _ = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
 
         player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
 
@@ -425,7 +425,7 @@ def run_scraper():
         initial_p = initial_projections.get(key)
         new_p = new_projections.get(key)
         if initial_p == None:
-            print("New projection: {}".format(new_p))
+            print("New projection: {} – {}".format(key, new_p))
         if new_p == None:
             print("Lost projection: {}".format(initial_p))
         if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 1:

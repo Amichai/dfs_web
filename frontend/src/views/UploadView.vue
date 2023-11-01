@@ -1,12 +1,13 @@
 <script setup>
 import axios from 'axios';
-import { writeData, queryData, searchData } from '../apiHelper';
+import { writeSlate } from '../apiHelper';
 import { FDParser, DKParser } from '../parsers';
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import ComboBox from '../components/ComboBox.vue'
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import TableComponent from '../components/TableComponent.vue'
+import { parse } from 'papaparse';
 
 
 onMounted(async () => {
@@ -54,20 +55,27 @@ const selectedSlate = ref('DK NBA')
 const sport = ref('')
 
 const uploadSlate = () => {
-  parser = slatesToParsers[selectedSlate.value]
-  parser.upload(slateId.value, date.value, selectedSlate.value.split(' ')[1])
+  // parser = slatesToParsers[selectedSlate.value]
+  // parsedContent.value.mappedVals
+  const site = selectedSlate.value.split(' ')[0]
+  writeSlate(sport.value, slateId.value, site.toLowerCase(), date.value.split(' ')[0], 
+  parsedContent.value.columns,
+  parsedContent.value.mappedVals,
+  slateInput.value.replace('\n',','))
 
-  console.log(slateInput.value)
-  if(!sport.value) {
-    alert('select a sport')
-    return
-  }
+  // parser.upload(slateId.value, date.value, selectedSlate.value.split(' ')[1])
 
-  writeData('slates', {
-    date: date.value,
-    slate: slateInput.value,
-    sport: sport.value
-  })
+  // console.log(slateInput.value)
+  // if(!sport.value) {
+  //   alert('select a sport')
+  //   return
+  // }
+
+  // writeData('slates', {
+  //   date: date.value,
+  //   slate: slateInput.value,
+  //   sport: sport.value
+  // })
 }
 
 const fileUploaded = (evt) => {

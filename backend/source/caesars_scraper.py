@@ -214,7 +214,6 @@ class CaesarsScraper:
             "line_score": line_adjusted,
             "stat": stat,
             "start_time": startTime,
-            "eventId": guid,
             "line_original": line,
             "under_fraction": under_faction,
             "over_fraction": over_fraction,

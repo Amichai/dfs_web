@@ -13,6 +13,20 @@ export const writeData = async (table, data) => {
   return json
 }
 
+export const writeSlate = async (sport, slateId, site, date, columns, playerData, gameData) => {
+  const result = await axios.post(`${URL_BASE}/writeslate`, { 
+    sport,
+    slateId,
+    site,
+    date,
+    columns,
+    playerData,
+    gameData,
+  })
+  const json = result.json
+  return json
+}
+
 export const queryData = async (table, key, value) => {
   const result = await axios.post(`${URL_BASE}/query`, { 
     table,

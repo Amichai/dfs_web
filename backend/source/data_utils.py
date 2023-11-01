@@ -5,7 +5,6 @@ DB_ROOT = 'DBs/'
 SCRAPE_OPERATIONS_TABLE = 'scrape_operations'
 
 def get_scraped_lines(scraper):
-    
     file_most_recent = open('DBs/{}/{}_current.txt'.format('NBA', scraper), 'r')
 
     all_results = []
@@ -28,6 +27,47 @@ def get_scraped_lines(scraper):
     return all_results
 
 
+def write_slate(sport, slate_id, site, date, columns, player_data, game_data):
+    filepath = 'DBs/{}/slates_{}.txt'.format(sport, date)
+    file = open(filepath, 'a')
+    file.write('slate: {} site: {}\n'.format(slate_id, site))
+    file.write('game data: {}\n'.format(game_data))
+    file.write('columns: {}\n'.format(','.join(columns)))
+    for player in player_data:
+        file.write('{}\n'.format(','.join(player)))
+    pass
+
+def get_slate_players(sport, site, slate_id, date):
+    filepath = 'DBs/{}/slates_{}.txt'.format(sport, date)
+    file = open(filepath, 'r')
+
+    players = []
+
+    start_idx_key = 'slate: {} site: {}\n'.format(slate_id, site)
+    lines = file.readlines()
+    index = len(lines) - 1 - lines[::-1].index(start_idx_key)
+    columns = None
+    game_data = None
+    while True:
+        index += 1
+        if index >= len(lines):
+            break
+        line = lines[index]
+
+        if 'game data: ' in line:
+            game_data = line.replace('game data: ', '').strip().replace(',', '\n')
+            continue
+        elif 'columns: ' in line:
+            columns = line.replace('columns: ', '').strip().split(',')
+            continue
+        else:
+            player = line.strip().split(',')
+            player = {k: v for k,v in zip(columns, player)}
+            players.append(player)
+   
+    return players, game_data
+
+
 def get_scraped_lines_multiple(projection_sources):
   scraped_lines = []
   for source in projection_sources:
@@ -37,10 +77,9 @@ def get_scraped_lines_multiple(projection_sources):
   return scraped_lines
 
 
-def get_slate_players_and_teams(table_root, sport, slate_id, exclude_injured=True):
-    db = TinyDB(DB_ROOT + table_root + sport)
-    query = Query()
-    slate_players = db.search((query['slateId'] == slate_id))
+def get_slate_players_and_teams(site, sport, slate_id, exclude_injured=True):
+    slate_players, _ = get_slate_players(sport, site, slate_id, utils.date_str())
+
 
     if exclude_injured:
       slate_players = [a for a in slate_players if a['injury'] != 'O']
