@@ -50,7 +50,7 @@ let parser = null;
 const reader = new FileReader();
 const date = ref(new Date().toISOString().slice(0, 10))
 const slateId = ref('')
-const selectedSlate = ref('')
+const selectedSlate = ref('DK NBA')
 const sport = ref('')
 
 const uploadSlate = () => {

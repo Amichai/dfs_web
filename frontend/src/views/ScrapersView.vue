@@ -95,7 +95,7 @@ const selectedScraper = ref('')
 const scrapers = ref(scrapeOptions.map((option) => option.displayName))
 
 const scrapedLines = ref([])
-const columns = ref(['time', 'line_score', 'name', 'stat', 'team', 'updated_at', 'active'])
+const columns = ref(['start_time', 'line_score', 'name', 'stat', 'team', 'active'])
 
 const parseScrapedLines = (lines) => {
   return lines.map((line) => {
@@ -121,7 +121,7 @@ const parseScrapedLines = (lines) => {
 }
 
 onMounted(async () => {
-  const lines = await getScrapedLines('PrizePicks_NFL')
+  const lines = await getScrapedLines('Caesars_NBA')
   scrapedLines.value = parseScrapedLines(lines).filter((line) => Object.keys(line).length)
 })
 
@@ -149,15 +149,15 @@ const toEpochSeconds = (dateString) => {
     <h1>Scrapers</h1>
     <br>
 
-    <div class="scrapers-area">
+    <!-- <div class="scrapers-area">
       <ComboBox :array="scrapers" 
           v-model="selectedScraper"
           @update:modelValue="selectedScraperChanged"
           placeholder="site" />
       <button class="btn btn-primary scrape-button" @click="scrape">Scrape</button>
-    </div>
-    <button class="btn btn-primary scrape-button button-margin" @click="() => scrapeSport('NBA', 'Caesars')">Caesars NBA</button>
-    <button class="btn btn-primary scrape-button button-margin" @click="() => scrapeSport('NBA', 'PrizePicks')">PP NBA</button>
+    </div> -->
+    <button class="btn btn-primary scrape-button button-margin" @click="() => scrapeSport('NBA', 'Caesars')">Scrape Caesars NBA</button>
+    <!-- <button class="btn btn-primary scrape-button button-margin" @click="() => scrapeSport('NBA', 'PrizePicks')">PP NBA</button> -->
     <br>
     <hr>
     <br>

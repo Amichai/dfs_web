@@ -110,7 +110,7 @@ watch(() => excludedPlayers.value, (newVal, oldVal) => {
 
 .settings {
   display: grid;
-  grid-template-columns: 9rem 9rem;
+  grid-template-columns: 9rem 24rem;
   gap: 1rem;
 }
 

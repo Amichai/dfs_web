@@ -141,7 +141,7 @@ def get_scraped_lines():
     scraper = request.args.get('scraper', '')
 
     all_results = data_utils.get_scraped_lines(scraper)
-    _get_scraped_lines_with_history(scraper)
+    # _get_scraped_lines_with_history(scraper)
     return jsonify(all_results)
 
 @app.route('/getslates')
@@ -235,7 +235,6 @@ def optimize():
     excluded_players = data.get('excludePlayers', '')
     print(excluded_players)
     excluded_names = excluded_players.split(',')
-    # excluded_names += ["Kyrie Irving"]
 
     # read player prices/positions
     # get player projections

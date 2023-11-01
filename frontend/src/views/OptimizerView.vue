@@ -12,14 +12,14 @@ const props = defineProps({
 const emits = defineEmits([])
 
 const optimize = async (sport, site, type) => {
-  const result = await runOptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value)
+  const result = await runOptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value, excludedPlayers.value)
   // debugger
   // todo render this result
   console.log(result)
 }
 
 const reoptimize = async  (sport, site, type) => {
-  const result = await runReoptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value, rosters.value)
+  const result = await runReoptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value, rosters.value, excludedPlayers.value)
   // debugger
   // todo render this result
   console.log(result)
@@ -30,6 +30,7 @@ const slateId = ref('')
 const rosters = ref('')
 const iterCount = ref(0)
 const rosterCount = ref(0)
+const excludedPlayers = ref('')
 
 onMounted(() => {
   sport.value = localStorage.getItem('sport')
@@ -37,6 +38,7 @@ onMounted(() => {
   rosterCount.value = localStorage.getItem('rosterCount')
   iterCount.value = localStorage.getItem('iterCount')
   rosters.value = localStorage.getItem('rosters')
+  excludedPlayers.value = localStorage.getItem('excludedPlayers')
 })
 
 watch(() => sport.value, (newVal, oldVal) => {
@@ -57,6 +59,10 @@ watch(() => iterCount.value, (newVal, oldVal) => {
 
 watch(() => rosters.value, (newVal, oldVal) => {
   localStorage.setItem('rosters', newVal)
+})
+
+watch(() => excludedPlayers.value, (newVal, oldVal) => {
+  localStorage.setItem('excludedPlayers', newVal)
 })
 
 /// show a table with every player's projcetions (source of the projection, last updated, etc.)
@@ -86,6 +92,8 @@ watch(() => rosters.value, (newVal, oldVal) => {
       <input type="text" placeholder="iter" v-model="iterCount">
       
       <button class="button" @click="() => optimize(sport, 'fd', '')">Optimize FD</button>
+
+      <textarea name="" id="" cols="30" rows="2" placeholder="exclude players" v-model="excludedPlayers"></textarea>
     </div>
     <button class="button" @click="() => optimize(sport, 'fd', 'single_game')">Optimize Single Game FD</button>
     <br>
@@ -103,7 +111,7 @@ watch(() => rosters.value, (newVal, oldVal) => {
 
 .settings {
   display: grid;
-  grid-template-columns: 9rem 9rem;
+  grid-template-columns: 9rem 24rem;
   gap: 1rem;
 }
 
