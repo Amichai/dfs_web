@@ -57,11 +57,12 @@ const sport = ref('')
 const uploadSlate = () => {
   // parser = slatesToParsers[selectedSlate.value]
   // parsedContent.value.mappedVals
+
   const site = selectedSlate.value.split(' ')[0]
   writeSlate(sport.value, slateId.value, site.toLowerCase(), date.value.split(' ')[0], 
   parsedContent.value.columns,
   parsedContent.value.mappedVals,
-  slateInput.value.replace('\n',','))
+  slateInput.value.replaceAll('\n',','))
 
   // parser.upload(slateId.value, date.value, selectedSlate.value.split(' ')[1])
 
@@ -148,7 +149,9 @@ const clearFile = () => {
       auto-apply
       text-input
       :enable-time-picker="false"
-      ></VueDatePicker>
+      timezone="Africa/Cairo"
+      ></VueDatePicker> 
+      <!-- TODO: fix this major timezone issue -->
     </div>
     <hr />
     <div class="input-file-row">

@@ -307,8 +307,8 @@ def get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjust
             player[2] = adjustments[name] * player[2]
 
         # TODO:
-        # if name == "Brandon Ingram" or name == "Kyrie Irving" or name == "Klay Thompson":
-        #     player[2] = 0
+        if name == "Tyrese Haliburton" or name == "Brandon Ingram":
+            player[2] = 0
 
     return player_pool
 
@@ -741,8 +741,10 @@ def optimize(sport, site, slate_id, roster_count, iter_count, excluded):
         results = optimize_fd_nba(player_pool, roster_count, iter_count, excluded)
     elif site == 'dk':
         results, name_to_positions = optimize_dk_nba(player_pool, roster_count, iter_count, excluded)
-        most_recent_slate = data_utils.get_most_recent_slate(sport)
-        start_times = utils.parse_start_times_from_slate(most_recent_slate['slate'])
+
+        _, game_data = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
+        start_times = utils.parse_start_times_from_slate(game_data)
+
         for roster in results:
             optimize_dk_roster_for_late_swap(roster,
                                              start_times, name_to_positions)
@@ -770,10 +772,9 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
 
     player_pool = get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments={
     })
-    
-    most_recent_slate = data_utils.get_most_recent_slate(sport)
 
-    start_times = utils.parse_start_times_from_slate(most_recent_slate['slate'])
+    _, game_data = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
+    start_times = utils.parse_start_times_from_slate(game_data)
     print(start_times)
 
     now = datetime.datetime.now()

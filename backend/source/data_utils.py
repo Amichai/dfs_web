@@ -54,7 +54,9 @@ def get_slate_players(sport, site, slate_id, date):
             break
         line = lines[index]
 
-        if 'game data: ' in line:
+        if 'slate: ' in line:
+            break
+        elif 'game data: ' in line:
             game_data = line.replace('game data: ', '').strip().replace(',', '\n')
             continue
         elif 'columns: ' in line:
@@ -63,6 +65,7 @@ def get_slate_players(sport, site, slate_id, date):
         else:
             player = line.strip().split(',')
             player = {k: v for k,v in zip(columns, player)}
+            
             players.append(player)
    
     return players, game_data

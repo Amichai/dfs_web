@@ -427,8 +427,8 @@ def run_scraper():
         if initial_p == None:
             print("New projection: {} – {}".format(key, new_p))
         if new_p == None:
-            print("Lost projection: {}".format(initial_p))
-        if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 1:
+            print("Lost projection: {} - {}".format(key, initial_p))
+        if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 0.6:
             print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
 
 
