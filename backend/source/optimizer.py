@@ -85,7 +85,7 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude
       player_pool.append([name, salary, proj, position, team])
   return player_pool
 
-def get_player_projection_data(scraped_lines, teams_to_include, computed_stats=[]):
+def get_player_projection_data(scraped_lines, teams_to_include):
     seen_names = []
     seen_stats = []
 
@@ -115,39 +115,7 @@ def get_player_projection_data(scraped_lines, teams_to_include, computed_stats=[
             seen_stats.append(stat) 
 
 
-    for name, stats in name_to_stats.items():
-        for computed_stat in computed_stats:
-          computed_stat_name = computed_stat['name']
-          if all([a in stats for a in computed_stat['stats']]):
-              new_stat_name = "{}_{}".format(name, computed_stat_name)
-              new_val = 0
-              for i, stat in enumerate(computed_stat['stats']):
-                  new_val += name_stat_to_val["{}_{}".format(name, stat)] * computed_stat['weights'][i]
-
-              name_stat_to_val[new_stat_name] = new_val
-
-              if not computed_stat_name in seen_stats:
-                  seen_stats.append(computed_stat_name)
-
-    print('', end=',')
-    for stat in seen_stats:
-        print(stat, end=',')
-    print()
-
-    for name in seen_names:
-        print(name, end=',')
-        for stat in seen_stats:
-            name_stat = "{}_{}".format(name, stat)
-            if name_stat in name_stat_to_val:
-                print(name_stat_to_val[name_stat], end=',')
-            else:
-                print('', end=',')
-        print()
-
     return name_stat_to_val, seen_names, seen_stats
-
-
-
 
 
 def get_player_projection(scraped_lines, name):
@@ -251,51 +219,11 @@ def optimize_FIBA_dk(slate_players, scraped_lines):
 
     print(results)
 
-
     return results
 
 
-computed_stats = [
-    # {
-    #   'name': 'FSComputed', # for QBs missing a fantasy score
-    #   'stats': ['Pass Yards', 'Pass TDs', 'Rush Yards'],
-    #   'weights': [0.04, 4, 0.1]
-    # },
-    # {
-    #   'name': 'FSComputed', # for QBs missing a fantasy score
-    #   'stats': ['Pass Yards', 'Pass+Rush+Rec TDs', 'Rush Yards'],
-    #   'weights': [0.04, 4, 0.1]
-    # },
-    {
-    'name': 'FSComputed',
-    'stats': ['Fantasy Score', 'Receptions'],
-    'weights': [1, -0.5]
-    },
-    {
-    'name': 'FSInferred', # TODO: WE ONLY WANT TO APPLY THIS IF NO FANTASY SCORE VALUE IS PROVIDED!
-    'stats': ['Kicking Points'],
-    'weights': [1]
-    },
-    {
-    'name': 'FSInferred',
-    'stats': ['Receiving Yards', 'Receptions'],
-    'weights': [0.1, 0.5]
-    },
-    {
-    'name': 'FSInferred',
-    'stats': ['Rush+Rec Yds', 'Receptions'],
-    'weights': [0.1, 0.5]
-    },
-]
-
 def get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments={}):
-    computed_stats_to_pass = []
-    # if site == 'fd':
-    #     computed_stats_to_pass = computed_stats
-    # else:
-    #     computed_stats_to_pass = [computed_stats[1]]
-
-    name_stat_to_val, seen_names, seen_stats = get_player_projection_data(scraped_lines, team_filter, computed_stats=computed_stats_to_pass)
+    name_stat_to_val, seen_names, seen_stats = get_player_projection_data(scraped_lines, team_filter)
 
 
     ## TODO: this is the current exclude list
@@ -305,10 +233,6 @@ def get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjust
         name = player[0]
         if name in adjustments:
             player[2] = adjustments[name] * player[2]
-
-        # TODO:
-        if name == "Tyrese Haliburton" or name == "Brandon Ingram":
-            player[2] = 0
 
     return player_pool
 
@@ -455,7 +379,7 @@ def get_roster_keys_from_rosters(rosters):
 def reoptimize_nba(by_position, locked_rosters, original_rosters):
     pass
 
-def reoptimize_dk_nba(player_pool, locked_rosters, original_rosters, excluded):
+def reoptimize_dk_nba(player_pool, locked_rosters, original_rosters, excluded=[]):
     by_position = utils.player_pool_to_by_position_dk_nba(player_pool, excluded)
 
     optimizer = DK_NBA_Optimizer()
@@ -538,7 +462,7 @@ def reoptimize_fd_nba(player_pool, locked_rosters, original_rosters):
             player = utils.Player(name, player, cost, team, proj)
             by_position[pos].append(player)
 
-    print(by_position)
+    # print(by_position)
 
     optimizer = FD_NBA_Optimizer()
     all_results = []
@@ -613,7 +537,7 @@ def reoptimize_fd_nba(player_pool, locked_rosters, original_rosters):
     return all_results
 
 
-def optimize_fd_nba(player_pool, ct, iterCount, excluded):
+def optimize_fd_nba(player_pool, ct, iterCount, excluded=[]):
     by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': []}
 
     for player in player_pool:
@@ -631,7 +555,7 @@ def optimize_fd_nba(player_pool, ct, iterCount, excluded):
             by_position[pos].append(player)
 
 
-    print(by_position)
+    # print(by_position)
 
     optimizer = FD_NBA_Optimizer()
 
@@ -655,9 +579,9 @@ def optimize_fd_nba(player_pool, ct, iterCount, excluded):
 
 
 
-def optimize_dk_nba(player_pool, ct, iterCount, excluded):
+def optimize_dk_nba(player_pool, ct, iterCount, excluded=[]):
     by_position = utils.player_pool_to_by_position_dk_nba(player_pool, excluded)
-    print(by_position)
+    # print(by_position)
 
     name_to_positions = {}
     for pos, players in by_position.items():
@@ -730,17 +654,19 @@ def optimize(sport, site, slate_id, roster_count, iter_count, excluded):
     scraped_lines = data_utils.get_scraped_lines_multiple(['Caesars_' + sport])
 
     slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(site, sport, slate_id, exclude_injured=site == 'fd')
-    
+    adjustments = {}
+    for exclude in excluded:
+        adjustments[exclude] = 0
+
     ## TODO - refactor this into a component?
-    player_pool = get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments={
-    })
+    player_pool = get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments=adjustments)
 
     print_slate(slate_players, player_pool, site, team_list)
 
     if site == 'fd':
-        results = optimize_fd_nba(player_pool, roster_count, iter_count, excluded)
+        results = optimize_fd_nba(player_pool, roster_count, iter_count)
     elif site == 'dk':
-        results, name_to_positions = optimize_dk_nba(player_pool, roster_count, iter_count, excluded)
+        results, name_to_positions = optimize_dk_nba(player_pool, roster_count, iter_count)
 
         _, game_data = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
         start_times = utils.parse_start_times_from_slate(game_data)
@@ -768,10 +694,15 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
 
     slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(site, sport, slate_id, exclude_injured=site == 'fd')
 
+
+
     id_to_name = {v: k for k, v in name_to_id.items()}
 
-    player_pool = get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments={
-    })
+    adjustments = {}
+    for exclude in excluded:
+        adjustments[exclude] = 0
+
+    player_pool = get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments=adjustments)
 
     _, game_data = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
     start_times = utils.parse_start_times_from_slate(game_data)
@@ -837,7 +768,7 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
     if site == 'fd':
         results = reoptimize_fd_nba(player_pool_new, locked_rosters, original_rosters)
     elif site == 'dk':
-        results = reoptimize_dk_nba(player_pool_new, locked_rosters, original_rosters, excluded=excluded)
+        results = reoptimize_dk_nba(player_pool_new, locked_rosters, original_rosters)
 
 
     name_to_id = utils.name_to_player_id(slate_players)

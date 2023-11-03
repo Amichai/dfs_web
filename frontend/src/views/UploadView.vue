@@ -149,9 +149,8 @@ const clearFile = () => {
       auto-apply
       text-input
       :enable-time-picker="false"
-      timezone="Africa/Cairo"
+      timezone="Etc/GMT"
       ></VueDatePicker> 
-      <!-- TODO: fix this major timezone issue -->
     </div>
     <hr />
     <div class="input-file-row">

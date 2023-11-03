@@ -1062,7 +1062,7 @@ def map_pp_defense_to_dk_defense_name(name_to_id):
 
     return name_to_id
 
-def player_pool_to_by_position_dk_nba(player_pool, excluded):
+def player_pool_to_by_position_dk_nba(player_pool, excluded=[]):
     dk_positions_mapper = {"PG": ["PG", "G", "UTIL"], "SG": ["SG", "G", "UTIL"], "SF": ["SF", "F", "UTIL"], "PF": ["PF", "F", "UTIL"], "C": ["C", "UTIL"]}
 
     by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': [], "G": [], "F": [], "UTIL": []}
