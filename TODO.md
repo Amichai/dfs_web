@@ -23,3 +23,7 @@ TODO:
  Use shark ownership to hedge lineups on PP
 
  Fix the DK reoptimizer :(
+
+  New database to track projection diffs each day
+
+  Game start-time distribution

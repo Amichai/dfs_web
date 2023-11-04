@@ -563,10 +563,10 @@ def print_player_exposures(rosters_sorted, locked_teams=None):
     rows = []
     for player_name, ct in player_to_ct.items():
         pl = name_to_player[player_name]
-        if pl.value == 0:
-            continue
-        if locked_teams != None and pl.team in locked_teams:
-            continue
+        # if pl.value == 0:
+        #     continue
+        # if locked_teams != None and pl.team in locked_teams:
+        #     continue
 
         team = pl.team
         # start_time = team_to_start_time('start_times.txt', team)

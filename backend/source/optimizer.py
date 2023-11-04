@@ -1,4 +1,4 @@
-from name_mapper import name_mapper_pp_to_fd_dk, name_mapper_pp_to_fd, name_mapper
+from name_mapper import name_mapper_pp_to_fd_dk, name_mapper_pp_to_fd, name_mapper, name_mapper_pp_to_dk
 import utils
 from optimizer_library import DK_NBA_Optimizer, NFL_Optimizer, FD_NBA_Optimizer
 import itertools
@@ -25,6 +25,9 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude
     
       elif site == 'fd' and name in name_mapper_pp_to_fd:
           name = name_mapper_pp_to_fd[name]
+
+      elif site == 'dk' and name in name_mapper_pp_to_dk:
+          name = name_mapper_pp_to_dk[name]
 
       if 'DST' in name:
           parsed_name = name.split(' ')[0]

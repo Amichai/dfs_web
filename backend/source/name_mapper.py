@@ -47,13 +47,11 @@ name_mapper_pp_to_fd_dk = {
   'Odell Beckham Jr': 'Odell Beckham Jr.',
   'Allen Robinson': 'Allen Robinson II',
   'Kenny Gainwell': 'Kenneth Gainwell',
-  
-
-  #NBA
-  
+   
 }
 
 name_mapper_pp_to_dk = {
+  'Reggie Bullock': 'Reggie Bullock Jr.',
 }
 
 name_mapper_pp_to_fd = {
@@ -94,6 +92,4 @@ name_mapper_pp_to_fd = {
 
   'Harry Giles III': 'Harry Giles',
   'Ron Harper Jr.': 'Ron Harper',
-
-
 }
