@@ -76,7 +76,7 @@ watch(() => excludedPlayers.value, (newVal, oldVal) => {
 
 <template>
   <main>
-    <h1>Optimizer</h1>
+    <h1>Optimizer DK</h1>
     <br>
     <div class="settings">
       <p>sport:</p>

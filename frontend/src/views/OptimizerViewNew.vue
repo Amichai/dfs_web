@@ -33,14 +33,29 @@ const emits = defineEmits([])
 
 <template>
   <main>
+
+
     <h1>Optimizer</h1>
-    <p>[x] pick the slate from a dropdown</p>
-    <p>[ ] show the players available for the slate</p>
-    <p>[ ] show the projections</p>
-    <p>[ ] show the projection sources</p>
-    <p>[ ] start times</p>
-    <p>[ ] Optimizer</p>
-    <p>[ ] Show player exposures</p>
+
+
+    <p>scrape button</p>
+    <p>Optimize all slates</p>
+
+    <p>add slate</p>
+    <ul>
+      <li>sport</li>
+      <li>slate id</li>
+      <li>site</li>
+      <li>roster count</li>
+      <li>iter count</li>
+      <li>optimize</li>
+      <li>reoptimize</li>
+      <li>exclude</li>
+      <li>existing rosters</li>
+      <li>remove this slate</li>
+    </ul>
+    <p>Show player exposure</p>
+    <p>Show lock-time exposure</p>
 
     <ComboBox :array="slates" 
       v-model="selectedSlate"

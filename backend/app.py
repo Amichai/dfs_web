@@ -384,8 +384,7 @@ def optimize():
 
 
     utils.print_player_exposures(results)
-    # return jsonify(roster_data)
-    return jsonify([])
+    return jsonify(roster_data)
 
 @app.route('/runscraper', methods=['POST'])
 def run_scraper():
