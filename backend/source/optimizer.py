@@ -725,10 +725,18 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
     original_rosters = []
     lines = rosters.split('\n')
     for line in lines:
-        players = line.split('	')
+        players = line.split(',')
+        if players[0] == 'entry_id' or players[0] == 'Entry ID':
+            continue
         locked_roster_players = []
         original_roster_players = []
-        for player in players:
+        if site == 'fd':
+            player_columns = players[3:12]
+        elif site == 'dk':
+            player_columns = players[4:12]
+        else:
+            assert False
+        for player in player_columns:
             if ':' in player:
                 name = player.split(':')[1]
             else:

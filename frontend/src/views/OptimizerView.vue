@@ -52,7 +52,6 @@ const constructOutputFile = (rosters) => {
 
   // Clean up by revoking the object URL
   window.URL.revokeObjectURL(url);
-
 }
 
 const optimize = async (sport, site, type) => {
@@ -61,8 +60,6 @@ const optimize = async (sport, site, type) => {
   // todo render this result
   console.log(result)
   constructOutputFile(result)
-
-
 }
 
 const uploadSlateFile = (evt) => {
@@ -86,9 +83,8 @@ const uploadSlateFile = (evt) => {
 
 const reoptimize = async  (sport, site, type) => {
   const result = await runReoptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value, contests.value, excludedPlayers.value)
-  // debugger
-  // todo render this result
   console.log(result)
+  constructOutputFile(result)
 }
 
 const sport = ref('NFL')
@@ -164,8 +160,7 @@ watch(() => excludedPlayers.value, (newVal, oldVal) => {
     </div>
     <!-- <button class="button" @click="() => optimize(sport, 'fd', 'single_game')">Optimize Single Game FD</button> -->
     <br>
-    <textarea name="roste
-    rs" class="roster-results" rows="3" placeholder="contests" v-model="contests"></textarea>
+    <textarea name="rosters" class="roster-results" rows="3" placeholder="contests" v-model="contests"></textarea>
 
 
     <div class="input-file-row">

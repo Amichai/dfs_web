@@ -13,8 +13,8 @@ const slates = ref(['test1'])
 
 onMounted(async () => {
   // await getSlates(getDateString())
-  const result = await getSlates('2023-09-18')
-  slates.value = result
+  // const result = await getSlates('2023-09-18')
+  // slates.value = result
 })
 
 const selectedSlate = ref('')

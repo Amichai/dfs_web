@@ -92,8 +92,8 @@ export const runReoptimizer = async (sport, site, type, slateId, rosterCount, it
   return result.data
 }
 
-export const getSlates = async (cutoffDate) => {
-  const result = await axios.get(`${URL_BASE}/getslates?cutoffDate=${cutoffDate}`)
+export const getSlates = async (site, sport) => {
+  const result = await axios.get(`${URL_BASE}/getslates?site=${site}&sport=${sport}`)
   console.log(result.data)
   return result.data
 }

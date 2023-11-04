@@ -37,6 +37,19 @@ def write_slate(sport, slate_id, site, date, columns, player_data, game_data):
         file.write('{}\n'.format(','.join(player)))
     pass
 
+def get_slates(sport, site, date):
+    filepath = 'DBs/{}/slates_{}.txt'.format(sport, date)
+    file = open(filepath, 'r')
+    lines = file.readlines()
+    slate_ids = []
+    site_key = 'site: {}'.format(site)
+    for line in lines:
+        if 'slate: ' in line and site_key in line:
+            slate_id = line.replace('slate: ', '').split(' ')[0]
+            slate_ids.append(slate_id)
+
+    return slate_ids
+
 def get_slate_players(sport, site, slate_id, date):
     filepath = 'DBs/{}/slates_{}.txt'.format(sport, date)
     file = open(filepath, 'r')

@@ -162,14 +162,13 @@ def get_scraped_lines():
 
 @app.route('/getslates')
 def get_slates():
-    cutoffDate = request.args.get('cutoffDate', '')
-    db = TinyDB(DB_ROOT + SLATES_TABLE)
-    results = db.all()
-    print(cutoffDate)
-    print(results)
-    filtered_results = [a for a in results if a['date'] >= cutoffDate]
+    site = request.args.get('site', '')
+    sport = request.args.get('sport', '')
+    date = utils.date_str()
+    slates = data_utils.get_slates(sport, site, date)
+    
 
-    return jsonify(filtered_results)
+    return jsonify(slates)
 
 
 @app.route('/getSlatePlayers')
@@ -227,7 +226,7 @@ def reoptimize():
 
     utils.print_player_exposures(results)
 
-    return jsonify([])
+    return jsonify(roster_data)
     
 
 
