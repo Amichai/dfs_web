@@ -13,7 +13,7 @@ const props = defineProps({
 const emits = defineEmits([])
 const contests = ref('')
 
-const constructOutputFile = (rosters) => {
+const constructOutputFile = (rosters, filename) => {
   const lines = contests.value.split('\n')
   let toWrite = ''
   toWrite += lines[0] + '\n'
@@ -43,7 +43,7 @@ const constructOutputFile = (rosters) => {
 // Create an anchor element for the download link
   const a = document.createElement('a');
   // a.href = url;
-  a.setAttribute('download', 'dk_upload.csv');
+  a.setAttribute('download', filename);
   a.setAttribute('href', url);
 
 // Trigger a click event on the download link to initiate the download
@@ -79,7 +79,7 @@ const optimize = async (sport, site, type) => {
   // debugger
   // todo render this result
   console.log(result)
-  constructOutputFile(result)
+  constructOutputFile(result, 'dk_upload.csv')
 }
 
 const reoptimize = async  (sport, site, type) => {
@@ -87,7 +87,7 @@ const reoptimize = async  (sport, site, type) => {
   // debugger
   // todo render this result
   console.log(result)
-  constructOutputFile(result)
+  constructOutputFile(result, 'dk_reoptimize.csv')
 }
 
 const sport = ref('NFL')
@@ -169,6 +169,8 @@ watch(() => excludedPlayers.value, (newVal, oldVal) => {
     <button class="button" @click="() => optimize(sport, 'dk', '')">Optimize DK</button>
     
     <button class="button" @click="() => reoptimize(sport, 'dk', '')">Reoptimize</button>
+    
+    <button class="button" @click="() => optimize(sport, 'dk', 'single_game')">Showdown</button>
   </main>
 </template>
 

@@ -18,7 +18,10 @@ TODO:
 
  
  -----
- Track line history
+ Track line change history
+
+save, sort and present projection diffs in a table format
+
  Show how my lineups are distrbuted across start times for the slate
  Use shark ownership to hedge lineups on PP
 
@@ -27,3 +30,4 @@ TODO:
   New database to track projection diffs each day
 
   Game start-time distribution
+

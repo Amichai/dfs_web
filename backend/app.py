@@ -9,8 +9,6 @@ import optimizer
 import random
 import datetime
 
-import pyperclip
-
 
 import sys
 sys.path.append('/Users/amichailevy/Documents/spikes/dfs_web/backend/source/')
@@ -221,9 +219,6 @@ def reoptimize():
 
         idx += 1
     
-    print("Copied to clipboard")
-    pyperclip.copy(save_to_clipboard)
-
     utils.print_player_exposures(results)
 
     return jsonify(roster_data)
@@ -358,9 +353,6 @@ def optimize():
                 'value': result.value,
                 'cost': result.cost
             })
-        print("Copied to clipboard")
-        pyperclip.copy(save_to_clipboard)
-
     elif sport == "NBA" and site == 'dk' and game_type == '':
         results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excluded_names)
 
@@ -376,11 +368,21 @@ def optimize():
                 'value': result.value,
                 'cost': result.cost
             })
-        
-        print("Copied to clipboard")
-        pyperclip.copy(save_to_clipboard)
+    elif sport == "NBA" and site == 'dk' and game_type == 'single_game':
+        results, name_to_id = optimizer.optimize_showdown_dk(slate_id, roster_count, excluded_names)
 
-
+        roster_data = []
+        save_to_clipboard = ''
+        for result in results:
+            to_print_data = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
+            to_print = ",".join(to_print_data) + "," + str(result.value)
+            print(to_print)
+            save_to_clipboard += to_print + '\n'
+            roster_data.append({
+                'players': to_print,
+                'value': result.value,
+                'cost': result.cost
+            })
 
     utils.print_player_exposures(results)
     return jsonify(roster_data)
@@ -419,6 +421,8 @@ def run_scraper():
     
     new_projections = data_utils.get_current_projections(sport)
 
+
+    ## TODO save, sort and present results in a table format
     for key in set(initial_projections.keys()).union(new_projections.keys()):
         initial_p = initial_projections.get(key)
         new_p = new_projections.get(key)
@@ -426,7 +430,7 @@ def run_scraper():
             print("New projection: {} – {}".format(key, new_p))
         if new_p == None:
             print("Lost projection: {} - {}".format(key, initial_p))
-        if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 0.6:
+        if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 0.45:
             print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
 
 

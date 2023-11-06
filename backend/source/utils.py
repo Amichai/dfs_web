@@ -32,12 +32,19 @@ class Player:
         return Player(self.name, self.position, self.cost, self.team, self.value, self.opp, self.projection_source)
 
 
+class RosterSingleGame:
+    def __init__(self, players, value, cost):
+        self.players = players
+        self.value = value
+        self.cost = cost
+
 class Roster:
   def __init__(self, players):
       self.players = players
       self.cost = sum([float(p.cost) for p in self.players])
       self.value = sum([float(p.value) for p in self.players])
       self.locked_indices = []
+    
 
   def __repr__(self):
       return ",".join([p.name for p in self.players]) + " {} - {}".format(self.cost, self.value)

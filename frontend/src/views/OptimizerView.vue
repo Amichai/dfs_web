@@ -13,7 +13,7 @@ const props = defineProps({
 const emits = defineEmits([])
 const reader = new FileReader();
 
-const constructOutputFile = (rosters) => {
+const constructOutputFile = (rosters, filename) => {
   const lines = contests.value.split('\n')
   let toWrite = ''
   toWrite += lines[0] + '\n'
@@ -44,7 +44,7 @@ const constructOutputFile = (rosters) => {
   const a = document.createElement('a');
   // a.href = url;
   // a.download = 'fd_upload.csv';
-  a.setAttribute('download', 'fd_upload.csv');
+  a.setAttribute('download', filename);
   a.setAttribute('href', url);
 
 // Trigger a click event on the download link to initiate the download
@@ -59,7 +59,7 @@ const optimize = async (sport, site, type) => {
   // debugger
   // todo render this result
   console.log(result)
-  constructOutputFile(result)
+  constructOutputFile(result, 'fd_upload.csv')
 }
 
 const uploadSlateFile = (evt) => {
@@ -84,7 +84,7 @@ const uploadSlateFile = (evt) => {
 const reoptimize = async  (sport, site, type) => {
   const result = await runReoptimizer(sport, site, type, slateId.value, rosterCount.value, iterCount.value, contests.value, excludedPlayers.value)
   console.log(result)
-  constructOutputFile(result)
+  constructOutputFile(result, 'fd_reoptimize.csv')
 }
 
 const sport = ref('NFL')
