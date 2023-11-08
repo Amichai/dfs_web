@@ -383,6 +383,21 @@ def optimize():
                 'value': result.value,
                 'cost': result.cost
             })
+    elif sport == "NBA" and site == 'fd' and game_type == 'single_game':
+        results, name_to_id = optimizer.optimize_single_game_fd(slate_id, roster_count, excluded_names)
+
+        roster_data = []
+        save_to_clipboard = ''
+        for result in results:
+            to_print_data = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
+            to_print = ",".join(to_print_data) + "," + str(result.value)
+            print(to_print)
+            save_to_clipboard += to_print + '\n'
+            roster_data.append({
+                'players': to_print,
+                'value': result.value,
+                'cost': result.cost
+            })
 
     utils.print_player_exposures(results)
     return jsonify(roster_data)

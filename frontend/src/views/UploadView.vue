@@ -57,6 +57,7 @@ const sport = ref('')
 const uploadSlate = () => {
   // parser = slatesToParsers[selectedSlate.value]
   // parsedContent.value.mappedVals
+  sport.value = 'NBA'
 
   const site = selectedSlate.value.split(' ')[0]
   writeSlate(sport.value, slateId.value, site.toLowerCase(), date.value.split(' ')[0], 

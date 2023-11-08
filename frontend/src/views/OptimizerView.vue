@@ -34,23 +34,16 @@ const constructOutputFile = (rosters, filename) => {
     toWrite += `${roster.cost}\n`
   }
   
-  // toWrite = toWrite.slice(0, -1);
   toWrite = toWrite.replace(/\r\n/g, '\n');
   console.log(toWrite)
   const blob = new Blob([toWrite], { type: 'text/plain' });
   const url = window.URL.createObjectURL(blob);
 
-// Create an anchor element for the download link
   const a = document.createElement('a');
-  // a.href = url;
-  // a.download = 'fd_upload.csv';
   a.setAttribute('download', filename);
   a.setAttribute('href', url);
 
-// Trigger a click event on the download link to initiate the download
   a.click();
-
-  // Clean up by revoking the object URL
   window.URL.revokeObjectURL(url);
 }
 

@@ -52,6 +52,7 @@ name_mapper_pp_to_fd_dk = {
 
 name_mapper_pp_to_dk = {
   'Reggie Bullock': 'Reggie Bullock Jr.',
+  
 }
 
 name_mapper_pp_to_fd = {
@@ -92,4 +93,5 @@ name_mapper_pp_to_fd = {
 
   'Harry Giles III': 'Harry Giles',
   'Ron Harper Jr.': 'Ron Harper',
+  'Danuel House Jr.': 'Danuel House',
 }

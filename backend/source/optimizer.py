@@ -401,7 +401,8 @@ def reoptimize_dk_nba(player_pool, locked_rosters, original_rosters, excluded=[]
             locked_players_key = get_locked_players_key(players)
 
             if not locked_players_key in locked_players_to_top_n_optimized:
-                candidate_rosters = optimizer.optimize_top_n(by_position, 120, players, int(12950))
+                # candidate_rosters = optimizer.optimize_top_n(by_position, 120, players, int(12950))
+                candidate_rosters = optimizer.optimize_top_n(by_position, 120, players, int(9250))
 
                 candidate_rosters_keys = get_roster_keys_from_rosters(candidate_rosters)
                 # TODO: consider filtering out currently in-play rosters from these candidates to avoid collisions?
@@ -483,7 +484,8 @@ def reoptimize_fd_nba(player_pool, locked_rosters, original_rosters):
             locked_players_key = get_locked_players_key(players)
 
             if not locked_players_key in locked_players_to_top_n_optimized:
-                candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(12950), players, lineup_validator=lineup_validator)
+                # candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(12950), players, lineup_validator=lineup_validator)
+                candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(9950), players, lineup_validator=lineup_validator)
                 # TODO: 6050
                 # candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(11050), players5, is_roster_valid)
 
@@ -732,12 +734,98 @@ def optimize_showdown_dk(slate_id, roster_count, excluded):
 
     all_rosters_sorted = sorted(all_rosters, key=lambda a: a.value, reverse=True)
     
-    import pdb; pdb.set_trace()
     to_return = all_rosters_sorted[:roster_count]
     for roster in to_return:
         print(roster)
         
     return to_return, name_to_id
+
+
+def optimize_single_game_fd(slate_id, roster_count, excluded):
+    scraped_lines = data_utils.get_scraped_lines_multiple(['Caesars_NBA'])
+    
+    site = 'fd'
+    sport = 'NBA'
+    
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(site, sport, slate_id, exclude_injured=False)
+    
+    name_to_player = {}
+    for player in slate_players:
+        name = player['name']
+        if not name in name_to_player:
+            name_to_player[name] = player
+        else:
+            player1 = name_to_player[name]
+            if int(player['salary']) < int(player1['salary']):
+                name_to_player[name] = player
+    
+    slate_players_new = name_to_player.values()
+    
+    adjustments = {}
+    for exclude in excluded:
+        adjustments[exclude] = 0
+        
+    player_pool = get_player_pool(slate_players_new, scraped_lines, site, team_filter=None, adjustments=adjustments)
+    
+    print_slate(slate_players_new, player_pool, site, team_list)
+    
+
+    all_rosters = []
+
+    roster_keys = set()
+
+    player_pool = [a for a in player_pool if a[2] > 10.0]
+    
+    player_pool = [utils.Player(a[0], a[3], a[1], a[4], a[2]) for a in player_pool]
+    print("Player pool ct: {}".format(len(player_pool)))
+    idx = 0
+    candidates = itertools.permutations(player_pool, 5)
+    for candidate in candidates:
+        p1 = candidate[0]
+        p2 = candidate[1]
+        p3 = candidate[2]
+        p4 = candidate[3]
+        p5 = candidate[4]
+
+        idx += 1
+        
+        if idx % 1000000 == 0:
+            print(idx)
+
+        all_players = [p1, p2, p3, p4, p5]
+        
+        total_cost = p1.cost + p2.cost + p3.cost + p4.cost + p5.cost
+        if total_cost > 60000:
+            continue
+        
+        seen_teams = []
+        for p in all_players:
+            team = p.team
+            if not team in seen_teams:
+                seen_teams.append(team)
+
+        if len(seen_teams) == 1:
+            continue
+
+        total_value = p1.value * 2.0 + p2.value * 1.5 + p3.value * 1.2 + p4.value + p5.value
+
+        roster_key = "{}|{}|{}|".format(p1.name, p2.name, p3.name) + "|".join(sorted([p4.name, p5.name]))
+        
+        if roster_key in roster_keys:
+            continue
+
+        roster_keys.add(roster_key)
+        # import pdb; pdb.set_trace()
+        all_rosters.append(utils.RosterSingleGame([p1, p2, p3, p4, p5], total_value, total_cost))
+
+    all_rosters_sorted = sorted(all_rosters, key=lambda a: a.value, reverse=True)
+    
+    to_return = all_rosters_sorted[:roster_count]
+    for roster in to_return:
+        print(roster)
+        
+    return to_return, name_to_id
+
 
 def optimize(sport, site, slate_id, roster_count, iter_count, excluded):
     assert site == 'fd' or site == 'dk'
