@@ -222,8 +222,23 @@ def reoptimize():
     utils.print_player_exposures(results)
 
     return jsonify(roster_data)
-    
 
+def collect_roster_data(results, name_to_id, site):
+    roster_data = []
+    for result in results:
+        if site == 'fd':
+            to_print_data = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
+        else:
+            to_print_data = ["{}".format(name_to_id[a.name]) for a in result.players]
+        to_print = ",".join(to_print_data) + "," + str(result.value)
+        print(to_print)
+        roster_data.append({
+            'players': to_print,
+            'value': result.value,
+            'cost': result.cost
+        })
+        
+    return roster_data
 
 @app.route('/optimize', methods=['POST'])
 def optimize():
@@ -326,79 +341,16 @@ def optimize():
         # optimizer.print_slate(slate_players, player_pool, 'fd', [])
         name_to_id = utils.name_to_player_id(slate_players)
         name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
-
-        results = optimizer.optimize_fd_nfl(player_pool, roster_count, iter_count)
-
-        roster_data = []
-        for result in results:
-            to_print = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
-            print(",".join(to_print) + "," + str(result.value))
-            roster_data.append({
-                'players': to_print,
-                'value': result.value,
-                'cost': result.cost
-            })
     elif sport == "NBA" and site == 'fd' and game_type == '':
         results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excluded_names)
-
-        roster_data = []
-        save_to_clipboard = ''
-        for result in results:
-            to_print_data = ["{}:{}".format(name_to_id[a.name], a.name) for a in result.players]
-            to_print = ",".join(to_print_data) + "," + str(result.value)
-            print(to_print)
-            save_to_clipboard += to_print + '\n'
-            roster_data.append({
-                'players': to_print,
-                'value': result.value,
-                'cost': result.cost
-            })
     elif sport == "NBA" and site == 'dk' and game_type == '':
         results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excluded_names)
-
-        roster_data = []
-        save_to_clipboard = ''
-        for result in results:
-            to_print_data = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
-            to_print = ",".join(to_print_data) + "," + str(result.value)
-            print(to_print)
-            save_to_clipboard += to_print + '\n'
-            roster_data.append({
-                'players': to_print,
-                'value': result.value,
-                'cost': result.cost
-            })
     elif sport == "NBA" and site == 'dk' and game_type == 'single_game':
         results, name_to_id = optimizer.optimize_showdown_dk(slate_id, roster_count, excluded_names)
-
-        roster_data = []
-        save_to_clipboard = ''
-        for result in results:
-            to_print_data = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
-            to_print = ",".join(to_print_data) + "," + str(result.value)
-            print(to_print)
-            save_to_clipboard += to_print + '\n'
-            roster_data.append({
-                'players': to_print,
-                'value': result.value,
-                'cost': result.cost
-            })
     elif sport == "NBA" and site == 'fd' and game_type == 'single_game':
         results, name_to_id = optimizer.optimize_single_game_fd(slate_id, roster_count, excluded_names)
-
-        roster_data = []
-        save_to_clipboard = ''
-        for result in results:
-            to_print_data = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
-            to_print = ",".join(to_print_data) + "," + str(result.value)
-            print(to_print)
-            save_to_clipboard += to_print + '\n'
-            roster_data.append({
-                'players': to_print,
-                'value': result.value,
-                'cost': result.cost
-            })
-
+    
+    roster_data = collect_roster_data(results, name_to_id, site)
     utils.print_player_exposures(results)
     return jsonify(roster_data)
 

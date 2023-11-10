@@ -31,3 +31,5 @@ save, sort and present projection diffs in a table format
 
   Game start-time distribution
 
+
+AUtomatically sort rosters by ?entry fee? so I can join in any order

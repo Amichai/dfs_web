@@ -1069,6 +1069,22 @@ def map_pp_defense_to_dk_defense_name(name_to_id):
 
     return name_to_id
 
+def player_pool_to_by_position_fd_nba(player_pool):
+    by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': []}
+
+    for player in player_pool:
+        name = player[0]
+        cost = player[1]
+        proj = player[2]
+        position = player[3]
+        team = player[4]
+        pos_parts = position.split('/')
+        for pos in pos_parts:
+            player = Player(name, player, cost, team, proj)
+            by_position[pos].append(player)
+    
+    return by_position
+
 def player_pool_to_by_position_dk_nba(player_pool, excluded=[]):
     dk_positions_mapper = {"PG": ["PG", "G", "UTIL"], "SG": ["SG", "G", "UTIL"], "SF": ["SF", "F", "UTIL"], "PF": ["PF", "F", "UTIL"], "C": ["C", "UTIL"]}
 
@@ -1096,3 +1112,14 @@ def player_pool_to_by_position_dk_nba(player_pool, excluded=[]):
 def write_to_files(to_write, *files):
     for file in files:
         file.write(to_write)
+
+
+def lineup_validator_fd(roster):
+    team_ct = {}
+    for player in roster.players:
+        pl_team = player.team
+        if not pl_team in team_ct:
+            team_ct[pl_team] = 1
+        else:
+            team_ct[pl_team] += 1
+    return max(team_ct.values()) <= 4

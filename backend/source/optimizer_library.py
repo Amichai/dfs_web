@@ -299,7 +299,7 @@ class DK_NBA_Optimizer:
     by_position = self.prune_player_pool(by_position)
     return self.optimizer.optimize(by_position, iter, None, locked_players)
   
-  def optimize_top_n(self, by_position, n, locked_players, iter = int(60000)):
+  def optimize_top_n(self, by_position, n, locked_players, iter = int(60000), lineup_validator=None):
     by_position = self.prune_player_pool(by_position)
     # __import__('pdb').set_trace()
     result = self.optimizer.optimize_top_n(by_position, n, iter, None, seed_roster=locked_players)

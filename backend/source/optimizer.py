@@ -37,8 +37,8 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude
 
         
       if len(matched_names) == 0:
-          if not '+' in name:
-            print("Can't find target to apply projection for (excluded or injured?): ", name)
+        #   if not '+' in name:
+            # print("Can't find target to apply projection for (excluded or injured?): ", name)
           continue
       
       if len(matched_names) > 1:
@@ -401,8 +401,8 @@ def reoptimize_dk_nba(player_pool, locked_rosters, original_rosters, excluded=[]
             locked_players_key = get_locked_players_key(players)
 
             if not locked_players_key in locked_players_to_top_n_optimized:
-                # candidate_rosters = optimizer.optimize_top_n(by_position, 120, players, int(12950))
-                candidate_rosters = optimizer.optimize_top_n(by_position, 120, players, int(9250))
+                candidate_rosters = optimizer.optimize_top_n(by_position, 120, players, int(11550))
+                # candidate_rosters = optimizer.optimize_top_n(by_position, 120, players, int(9250))
 
                 candidate_rosters_keys = get_roster_keys_from_rosters(candidate_rosters)
                 # TODO: consider filtering out currently in-play rosters from these candidates to avoid collisions?
@@ -442,6 +442,62 @@ def reoptimize_dk_nba(player_pool, locked_rosters, original_rosters, excluded=[]
     return all_results
 
 
+def reoptimize_nba_v2(player_pool, locked_rosters, original_rosters, by_position, optimizer, lineup_validator):
+    locked_players_to_top_n_optimized = {}
+    seen_roster_keys = []
+    is_h2h = False
+    
+    all_results = []
+    for locked_players in locked_rosters:
+        # TODO get the current roster value to compare with the new optimized roster value
+        lock_ct = sum([1 for a in locked_players if a != ''])
+        if lock_ct == 9:
+            all_results.append(None)
+            continue
+        locked_players_key = get_locked_players_key(locked_players)
+        if locked_players_key in locked_players_to_top_n_optimized:
+            candidate_rosters = locked_players_to_top_n_optimized[locked_players_key]
+        else:
+            candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(9950), locked_players, lineup_validator=lineup_validator)
+            locked_players_to_top_n_optimized[locked_players_key] = candidate_rosters
+        top_roster = candidate_rosters[0]
+        top_val = top_roster.value
+        if is_h2h:
+            all_results.append(top_roster)
+            continue
+        candidate_rosters_filtered = [a for a in candidate_rosters if a.value >= top_val - 10]
+        counter = 0
+        for roster in candidate_rosters_filtered:
+            names1 = [p.name for p in roster.players]
+            candidate_roster_key = ",".join(sorted(names1))
+            if not candidate_roster_key in seen_roster_keys:
+                result = roster
+                print("TAKING CANDIDATE ROSTER: {}".format(counter))
+                break
+
+            counter += 1
+        
+        names1 = [p.name for p in result.players]
+        optimized_roster_key = ",".join(sorted(names1))
+        seen_roster_keys.append(optimized_roster_key)
+        all_results.append(result)
+        print("{}/{}".format(len(all_results), len(locked_rosters)))
+        
+    diff_count = 0
+    for idx in range(len(original_rosters)):
+        new_roster = all_results[idx]
+        if new_roster == None:
+            continue
+        new_roster_key = new_roster.roster_key()
+        roster = original_rosters[idx]
+        roster_key = roster.roster_key()
+        if new_roster_key != roster_key:
+            diff_count += 1
+
+    print("{} / {} rosters changed".format(diff_count, len(original_rosters)))
+    return all_results
+        
+        
 def reoptimize_fd_nba(player_pool, locked_rosters, original_rosters):
     by_position = {'PG': [], 'SG': [], 'SF': [], 'PF': [], 'C': []}
 
@@ -485,7 +541,7 @@ def reoptimize_fd_nba(player_pool, locked_rosters, original_rosters):
 
             if not locked_players_key in locked_players_to_top_n_optimized:
                 # candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(12950), players, lineup_validator=lineup_validator)
-                candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(9950), players, lineup_validator=lineup_validator)
+                candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(11950), players, lineup_validator=lineup_validator)
                 # TODO: 6050
                 # candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(11050), players5, is_roster_valid)
 
@@ -494,7 +550,7 @@ def reoptimize_fd_nba(player_pool, locked_rosters, original_rosters):
 
                 locked_players_to_top_n_optimized[locked_players_key] = candidate_rosters
             else:
-                candidate_rosters = locked_players_to_top_n_optimized[locked_players_key]   
+                candidate_rosters = locked_players_to_top_n_optimized[locked_players_key]
                     # result = optimizer.optimize(by_position, players, int(2500), lineup_validator=lineup_validator)
                     # result = optimizer.optimize(by_position, players, int(5000), lineup_validator=lineup_validator)
 
@@ -955,8 +1011,18 @@ def reoptimize(sport, site, slate_id, rosters, excluded=None):
     # elif sport == 'NBA':
     if site == 'fd':
         results = reoptimize_fd_nba(player_pool_new, locked_rosters, original_rosters)
+        
+        # optimizer = FD_NBA_Optimizer()
+        # by_position = utils.player_pool_to_by_position_fd_nba(player_pool)
+        # lineup_validator = utils.lineup_validator_fd
     elif site == 'dk':
         results = reoptimize_dk_nba(player_pool_new, locked_rosters, original_rosters)
+        
+        # by_position = utils.player_pool_to_by_position_dk_nba(player_pool)
+        # optimizer = DK_NBA_Optimizer()
+        # lineup_validator=None
+        
+    # results = reoptimize_nba_v2(player_pool_new, locked_rosters, original_rosters, by_position, optimizer, lineup_validator)
 
 
     name_to_id = utils.name_to_player_id(slate_players)
