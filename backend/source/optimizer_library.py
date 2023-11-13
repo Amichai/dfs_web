@@ -89,6 +89,8 @@ class Optimizer:
 
   def random_elements(self, arr, count, exclude=[]):
       if count > len(arr):
+          # in a pinch you can use this hack
+          # return [arr[0]] * count
           assert False
       if count == len(arr):
         if arr[0].name in exclude:
@@ -126,6 +128,7 @@ class Optimizer:
       to_return += result
 
       if len(to_return) != len(set([a.name for a in to_return])):
+        # in a pinch this can be removed
         __import__('pdb').set_trace()
 
     to_return = utils.Roster(to_return)
@@ -156,7 +159,7 @@ class Optimizer:
 
           if to_remove == None:
             by_position_copied = by_position
-
+            
           random_lineup = self.build_random_line_up(by_position_copied)
 
           if random_lineup == None:
@@ -220,7 +223,7 @@ class Optimizer:
     for i in range(iter_count):
         if i % 50000 == 0:
             print(i)
-        
+            
         random_lineup = self.build_random_line_up(by_position)
         if random_lineup == None:
           continue
@@ -299,7 +302,7 @@ class DK_NBA_Optimizer:
     by_position = self.prune_player_pool(by_position)
     return self.optimizer.optimize(by_position, iter, None, locked_players)
   
-  def optimize_top_n(self, by_position, n, locked_players, iter = int(60000), lineup_validator=None):
+  def optimize_top_n(self, by_position, n, iter, locked_players, lineup_validator=None):
     by_position = self.prune_player_pool(by_position)
     # __import__('pdb').set_trace()
     result = self.optimizer.optimize_top_n(by_position, n, iter, None, seed_roster=locked_players)

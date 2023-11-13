@@ -145,7 +145,7 @@ const getCurrentTimeDecimal = () => {
 const optimize = async () => {
   const currentTime = getCurrentTimeDecimal()
   if (currentTime > startTime.value) {
-    alert('Slate has already started')
+    // alert('Slate has already started')
     // return
 
 
