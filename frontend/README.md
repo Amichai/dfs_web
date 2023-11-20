@@ -35,5 +35,5 @@ npm run lint
 ```
 
 
-virtualenv env; source env/bin/activate
+virtualenv env;   
 python app.py 

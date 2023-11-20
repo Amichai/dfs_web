@@ -24,7 +24,7 @@ const removeSlate = (index) => {
 
 onMounted(async () => {
   const slateIdsString = localStorage.getItem(`slateIds`)
-  slateIds.value =slateIdsString === '' ? [] :
+  slateIds.value = slateIdsString === '' ? [] :
     slateIdsString?.split(',')?.map(s => parseInt(s)) ?? []
 
   console.log("slateIds", slateIds.value)
@@ -48,7 +48,7 @@ const emits = defineEmits([])
 <template>
   <main>
     <h1>Optimizer</h1>
-    <div v-for="(slateId, index) in slateIds" :key="index">
+    <div v-for="(slateId, index) in slateIds" :key="slateId">
       <SlateSetup
         :id="slateId"
         @delete="() => removeSlate(index)"

@@ -94,4 +94,5 @@ name_mapper_pp_to_fd = {
   'Harry Giles III': 'Harry Giles',
   'Ron Harper Jr.': 'Ron Harper',
   'Danuel House Jr.': 'Danuel House',
+  'Kevin Knox II': 'Kevin Knox',
 }
