@@ -60,7 +60,14 @@ const uploadSlate = () => {
   sport.value = 'NBA'
 
   const site = selectedSlate.value.split(' ')[0]
-  writeSlate(sport.value, slateId.value, site.toLowerCase(), date.value.split(' ')[0], 
+  const currentDate = new Date();
+  const dateString = currentDate.toLocaleDateString('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  writeSlate(sport.value, slateId.value, site.toLowerCase(), dateString,
+
   parsedContent.value.columns,
   parsedContent.value.mappedVals,
   slateInput.value.replaceAll('\n',','))
@@ -145,13 +152,13 @@ const clearFile = () => {
         v-model="selectedSlate"
         placeholder="site" />
 
-      <VueDatePicker class="datepicker" v-model="date" 
+      <!-- <VueDatePicker class="datepicker" v-model="date" 
       :month-change-on-scroll="false"
       auto-apply
       text-input
       :enable-time-picker="false"
       timezone="Etc/GMT"
-      ></VueDatePicker> 
+      ></VueDatePicker>  -->
     </div>
     <hr />
     <div class="input-file-row">

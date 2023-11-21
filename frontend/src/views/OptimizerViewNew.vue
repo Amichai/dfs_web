@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import ComboBox from '../components/ComboBox.vue'
 import SlateSetup from '../components/SlateSetup.vue'
-import { getSlates, getSlatePlayers } from '../apiHelper';
+import { runScraper, getScrapedLines } from '../apiHelper';
 import { getDateString } from '../utils';
   
 const props = defineProps({
@@ -40,6 +40,10 @@ const lowestAvailableId = () => {
   return id
 }
 
+const scrape = async () => {
+  await runScraper('NBA', 'Caesars')
+}
+
 const emits = defineEmits([])
 
 
@@ -48,6 +52,7 @@ const emits = defineEmits([])
 <template>
   <main>
     <h1>Optimizer</h1>
+    <button class="button" @click="scrape">Scrape</button>
     <div v-for="(slateId, index) in slateIds" :key="slateId">
       <SlateSetup
         :id="slateId"
