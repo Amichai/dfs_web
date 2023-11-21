@@ -27,6 +27,122 @@ def get_scraped_lines(scraper):
     return all_results
 
 
+def scraped_lines_to_projections(lines, site='fd'):
+    name_to_stat_to_val = {}
+    for line in lines:
+        parts = line.split(',')
+        name = parts[7]
+        stat = parts[1]
+        val = parts[0]
+        if not name in name_to_stat_to_val:
+            name_to_stat_to_val[name] = {}
+        name_to_stat_to_val[name][stat] = val
+
+    name_to_projection = {}
+    for name, stats in name_to_stat_to_val.items():
+        pts, assists, rebounds, blocks, steals, turnovers, three_pointers = 0, 0, 0, 0, 0, 0, 0
+        
+        if 'Points' in stats:
+            pts = float(stats['Points'])
+            
+        if 'Assists' in stats:
+            assists = float(stats['Assists'])
+        
+        if 'Rebounds' in stats:
+            rebounds = float(stats['Rebounds'])
+        
+        if 'Blocks' in stats:
+            blocks = float(stats['Blocks'])
+    
+        if 'Steals' in stats:
+            steals = float(stats['Steals'])
+        
+        if 'Turnovers' in stats:
+            turnovers = float(stats['Turnovers'])
+        
+        if '3pt Field Goals' in stats:
+            three_pointers = float(stats['3pt Field Goals'])
+        
+        projection = compute_caesar_projection(pts, assists, rebounds, blocks, steals, turnovers, three_pointers, site)
+        name_to_projection[name] = round(projection, 3)
+        
+    return name_to_projection
+
+def get_caesars_projection_history():
+    date_string = utils.date_str()
+    file_today = open('DBs/{}/{}_{}.txt'.format('NBA', 'Caesars', date_string), 'r')
+    
+    header_row = 'line_score,stat,start_time,line_original,under_fraction,over_fraction,active,name,team'
+    
+    all_scrapes = []
+    current_scrape = []
+    current_scrape_time = None
+    
+    all_lines = file_today.readlines()
+    print(len(all_lines))
+    for line in all_lines:
+        if line.startswith('t:'):
+            if current_scrape_time != None:
+                projections = scraped_lines_to_projections(current_scrape)
+                all_scrapes.append({
+                    'time': current_scrape_time,
+                    'projections': projections
+                })
+            
+            current_scrape_time = line.split(' ')[1].strip()
+            current_scrape = []
+            continue
+        if header_row in line:
+            continue
+        
+        current_scrape.append(line)
+    
+    projections = scraped_lines_to_projections(current_scrape)
+    all_scrapes.append({
+        'time': current_scrape_time,
+        'projections': projections
+    })
+    name_to_projections = {}
+    for scrape in all_scrapes:
+        projections = scrape['projections']
+        time = scrape['time']
+        for name, projection in projections.items():
+            if not name in name_to_projections:
+                name_to_projections[name] = []
+            name_to_projections[name].append((time, projection))
+    
+    
+    name_to_projection_history = {}
+    for name, projections in name_to_projections.items():
+        projections.reverse()
+        
+        most_recent_projection = projections[0]
+        current_projection = most_recent_projection[1]
+        last_update = most_recent_projection[0]
+        max_projection = max(projections, key=lambda a: a[1])
+        min_projection = min(projections, key=lambda a: a[1])
+        proj_inspection = most_recent_projection
+        last_change = None
+        last_change_diff = None
+        for projection in projections:
+            if abs(proj_inspection[1] - projection[1]) > .1:
+                last_change = proj_inspection[0]
+                last_change_diff = round(proj_inspection[1] - projection[1], 3)
+                
+            proj_inspection = projection
+        
+        name_to_projection_history[name] = {
+            'current': current_projection,
+            'last_update': last_update,
+            'max': max_projection[1],
+            'min': min_projection[1],
+            'last_change': last_change,
+            'last_change_diff': last_change_diff 
+        }
+
+    print(name_to_projection_history)
+
+
 def write_slate(sport, slate_id, site, date, columns, player_data, game_data):
     filepath = 'DBs/{}/slates_{}.txt'.format(sport, date)
     file = open(filepath, 'a')
@@ -118,6 +234,17 @@ def get_most_recent_slate(sport):
     return most_recent_slate
 
 
+def compute_caesar_projection(points, assists, rebounds, blocks, steals, turnovers, three_pointers, site='fd'):
+    turnover_penalty = turnovers / 3
+    if site == 'dk':
+        turnover_penalty /= 2
+    val = points + assists * 1.5 + rebounds * 1.2 + blocks * 3 + steals * 3 - turnover_penalty
+
+    if site == 'dk':
+        val += three_pointers * 0.5
+        
+    return val
+
 def add_casesar_projections(name_stat_to_val, all_names, site='fd'):
     get_key = lambda a, b: "{}_{}".format(a, b)
     key_generators = [
@@ -140,13 +267,7 @@ def add_casesar_projections(name_stat_to_val, all_names, site='fd'):
                 stat_vals.append(0)
 
         if sum(stat_vals) > 0:
-            turnover_penalty = stat_vals[5] / 3
-            if site == 'dk':
-                turnover_penalty /= 2
-            val = stat_vals[0] + stat_vals[1] * 1.5 + stat_vals[2] * 1.2 + stat_vals[3] * 3 + stat_vals[4] * 3 - turnover_penalty
-
-            if site == 'dk':
-                val += stat_vals[6] * 0.5
+            val = compute_caesar_projection(stat_vals[0], stat_vals[1], stat_vals[2], stat_vals[3], stat_vals[4], stat_vals[5], stat_vals[6], site)
             
             name_stat_to_val["{}_{}".format(name, 'CaesarsComputed')] = round(val, 3)
 

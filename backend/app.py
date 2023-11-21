@@ -8,7 +8,7 @@ import time
 import optimizer
 import random
 import datetime
-
+from tabulate import tabulate
 
 import sys
 sys.path.append('/Users/amichailevy/Documents/spikes/dfs_web/backend/source/')
@@ -155,6 +155,8 @@ def get_scraped_lines():
     scraper = request.args.get('scraper', '')
 
     all_results = data_utils.get_scraped_lines(scraper)
+    
+    data_utils.get_caesars_projection_history()
     # _get_scraped_lines_with_history(scraper)
     return jsonify(all_results)
 
@@ -387,20 +389,35 @@ def run_scraper():
     file_most_recent.close()
     
     new_projections = data_utils.get_current_projections(sport)
-
+    diffs = []
+    removed = []
+    added = []
 
     ## TODO save, sort and present results in a table format
     for key in set(initial_projections.keys()).union(new_projections.keys()):
         initial_p = initial_projections.get(key)
         new_p = new_projections.get(key)
         if initial_p == None:
-            print("New projection: {} – {}".format(key, new_p))
+            added.append((key, new_p))
         if new_p == None:
-            print("Lost projection: {} - {}".format(key, initial_p))
-        if initial_p != None and new_p != None and float(new_p) != float(initial_p) and abs(float(new_p) - float(initial_p)) > 0.45:
-            print("Projection diff: {}, initial: {}, new: {}".format(key, initial_p, new_p))
-
-
+            removed.append((key, initial_p))
+        if initial_p != None and new_p != None and float(new_p) != float(initial_p):
+            diff = float(new_p) - float(initial_p)
+            if abs(diff) > 0.01:
+                diffs.append((key, new_p, diff))
+            
+    
+    diffs_sorted = sorted(diffs, key=lambda a: abs(a[2]), reverse=True)
+    print(tabulate(diffs_sorted, headers=['Name', 'new', 'diff']))
+    
+    added_sorted = sorted(added, key=lambda a: a[1], reverse=True)
+    if len(added_sorted) > 0:
+        print(tabulate(added_sorted, headers=['Name', 'projection']))
+    
+    removed_sorted = sorted(removed, key=lambda a: a[1], reverse=True)
+    if len(removed_sorted) > 0:
+        print("Removed: {}".format(",".join([a[0] for a in removed_sorted])))
+        
     return jsonify('success')
 
 if __name__ == '__main__':
