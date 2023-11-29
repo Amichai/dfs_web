@@ -194,7 +194,6 @@ def reoptimize():
     rosters = data['rosters']
 
     excluded_players = data.get('excludePlayers', '')
-    print(excluded_players)
     excluded_names = excluded_players.split(',')
     results, original_rosters, name_to_id = optimizer.reoptimize(sport, site, slate_id, rosters, excluded_names)
 
@@ -204,14 +203,13 @@ def reoptimize():
             # roster is fully locked.
             results[i] = original_rosters[i]
 
-    print(results)
     roster_data = []
     save_to_clipboard = ''
     idx = 0
     for result in results:
         to_print_data = ["{}".format(name_to_id[a.name], a.name) for a in result.players]
         to_print = ",".join(to_print_data) + "," + str(result.value)
-        print(to_print)
+        # print(to_print)
         save_to_clipboard += to_print + '\n'
         roster_data.append({
             'players': to_print,
@@ -233,7 +231,6 @@ def collect_roster_data(results, name_to_id, site):
         else:
             to_print_data = ["{}".format(name_to_id[a.name]) for a in result.players]
         to_print = ",".join(to_print_data) + "," + str(result.value)
-        print(to_print)
         roster_data.append({
             'players': to_print,
             'value': result.value,
@@ -327,15 +324,18 @@ def optimize():
         pass
     elif sport == "NFL" and site == 'fd' and game_type == '':
         print("FD NFL", slate_id)
-        scraped_lines = data_utils.get_scraped_lines('PrizePicks_' + sport)
+        scraped_lines = data_utils.get_scraped_lines('PrizePicks_' + sport, sport)
 
         slate_players, _ = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
 
+        # print(slate_players)
+        # print('---')
+        # print(scraped_lines)
         player_pool = optimizer.get_player_pool(slate_players, scraped_lines, 'fd')
 
-        db = TinyDB(DB_ROOT + "slates")
-        query = Query()
-        upcoming_slates = db.search(query['sport'] == sport)
+        # db = TinyDB(DB_ROOT + "slates")
+        # query = Query()
+        # upcoming_slates = db.search(query['sport'] == sport)
         # # TODO: we should be filtering on slate id here
         # print(upcoming_slates[-1])
 
@@ -343,6 +343,8 @@ def optimize():
         # optimizer.print_slate(slate_players, player_pool, 'fd', [])
         name_to_id = utils.name_to_player_id(slate_players)
         name_to_id = utils.map_pp_defense_to_fd_defense_name(name_to_id)
+        results = optimizer.optimize_fd_nfl(player_pool, roster_count, iter_count)
+
     elif sport == "NBA" and site == 'fd' and game_type == '':
         results, name_to_id = optimizer.optimize(sport, site, slate_id, roster_count, iter_count, excluded_names)
     elif sport == "NBA" and site == 'dk' and game_type == '':
@@ -355,6 +357,83 @@ def optimize():
     roster_data = collect_roster_data(results, name_to_id, site)
     utils.print_player_exposures(results)
     return jsonify(roster_data)
+
+@app.route('/getRosterExposures', methods=['POST'])
+def getRosterExposures():
+    data = request.json
+    rosters = data['rosters']
+    slate_id = data['slateId']
+    site = data['site']
+    sport = data['sport']
+    scraped_lines = data_utils.get_scraped_lines_multiple(['Caesars_NBA'])
+    
+    
+    
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(site, sport, slate_id, exclude_injured=False)
+    
+    _, game_data = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
+    start_times = utils.parse_start_times_from_slate(game_data)
+    print(start_times)
+    
+    team_to_start_time = {}
+    for time, teams in start_times.items():
+        for team in teams:
+            team_to_start_time[team] = time
+    
+    player_pool = optimizer.get_player_pool(slate_players, scraped_lines, site, team_filter=None)
+    
+    name_to_player = {}
+    for player in player_pool:
+        name = player[0]
+        cost = player[1]
+        value = player[2]
+        position = player[3]
+        team = player[4]
+        name_to_player[name] = utils.Player(name, position, cost, team, value)
+        
+    
+    id_to_name = {v: k for k, v in name_to_id.items()}
+    parsed_rosters = []
+    roster = None
+    lines = rosters.split('\n')
+    for line in lines:
+        if roster != None:
+            parsed_rosters.append(utils.Roster(roster))
+        roster = []
+        players = line.split(',')
+        if players[0] == 'entry_id' or players[0] == 'Entry ID':
+            continue
+        if site == 'fd':
+            player_columns = players[3:12]
+        elif site == 'dk':
+            player_columns = players[4:12]
+        else:
+            assert False
+        for player in player_columns:
+            if ':' in player:
+                name = player.split(':')[1]
+            else:
+                name = id_to_name[player]
+                
+            roster.append(name_to_player[name])
+    
+    player_exposures = utils.get_player_exposures(parsed_rosters)
+    start_time_exposures = utils.get_start_time_exposures(parsed_rosters, team_to_start_time)
+    # print(rosters)
+    # print(slate_id)
+    
+    class PlayerEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, utils.Player):
+                return obj.to_dict()
+            return super().default(obj)
+
+    
+    return jsonify({
+        'player_exposures': player_exposures,
+        'start_times': start_time_exposures,
+        'name_to_player': json.dumps(name_to_player, cls=PlayerEncoder)
+    })
 
 @app.route('/runscraper', methods=['POST'])
 def run_scraper():

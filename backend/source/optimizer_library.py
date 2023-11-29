@@ -304,8 +304,7 @@ class DK_NBA_Optimizer:
   
   def optimize_top_n(self, by_position, n, iter, locked_players, lineup_validator=None):
     by_position = self.prune_player_pool(by_position)
-    # __import__('pdb').set_trace()
-    result = self.optimizer.optimize_top_n(by_position, n, iter, None, seed_roster=locked_players)
+    result = self.optimizer.optimize_top_n(by_position, n, iter, lineup_validator, seed_roster=locked_players)
     return result
 
 class DK_CBB_Optimizer:
@@ -436,7 +435,7 @@ class FD_WNBA_Optimizer:
 
       for player in players:
         if player.value_per_dollar < cuttoff:
-          print("Filtered out: {}".format(player))
+          # print("Filtered out: {}".format(player))
           continue
         by_position_copied[position].append(player)
 

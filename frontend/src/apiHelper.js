@@ -61,6 +61,18 @@ export const getScrapedLines = async (scraper) => {
   return result.data
 }
 
+export const getRosterExposures = async (slateId, rosters, sport, site) => {
+  const result = await axios.post(`${URL_BASE}/getRosterExposures`,
+  {
+    slateId,
+    rosters,
+    sport,
+    site
+  })
+
+  return result.data
+}
+
 export const runOptimizer = async (sport, site, type, slateId, rosterCount, iterCount, excludePlayers) => {
   const result = await axios.post(`${URL_BASE}/optimize`,
   {

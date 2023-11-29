@@ -35,3 +35,7 @@ save, sort and present projection diffs in a table format
 AUtomatically sort rosters by ?entry fee? so I can join in any order
 ----
 When scraping caesars, don't filter out "active games" – this will let me see how well my active lineups are projecting. Then i can sort my active lineups by highest projection while reoptimizing to feed the best swaps to my best active lineups
+
+arbitrage with PP finally
+
+Wire the "iter count" param through to the reoptimizer

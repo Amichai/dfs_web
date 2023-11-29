@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
-import { runOptimizer, runReoptimizer } from '../apiHelper';
+import { runOptimizer, runReoptimizer, getRosterExposures } from '../apiHelper';
 import Papa from 'papaparse';
   
 const props = defineProps({
@@ -27,6 +27,10 @@ const excludedPlayers = ref('')
 const slateName = ref('')
 const startTime = ref(0)
 const gameType = ref('')
+
+const slatePlayers = ref([])
+const playerExposures = ref({})
+const startTimeExposures = ref({})
 
 const resetVals = () => {
   console.log('Resetting', props.id)
@@ -142,6 +146,21 @@ const getCurrentTimeDecimal = () => {
   return current_time;
 }
 
+const showExposures = async () => {
+  const exposures = await getRosterExposures(slateId.value, contests.value, sport.value, site.value)
+  
+  slatePlayers.value = JSON.parse(exposures.name_to_player)
+  playerExposures.value = Object.keys(exposures.player_exposures).map((player) => {
+    return [player, exposures.player_exposures[player]]
+  }).sort((a, b) => b[1] - a[1])
+
+  startTimeExposures.value = exposures.start_times
+
+  console.log(playerExposures.value)
+  console.log(startTimeExposures.value)
+}
+
+
 const optimize = async () => {
   const currentTime = getCurrentTimeDecimal()
   if (currentTime > startTime.value) {
@@ -185,14 +204,11 @@ const reoptimize = async  (sport, site, type) => {
   constructOutputFile(result, `${site}_reoptimize.csv`)
 }
 
-
 const deleteSlate = () => {
   resetVals()
   nextTick(() => {
     emits('delete')
   })
-
-
 }
 
 </script>
@@ -230,6 +246,23 @@ const deleteSlate = () => {
       </div>
     </div>
     <button class="button" @click="optimize">Optimize</button>
+    <button class="button" @click="showExposures">Show/Hide Exposures</button>
+    <div class="exposure-grid">
+      <div>
+      <div class="player-exposure-grid grid-header">
+        <div>idx</div>
+        <div>name</div>
+        <div>ct</div>
+      </div>
+      <div v-for="(player, index) in playerExposures" :key="index" class="player-exposure-grid">
+        <div>{{ index + 1}}</div>
+        <div>{{ player[0] }}</div>
+        <div>{{ player[1] }} / {{ rosterCount }}</div>
+      </div>
+    </div>
+      <!-- <div>test2</div> -->
+    </div>
+    
   </div>
 </template>
 
@@ -238,6 +271,12 @@ const deleteSlate = () => {
   display: grid;
   grid-template-columns: 6rem 1fr 6rem 1fr;
   gap: 0.5rem
+}
+
+.player-exposure-grid {
+  font-size: 0.8rem;
+  display: grid;
+  grid-template-columns: 1fr 9rem 5rem 1fr 1fr 1fr 1fr;
 }
 
 .span-3 {
@@ -279,5 +318,19 @@ const deleteSlate = () => {
 .game-type {
   display: flex;
   gap: 0.5rem;
+}
+
+.exposure-grid {
+  border-radius: 0.5rem;
+  margin: 0.5rem;
+  padding: 0.5rem;
+  background-color: lightgray;
+  color: black;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.grid-header {
+  font-weight: bold;
 }
 </style>

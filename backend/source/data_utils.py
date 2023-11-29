@@ -4,8 +4,8 @@ import utils
 DB_ROOT = 'DBs/'
 SCRAPE_OPERATIONS_TABLE = 'scrape_operations'
 
-def get_scraped_lines(scraper):
-    file_most_recent = open('DBs/{}/{}_current.txt'.format('NBA', scraper), 'r')
+def get_scraped_lines(scraper, sport='NBA'):
+    file_most_recent = open('DBs/{}/{}_current.txt'.format(sport, scraper), 'r')
 
     all_results = []
     lines = file_most_recent.readlines()
@@ -70,7 +70,10 @@ def scraped_lines_to_projections(lines, site='fd'):
 
 def get_caesars_projection_history():
     date_string = utils.date_str()
-    file_today = open('DBs/{}/{}_{}.txt'.format('NBA', 'Caesars', date_string), 'r')
+    try:
+        file_today = open('DBs/{}/{}_{}.txt'.format('NBA', 'Caesars', date_string), 'r')
+    except:
+        return []
     
     header_row = 'line_score,stat,start_time,line_original,under_fraction,over_fraction,active,name,team'
     
@@ -235,13 +238,14 @@ def get_most_recent_slate(sport):
 
 
 def compute_caesar_projection(points, assists, rebounds, blocks, steals, turnovers, three_pointers, site='fd'):
-    turnover_penalty = turnovers / 3
-    if site == 'dk':
-        turnover_penalty /= 2
-    val = points + assists * 1.5 + rebounds * 1.2 + blocks * 3 + steals * 3 - turnover_penalty
-
-    if site == 'dk':
-        val += three_pointers * 0.5
+    if site == 'fd':
+        val = points + assists * 1.5 + rebounds * 1.2 + blocks * 3 + steals * 3 - (turnovers / 3.0)
+        
+    elif site == 'dk':
+        val = points + assists * 1.5 + rebounds * 1.25 + blocks * 2 + steals * 2 - (turnovers / 6.0) + (three_pointers * 0.5)
+        
+    else:
+        assert False
         
     return val
 

@@ -157,6 +157,7 @@ const toEpochSeconds = (dateString) => {
       <button class="btn btn-primary scrape-button" @click="scrape">Scrape</button>
     </div> -->
     <button class="btn btn-primary scrape-button button-margin" @click="() => scrapeSport('NBA', 'Caesars')">Scrape Caesars NBA</button>
+    <button class="btn btn-primary scrape-button button-margin" @click="() => scrapeSport('NFL', 'PrizePicks')">Scrape PP NFL</button>
     <!-- <button class="btn btn-primary scrape-button button-margin" @click="() => scrapeSport('NBA', 'PrizePicks')">PP NBA</button> -->
     <br>
     <hr>

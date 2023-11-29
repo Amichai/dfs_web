@@ -30,6 +30,15 @@ class Player:
 
     def clone(self):
         return Player(self.name, self.position, self.cost, self.team, self.value, self.opp, self.projection_source)
+    
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'position': self.position,
+            'cost': self.cost,
+            'team': self.team,
+            'value': self.value,
+        }
 
 
 class RosterSingleGame:
@@ -541,6 +550,20 @@ def get_player_exposures(rosters_sorted):
     
     return player_to_ct
 
+
+def get_start_time_exposures(rosters_sorted, team_to_start_time):
+    start_times = {}
+    for roster in rosters_sorted:
+        for player in roster.players:
+            team = player.team
+            start_time = team_to_start_time[team]
+            if not start_time in start_times:
+                start_times[start_time] = 1
+            else:
+                start_times[start_time] += 1
+        pass
+    return start_times
+
 def print_player_exposures(rosters_sorted, locked_teams=None):
     print("Average roster val: {}".format(statistics.mean([a.value for a in rosters_sorted])))
 
@@ -1018,6 +1041,7 @@ def map_pp_defense_to_fd_defense_name(name_to_id):
         'Washington DST': 'Washington Football Team',
         'Broncos DST': 'Denver Broncos',
         'Bengals DST': 'Cincinnati Bengals',
+        'Commanders DST': 'Washington Commanders',
     }
 
     for name, val in mappings.items():
@@ -1123,3 +1147,26 @@ def lineup_validator_fd(roster):
         else:
             team_ct[pl_team] += 1
     return max(team_ct.values()) <= 4
+
+def lineup_validator_dk(roster):
+    return True
+    seen_games = []
+    
+    # TODO
+    
+    team_to_opp = {
+        'MIA': 'BKN',
+        'BKN': 'MIA',
+        'PHI': 'OKC',
+        'OKC': 'PHI',
+    }
+    for player in roster.players:
+        team = player.team
+        opp = team_to_opp[team]
+        team_opp_sorted = sorted([team, opp])
+        seen_games_key = ",".join(team_opp_sorted)
+        if not seen_games_key in seen_games:
+            seen_games.append(seen_games_key)
+            
+    return len(seen_games) > 1
+    
