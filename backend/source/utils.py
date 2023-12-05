@@ -1155,14 +1155,23 @@ def lineup_validator_dk(roster):
     # TODO
     
     team_to_opp = {
-        'MIA': 'BKN',
-        'BKN': 'MIA',
-        'PHI': 'OKC',
-        'OKC': 'PHI',
+        'WAS': 'ORL',
+        'MEM': 'DAL',
+        'PHI': 'BOS',
+        'SAS': 'NOP',
+        'NYK': 'TOR',
+        'DEN': 'PHX',
     }
+    
+    team_to_opp_2 = {}
+    for team, opp in team_to_opp.items():
+        team_to_opp_2[opp] = team
+        team_to_opp_2[team] = opp
+        
+    
     for player in roster.players:
         team = player.team
-        opp = team_to_opp[team]
+        opp = team_to_opp_2[team]
         team_opp_sorted = sorted([team, opp])
         seen_games_key = ",".join(team_opp_sorted)
         if not seen_games_key in seen_games:

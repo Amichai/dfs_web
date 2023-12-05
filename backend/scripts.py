@@ -1,77 +1,97 @@
 from tinydb import TinyDB, Query, where
 import itertools
+import requests
+import json
+import time
+
 
 import sys
 sys.path.append('/Users/amichailevy/Documents/spikes/dfs_web/backend/source/')
 
 from optimizer_library import NFL_Optimizer
+import optimizer
 import utils
 
 
-from app import _get_scraped_lines
-
 DB_ROOT = 'DBs/'
 
-SCRAPE_OPERATIONS_TABLE = 'scrape_operations'
+# BACKTESTER
+# OPTIMIZE AND REOPTIMIZE OVER THE COURSE OF A NIGHT
+# EXPLORE DIFFERENT PROJECTION NORMALIZATION TECHNIQUES
 
 
-# slate_lines_dk = _get_slate_data('DKSlatePlayers_NFL', '89943,89970')
-# player_pool = get_player_pool(name_stat_to_val, seen_names, slate_lines_dk)
-# print("DK: ", player_pool)
-# optimize_for_single_game_dk(player_pool, 5)
+def optimize():
+    sport = 'NBA'
+    site = 'fd'
+    slate_id = '96674'
+    roster_count = 50
+    iter_count = 11
+    
+    results, name_to_id = optimizer.optimize_historical(sport, site, slate_id, roster_count, iter_count, [], '2023-11-28')
+    
+    print(results)
 
 
-# slate_lines_fd = _get_slate_data('FDSlatePlayers_NFL', '92765')
-# player_pool = get_player_pool(name_stat_to_val, seen_names, slate_lines_fd)
-# print("FD: ", player_pool)
-# # optimize_for_single_game_fd(player_pool, 5)
+def get_stats():
+    url = "https://api-nba-v1.p.rapidapi.com/games"
 
-# by_position = {'QB': [], 'RB': [], 'WR': [], 'TE': [], 'FLEX': [], 'D': []}
+    date = "2023-11-28"
+    querystring = {"date":date}
 
-# for player in player_pool:
-#    name = player[0]
-#    cost = player[1]
-#    proj = player[2]
-#    position = player[3]
-#    team = player[4]
-#    player = utils.Player(name, player, cost, team, proj)
+    headers = {
+        "X-RapidAPI-Key": "180328e9admsh876015c8399ed57p1be573jsnc0b7d2bb42ac",
+        "X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
+    }
 
-#    by_position[position].append(player)
-#    if position != 'D' and position != 'QB':
-#     by_position['FLEX'].append(player)
+    response = requests.get(url, headers=headers, params=querystring)
+    
+          
+    print(response.json())
+    return
+    
+    all_game_ids = [a['id'] for a in response.json()['response']]
+    
+    player_to_fantasy_points = {}
+    
+    for game_id in all_game_ids:
+        print(game_id)
+        url = "https://api-nba-v1.p.rapidapi.com/players/statistics"
 
+        querystring = {"game": game_id}
 
-# print(by_position)
+        headers = {
+            "X-RapidAPI-Key": "180328e9admsh876015c8399ed57p1be573jsnc0b7d2bb42ac",
+            "X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
+        }
+        
+        time.sleep(10)
 
-# optimizer = NFL_Optimizer()
-# # optimizer.optimize(by_position, None, 100000)
-# results = optimizer.optimize_top_n(by_position, 16, 100000)
-
-# for result in results:
-#    print(result)
-
-
-# check the prizepicks_nfl line changes
-# surface those line changes to the frontend 
-
-##########
-
-
-# # filter out any expired lines? 
-
-# all_results = db2.search(query2['time'] == most_recent_scrape['scrape_time'])
-
-
-
-scraper = 'PrizePicks_NFL'
-target_name = 'Kirk Cousins'
-
-query = Query()
-db = TinyDB(DB_ROOT + scraper)
-lines = db.search(query['name'] == target_name)
-
-# lines = _get_scraped_lines(scraper)
-for line in lines:
-    if line['stat'] != 'Pass Yards':
-        continue
-    print(line)
+        response = requests.get(url, headers=headers, params=querystring)
+        
+        response_json = response.json()
+  
+        if not 'response' in response_json:
+            print(response_json)
+            continue
+        for result in response_json['response']:
+            name = result['player']['firstname'] + ' ' + result['player']['lastname']
+            points = result['points']
+            rebounds = result['totReb']
+            assists = result['assists']
+            steals = result['steals']
+            blocks = result['blocks']
+            turnovers = result['turnovers']
+            
+            if points == None or rebounds == None or assists == None or steals == None or blocks == None or turnovers == None:
+                import pdb; pdb.set_trace()
+                continue
+            fdp = points + rebounds * 1.2 + assists * 1.5 + steals * 3 + blocks * 3 - turnovers
+            player_to_fantasy_points[name] = fdp
+            
+            print(name, fdp)
+        
+    path = 'DBs/NBA/results/{}.json'.format(date)
+    file  = open(path, 'a')
+    file.write(json.dumps(player_to_fantasy_points))
+        
+get_stats()

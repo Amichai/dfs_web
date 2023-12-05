@@ -466,7 +466,7 @@ def reoptimize_nba_v2(player_pool, locked_rosters, original_rosters, by_position
         if locked_players_key in locked_players_to_top_n_optimized:
             candidate_rosters = locked_players_to_top_n_optimized[locked_players_key]
         else:
-            candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(25950), locked_players, lineup_validator=lineup_validator)
+            candidate_rosters = optimizer.optimize_top_n(by_position, 120, int(29950), locked_players, lineup_validator=lineup_validator)
             
         candidate_rosters = add_roster_to_set(original_roster, candidate_rosters)
             
@@ -510,7 +510,8 @@ def reoptimize_nba_v2(player_pool, locked_rosters, original_rosters, by_position
         if new_roster_key != roster_key:
             diff_count += 1
 
-    if len(all_results) != len(set([a.roster_key() for a in all_results])):
+    all_results_filtered = [a for a in all_results if a != None]
+    if len(all_results_filtered) != len(set([a.roster_key() for a in all_results_filtered])):
         print("DUPLICATE ROSTERS FOUND")
         import pdb; pdb.set_trace()
             
@@ -901,6 +902,35 @@ def optimize_single_game_fd(slate_id, roster_count, excluded):
         
     return to_return, name_to_id
 
+def optimize_historical(sport, site, slate_id, roster_count, iter_count, excluded, date):
+    assert site == 'fd' or site == 'dk'
+    print("{} NBA {}".format(site, slate_id))
+
+    scraped_lines = data_utils.get_scraped_lines_historical('Caesars', 'NBA', date)
+
+    slate_players, team_list, name_to_id = data_utils.get_slate_players_and_teams(site, sport, slate_id, exclude_injured=site == 'fd', date=date)
+    adjustments = {}
+    for exclude in excluded:
+        adjustments[exclude] = 0
+
+    ## TODO - refactor this into a component?
+    player_pool = get_player_pool(slate_players, scraped_lines, site, team_filter=None, adjustments=adjustments)
+
+    print_slate(slate_players, player_pool, site, team_list)
+
+    if site == 'fd':
+        results = optimize_fd_nba(player_pool, roster_count, iter_count)
+    elif site == 'dk':
+        results, name_to_positions = optimize_dk_nba(player_pool, roster_count, iter_count)
+
+        _, game_data = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
+        start_times = utils.parse_start_times_from_slate(game_data)
+
+        for roster in results:
+            optimize_dk_roster_for_late_swap(roster,
+                                             start_times, name_to_positions)
+
+    return results, name_to_id
 
 def optimize(sport, site, slate_id, roster_count, iter_count, excluded):
     assert site == 'fd' or site == 'dk'

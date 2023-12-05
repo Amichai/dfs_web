@@ -4,6 +4,33 @@ import utils
 DB_ROOT = 'DBs/'
 SCRAPE_OPERATIONS_TABLE = 'scrape_operations'
 
+def get_scraped_lines_historical(scraper, sport, date):
+    file = open('DBs/{}/{}_{}.txt'.format(sport, scraper, date), 'r')
+    name_stat_to_obj = {}
+    key_line = 'line_score,stat,start_time,line_original,under_fraction,over_fraction,active,name,team'
+    keys = key_line.split(',')
+    
+    lines = file.readlines()
+    for line in lines:
+        if key_line in line:
+            continue
+        line = line.strip()
+        parts = line.split(',')
+        if len(parts) < 8:
+            continue
+        obj = {}
+        for idx in range(len(keys)):
+            key = keys[idx].strip()
+            row_parts = line.split(',')
+            val = row_parts[idx]
+            obj[key] = val
+        name = parts[7]
+        stat = parts[1]
+        name_stat_to_obj['{}_{}'.format(name, stat)] = obj
+        
+    to_return = list(name_stat_to_obj.values())
+    return to_return
+
 def get_scraped_lines(scraper, sport='NBA'):
     file_most_recent = open('DBs/{}/{}_current.txt'.format(sport, scraper), 'r')
 
@@ -212,9 +239,10 @@ def get_scraped_lines_multiple(projection_sources):
   return scraped_lines
 
 
-def get_slate_players_and_teams(site, sport, slate_id, exclude_injured=True):
-    slate_players, _ = get_slate_players(sport, site, slate_id, utils.date_str())
-
+def get_slate_players_and_teams(site, sport, slate_id, exclude_injured=True, date=None):
+    if date == None:
+        date = utils.date_str()
+    slate_players, _ = get_slate_players(sport, site, slate_id, date)
 
     if exclude_injured:
       slate_players = [a for a in slate_players if a['injury'] != 'O']

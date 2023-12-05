@@ -391,6 +391,14 @@ def getRosterExposures():
         team = player[4]
         name_to_player[name] = utils.Player(name, position, cost, team, value)
         
+    for player in slate_players:
+        name = player['name']
+        cost = player['salary']
+        position = player['position']
+        team = player['team']
+        if not name in name_to_player:
+            name_to_player[name] = utils.Player(name, position, cost, team, 0)
+        
     
     id_to_name = {v: k for k, v in name_to_id.items()}
     parsed_rosters = []

@@ -14,7 +14,7 @@ const props = defineProps({
   },
   columnMapper: {
     type: Object,
-    default: {}
+    default: () => {}
   }
 })
 
