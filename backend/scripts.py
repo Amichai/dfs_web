@@ -3,6 +3,8 @@ import itertools
 import requests
 import json
 import time
+import boto3
+
 
 
 import sys
@@ -11,87 +13,120 @@ sys.path.append('/Users/amichailevy/Documents/spikes/dfs_web/backend/source/')
 from optimizer_library import NFL_Optimizer
 import optimizer
 import utils
+import os
+from name_mapper import dk_name_to_fd_name
+import data_utils
 
 
-DB_ROOT = 'DBs/'
 
-# BACKTESTER
-# OPTIMIZE AND REOPTIMIZE OVER THE COURSE OF A NIGHT
-# EXPLORE DIFFERENT PROJECTION NORMALIZATION TECHNIQUES
+# open fd slate file and dk slate file
+# parse relevant columns
+#name, normalized name, pos, salary, team
+
+# generate name (fd, dk) -> id
+# id -> projection, status
+# team -> start time, opp
+# slates -> teams, slate name1
 
 
-def optimize():
-    sport = 'NBA'
-    site = 'fd'
-    slate_id = '96674'
-    roster_count = 50
-    iter_count = 11
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+
+s3 = boto3.client('s3',
+                  aws_access_key_id=aws_access_key_id,
+                  aws_secret_access_key=aws_secret_access_key,
+                  region_name='us-east-1')
+
+def write_file(content, name):
+    bucket_name = 'amichai-dfs-data'  # S3 bucket name
+    s3.put_object(Body=content, Bucket=bucket_name, Key=name)
+
+date = '2023-11-22'
+
+# we should actually pull this from the `current` table on any given day
+lines = data_utils.get_scraped_lines_for_date('Caesars', date)
+name_to_projection = data_utils.scraped_lines_to_projections(lines, 'fd')
+
+name_to_projection_2 = {}
+for name, proj in name_to_projection.items():
+    name_madded = name
+    if name in dk_name_to_fd_name:
+        name_madded = dk_name_to_fd_name[name]
+    name_to_projection_2[name_madded] = proj
+
+path = './DBs/NBA/slates_' + date + '.txt'
+
+fd_names = {}
+
+# to upload
+# [slate id, player name, player id, pos, salary]
+slate_player_data = ''
+# [name, team, projection, status]
+player_data = ''
+# [team, start_time, opp]
+team_data = ''
+#[slate id, slate name, start_time, end_time, site]
+slate_data = ''
+
+
+
+# seen_names = []
+# seen_matchups = []
+# team_to_start_time = {}
+
+# file = open(path, 'r')
+# lines = file.readlines()
+# site = None
+# for line in lines:
+#     line = line.strip()
+#     if 'game data:' in line:
+#         game_data = line.replace('game data: ', '').strip().replace(',', '\n')
+#         start_times = utils.parse_start_times_from_slate(game_data)
+#         for t, teams in start_times.items():
+#             for team in teams:
+#                 team_to_start_time[team] = t
+#         continue
     
-    results, name_to_id = optimizer.optimize_historical(sport, site, slate_id, roster_count, iter_count, [], '2023-11-28')
+#     if 'columns:' in line:
+#         continue
+#     if 'site: fd' in line:
+#         site = 'fd'
+#         continue
+#     elif 'site: dk' in line:
+#         site = 'dk'
+#         continue
     
-    print(results)
-
-
-def get_stats():
-    url = "https://api-nba-v1.p.rapidapi.com/games"
-
-    date = "2023-11-28"
-    querystring = {"date":date}
-
-    headers = {
-        "X-RapidAPI-Key": "180328e9admsh876015c8399ed57p1be573jsnc0b7d2bb42ac",
-        "X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
-    }
-
-    response = requests.get(url, headers=headers, params=querystring)
+#     if site == 'dk':
+#         continue
     
-          
-    print(response.json())
-    return
+#     assert site is not None
     
-    all_game_ids = [a['id'] for a in response.json()['response']]
+#     parts = line.split(',')
+#     assert len(parts) == 7, line
     
-    player_to_fantasy_points = {}
+#     id = parts[0]
     
-    for game_id in all_game_ids:
-        print(game_id)
-        url = "https://api-nba-v1.p.rapidapi.com/players/statistics"
-
-        querystring = {"game": game_id}
-
-        headers = {
-            "X-RapidAPI-Key": "180328e9admsh876015c8399ed57p1be573jsnc0b7d2bb42ac",
-            "X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
-        }
+#     name = parts[2]
+#     position = parts[1]
+#     salary = parts[3]
+#     matchup = parts[4]
+#     team = parts[5]
+#     status = parts[6]
+    
+#     projection = str(name_to_projection_2.get(name, None))
         
-        time.sleep(10)
-
-        response = requests.get(url, headers=headers, params=querystring)
         
-        response_json = response.json()
-  
-        if not 'response' in response_json:
-            print(response_json)
-            continue
-        for result in response_json['response']:
-            name = result['player']['firstname'] + ' ' + result['player']['lastname']
-            points = result['points']
-            rebounds = result['totReb']
-            assists = result['assists']
-            steals = result['steals']
-            blocks = result['blocks']
-            turnovers = result['turnovers']
-            
-            if points == None or rebounds == None or assists == None or steals == None or blocks == None or turnovers == None:
-                import pdb; pdb.set_trace()
-                continue
-            fdp = points + rebounds * 1.2 + assists * 1.5 + steals * 3 + blocks * 3 - turnovers
-            player_to_fantasy_points[name] = fdp
-            
-            print(name, fdp)
+#     all_slate_lines += ",".join([id, name, position, salary]) + '\n'
+#     if not name in seen_names:
+#         player_data += ','.join([name, team, projection, status]) + '\n'
+#         seen_names.append(name)
         
-    path = 'DBs/NBA/results/{}.json'.format(date)
-    file  = open(path, 'a')
-    file.write(json.dumps(player_to_fantasy_points))
-        
-get_stats()
+#     if not matchup in seen_matchups:
+#         team_data += ','.join([matchup, str(team_to_start_time[team])]) + '\n'
+#         seen_matchups.append(matchup)
+    
+    
+write_file(slate_player_data, 'slate_player_data')
+write_file(team_data, 'team_data')
+write_file(player_data, 'player_data')
+write_file(slate_data, 'slate_data')
