@@ -72,3 +72,5 @@ https://www.fanduel.com/games/96735/contests/96735-267338698/enter
 ***12/1/23
 https://www.fanduel.com/games/96771/contests/96771-267354560/enter
 5745.06,806.00
+12/11/23,5595.06,
+12/14/23,5501.06,667.82

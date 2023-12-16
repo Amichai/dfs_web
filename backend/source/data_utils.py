@@ -4,6 +4,20 @@ import utils
 DB_ROOT = 'DBs/'
 SCRAPE_OPERATIONS_TABLE = 'scrape_operations'
 
+
+# test code only...
+def get_scraped_lines_for_date(scraper, date, sport='NBA'):
+    file = open('DBs/{}/{}_{}.txt'.format(sport, scraper, date), 'r')
+    lines = file.readlines()
+    indices = []
+    for i in range(len(lines)):
+        if lines[i].startswith('t:'):
+            indices.append(i)
+            
+    last_idx = indices[-1]
+    lines = lines[last_idx:]
+    return lines
+
 def get_scraped_lines_historical(scraper, sport, date):
     file = open('DBs/{}/{}_{}.txt'.format(sport, scraper, date), 'r')
     name_stat_to_obj = {}
@@ -57,6 +71,8 @@ def get_scraped_lines(scraper, sport='NBA'):
 def scraped_lines_to_projections(lines, site='fd'):
     name_to_stat_to_val = {}
     for line in lines:
+        if line.startswith('t:'):
+            continue
         parts = line.split(',')
         name = parts[7]
         stat = parts[1]
