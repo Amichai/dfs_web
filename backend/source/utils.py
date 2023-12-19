@@ -309,6 +309,53 @@ def team_to_start_time(path, input_team):
 
 DOWNLOAD_FOLDER = "/Users/amichailevy/Downloads/"
 
+def convert_time_string_to_decimal(time_str):
+    time_conversion = {
+        '12:00pm ET': 0, '12:30pm ET': 0.5,
+        '1:00pm ET': 1, '1:30pm ET': 1.5,
+        '2:00pm ET': 2, '2:30pm ET': 2.5,
+        '3:00pm ET': 3, '3:30pm ET': 3.5,
+        '4:00pm ET': 4, '4:30pm ET': 4.5,
+        '4:05pm ET': 4.02,
+        '4:25pm ET': 4.48,
+        '5:00pm ET': 5, '5:30pm ET': 5.5,
+        '6:00pm ET': 6, '6:30pm ET': 6.5, 
+        '7:00pm ET': 7, '7:30pm ET': 7.5, 
+        '7:15pm ET': 7.15, '7:45pm ET': 7.85,
+        '8:00pm ET': 8, '8:30pm ET': 8.5, 
+        '8:15pm ET': 8.15, '8:45pm ET': 8.85,
+        '8:20pm ET': 8.2,
+        '9:00pm ET': 9, '9:30pm ET': 9.5, 
+        '9:15pm ET': 9.15, '9:45pm ET': 9.85,
+        '10:00pm ET': 10, '10:30pm ET': 10.5, 
+        '10:15pm ET': 10.15, '10:45pm ET': 10.85,
+        '11:00pm ET': 11, '11:30pm ET': 11.5,
+        '11:15pm ET': 11.15,
+        '12:00pm': 0, '12:30pm': 0.5,
+        '1:00pm': 1, '1:30pm': 1.5,
+        '2:00pm': 2, '2:30pm': 2.5,
+        '3:00pm': 3, '3:30pm': 3.5,
+        '4:00pm': 4, '4:30pm': 4.5,
+        '4:05pm': 4.02,
+        '4:25pm': 4.48,
+        '5:00pm': 5, '5:30pm': 5.5,
+        '6:00pm': 6, '6:30pm': 6.5, 
+        '7:00pm': 7, '7:30pm': 7.5, 
+        '7:15pm': 7.15, '7:45pm': 7.85,
+        '8:00pm': 8, '8:30pm': 8.5, 
+        '8:15pm': 8.15, '8:45pm': 8.85,
+        '8:20pm': 8.2,
+        '9:00pm': 9, '9:30pm': 9.5, 
+        '9:15pm': 9.15, '9:45pm': 9.85,
+        '10:00pm': 10, '10:30pm': 10.5, 
+        '10:15pm': 10.15, '10:45pm': 10.85,
+        '11:00pm': 11, '11:30pm': 11.5,
+        '11:15pm': 11.15,
+    }
+    assert time_str in time_conversion
+    
+    
+    return time_conversion[time_str]
 
 def parse_start_times_from_slate(slate):
     lines = slate.split('\n')
@@ -565,7 +612,10 @@ def get_start_time_exposures(rosters_sorted, team_to_start_time):
     return start_times
 
 def print_player_exposures(rosters_sorted, locked_teams=None):
-    print("Average roster val: {}".format(statistics.mean([a.value for a in rosters_sorted])))
+    if len(rosters_sorted) > 1:
+        print("Average roster val: {}".format(statistics.mean([a.value for a in rosters_sorted])))
+    else:
+        print("Error no rosters to print")
 
     print("print player exposures")
     

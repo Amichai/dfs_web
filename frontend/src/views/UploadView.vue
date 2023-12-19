@@ -1,13 +1,8 @@
 <script setup>
-import axios from 'axios';
 import { writeSlate } from '../apiHelper';
 import { FDParser, DKParser } from '../parsers';
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
-import ComboBox from '../components/ComboBox.vue'
-import Column from 'primevue/column';
-import DataTable from 'primevue/datatable';
 import TableComponent from '../components/TableComponent.vue'
-import { parse } from 'papaparse';
 
 
 onMounted(async () => {
@@ -15,9 +10,12 @@ onMounted(async () => {
 
 const inputChanged = () => {
   const lines = slateInput.value.split('\n')
+  let gameCount = 0
+  let startTime = null
 
   for(var i = 0; i < lines.length; i += 1) {
     if(lines[i][0] === '@'){
+      gameCount += 1
       console.log(lines[i])
       const timeString1 = lines[i + 1]
       const timeString2 = lines[i + 2] ?? ''
@@ -28,10 +26,20 @@ const inputChanged = () => {
       ) {
         alert('failed to parse slate')
       }
+
+      if(!startTime) {
+        startTime = (isString1Time ? timeString1 : timeString2).replace(' ET', '')
+      }
     }
   }
 
-  console.log(lines)
+  if(site.value == 'FD') {
+    if (gameCount > 1) {
+        slateId.value = `${site.value}_${startTime}_${gameCount}games`
+      } else {
+        slateId.value = `${site.value}_${startTime}_1game`
+      }
+    }
 }
 
 const slatesToParsers = {
@@ -54,37 +62,28 @@ const slateId = ref('')
 const selectedSlate = ref('DK NBA')
 const sport = ref('')
 
+const site = computed(() => selectedSlate.value.split(' ')[0])
+
 const uploadSlate = () => {
   // parser = slatesToParsers[selectedSlate.value]
   // parsedContent.value.mappedVals
   sport.value = 'NBA'
 
-  const site = selectedSlate.value.split(' ')[0]
   const currentDate = new Date();
   const dateString = currentDate.toLocaleDateString('en-CA', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
   });
-  writeSlate(sport.value, slateId.value, site.toLowerCase(), dateString,
+  if(slateId.value.includes(' ')) {
+    debugger
+  }
+
+  writeSlate(sport.value, slateId.value, site.value.toLowerCase(), dateString,
 
   parsedContent.value.columns,
   parsedContent.value.mappedVals,
   slateInput.value.replaceAll('\n',','))
-
-  // parser.upload(slateId.value, date.value, selectedSlate.value.split(' ')[1])
-
-  // console.log(slateInput.value)
-  // if(!sport.value) {
-  //   alert('select a sport')
-  //   return
-  // }
-
-  // writeData('slates', {
-  //   date: date.value,
-  //   slate: slateInput.value,
-  //   sport: sport.value
-  // })
 }
 
 const fileUploaded = (evt) => {
@@ -99,7 +98,7 @@ const fileUploaded = (evt) => {
     const year = parts[2].replace(' ET', '');
     const month = parts[3].replace(' ET', '');
     const day = parts[4].replace(' ET', '');
-    date.value = `${year}-${month}-${day} EST`
+    date.value = `${year}-${month}-${day}`
     slateId.value = parts[5];
     selectedSlate.value = 'FD ' + sport.value
   } else if(name.includes('DKSalaries') ) {
@@ -128,6 +127,31 @@ const fileUploaded = (evt) => {
       }
 
       parsedContent.value = parser.parse(content)
+
+      if(site.value == 'DK') {
+        const seenStartTimes = []
+        const seenGames = []
+
+        parsedContent.value.mappedVals.forEach(row => {
+          const gameParts = row[4].split(' ')
+          const game = gameParts[0]
+          const startTime = gameParts[2]
+
+          if(!seenStartTimes.includes(startTime)) {
+            seenStartTimes.push(startTime)
+          }
+
+          if(!seenGames.includes(game)) {
+            seenGames.push(game)
+          }
+        });
+
+        if (seenGames.length > 1) {
+          slateId.value = `${site.value}_${seenStartTimes.sort()[0]}_${seenGames.length}games`
+        } else {
+          slateId.value = `${site.value}_${seenStartTimes.sort()[0]}_${seenGames[0]}`
+        }
+      }
     };
   })();
 
@@ -148,17 +172,8 @@ const clearFile = () => {
   <main>
     <h1>Upload</h1>
     <div class="slate-filter">
-      <ComboBox :array="Object.keys(slatesToParsers)" 
-        v-model="selectedSlate"
-        placeholder="site" />
+      <div>{{ selectedSlate }}</div>
 
-      <!-- <VueDatePicker class="datepicker" v-model="date" 
-      :month-change-on-scroll="false"
-      auto-apply
-      text-input
-      :enable-time-picker="false"
-      timezone="Etc/GMT"
-      ></VueDatePicker>  -->
     </div>
     <hr />
     <div class="input-file-row">

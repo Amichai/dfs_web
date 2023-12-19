@@ -200,15 +200,43 @@ def write_slate(sport, slate_id, site, date, columns, player_data, game_data):
     pass
 
 def get_slates(sport, site, date):
+    print('get_slates', sport, site, date)
     filepath = 'DBs/{}/slates_{}.txt'.format(sport, date)
     file = open(filepath, 'r')
     lines = file.readlines()
-    slate_ids = []
+    slate_ids = {}
     site_key = 'site: {}'.format(site)
     for line in lines:
         if 'slate: ' in line and site_key in line:
             slate_id = line.replace('slate: ', '').split(' ')[0]
-            slate_ids.append(slate_id)
+            print(slate_id)
+            
+            players, game_data = get_slate_players(sport, site, slate_id, date)
+            # slate_ids.append(slate_id)
+            # import pdb; pdb.set_trace()
+            seen_games = []
+            for player in players:
+                game = player['game']
+                if not game in seen_games:
+                    seen_games.append(game)
+            
+            game_type = 'single_game' if len(seen_games) == 1 else ''
+            
+            start_time = 11.8
+            if game_data != '':
+                start_time_string = game_data.split(' ')[0].split('\n')[-1]
+                start_time = utils.convert_time_string_to_decimal(start_time_string)
+            
+            slate_ids[slate_id] = {
+                'sport': sport,
+                'site': site,
+                'type': game_type,
+                'name': slate_id,
+                'start_time': start_time,
+            }
+
+    # I want to return a dictionary of slateId to ->
+    # sport, site, type, name, start time
 
     return slate_ids
 

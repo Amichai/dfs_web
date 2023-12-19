@@ -1,13 +1,9 @@
 <template>
-  <div class="container">
-    <input id="combobox" v-model="selectedElement" list="elements" :placeholder="placeholder"
-      @change="$emit('update:modelValue', selectedElement)" 
-      
-      />
-    <datalist id="elements">
-      <option v-for="element in array" :key="element" :value="renderer(element)" />
-    </datalist>
-  </div>
+  <select v-model="selectedElement" class="container">
+    <option v-for="element in array" :key="element" :value="element">
+      {{ element }}
+    </option>
+  </select>
 </template>
   
 <script setup>
@@ -26,24 +22,25 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  renderer: {
-    type: Function,
-    default: (val) => val
-  }
 })
 
-defineEmits(['update:modelValue'])
+const emits = defineEmits(['update:modelValue'])
 
 const selectedElement = ref(props.modelValue);
 
 watch(() => props.modelValue, (val) => {
   selectedElement.value = val;
 })
+
+watch(() => selectedElement.value, (val) => {
+  emits('update:modelValue', val)
+})
 </script>
   
 <style scoped>
 .container {
   font-family: Arial, sans-serif;
+  padding: 0.5rem 1rem;
 }
 
 input {

@@ -167,7 +167,7 @@ def get_slates():
     date = utils.date_str()
     slates = data_utils.get_slates(sport, site, date)
     
-
+    
     return jsonify(slates)
 
 

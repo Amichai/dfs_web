@@ -1,13 +1,10 @@
 <script setup>
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
-import { runOptimizer, runReoptimizer, getRosterExposures } from '../apiHelper';
+import { runOptimizer, runReoptimizer, getRosterExposures, getSlates } from '../apiHelper';
 import Papa from 'papaparse';
+import ComboBox from './ComboBox.vue';
   
 const props = defineProps({
-  // slateSettings: {
-  //   type: Object,
-  //   required: true
-  // },
   id: {
     type: Number,
     required: true
@@ -32,21 +29,33 @@ const slatePlayers = ref([])
 const playerExposures = ref({})
 const startTimeExposures = ref({})
 
-const resetVals = () => {
+const availableSlates = ref([])
+
+const getAllAvailableSlates = async () => {
+  const fdSlates = await getSlates('fd', 'NBA')
+  const dkSlates = await getSlates('dk', 'NBA')
+
+  const toReturn = { ...fdSlates, ...dkSlates}
+
+  return toReturn
+}
+
+const resetVals = async () => {
   console.log('Resetting', props.id)
   sport.value = 'NBA'
   site.value = 'fd'
   slateId.value = ''
   contests.value = ''
-  iterCount.value = 0
+  iterCount.value = '13'
   rosterCount.value = 0
   excludedPlayers.value = ''
   slateName.value = ''
   startTime.value = 0
   gameType.value = ''
+  availableSlates.value = await getAllAvailableSlates()
 }
 
-onMounted(() => {
+onMounted(async () => {
   console.log('Mounted', props.id)
   sport.value = localStorage.getItem(`sport_${props.id}`)
   slateId.value = localStorage.getItem(`slateId_${props.id}`)
@@ -58,6 +67,8 @@ onMounted(() => {
   startTime.value = localStorage.getItem(`startTime_${props.id}`)
   site.value = localStorage.getItem(`site_${props.id}`)
   gameType.value = localStorage.getItem(`gameType_${props.id}`)
+
+  availableSlates.value = await getAllAvailableSlates()
 })
 
 watch(() => sport.value, (newVal) => {
@@ -66,6 +77,17 @@ watch(() => sport.value, (newVal) => {
 
 watch(() => slateId.value, (newVal) => {
   localStorage.setItem(`slateId_${props.id}`, newVal)
+
+  const slateSettings = availableSlates.value[newVal]
+  if(slateSettings) {
+    site.value = slateSettings.site
+    sport.value = slateSettings.sport
+    slateName.value = slateSettings.name
+    gameType.value = slateSettings.type
+    startTime.value = slateSettings.start_time
+  }
+
+  console.log(slateSettings)
 })
 
 watch(() => rosterCount.value, (newVal) => {
@@ -216,26 +238,20 @@ const deleteSlate = () => {
 <template>
   <div class="root">
     <div class="header">
+      <ComboBox :array="Object.keys(availableSlates)" 
+      v-model="slateId"
+      placeholder="sport" />
       <button class="button" @click="deleteSlate">delete</button>
     </div>
     <div class="input-grid">
-      <div>Sport:</div>
-      <input type="text" placeholder="sport" v-model="sport">
-      <div>Site:</div>
-      <input type="text" placeholder="site" v-model="site">
-      <div>Slate:</div>
-      <input type="text" placeholder="slateId" v-model="slateId">
-      <div>Type:</div>
-      <input type="text" placeholder="type" v-model="gameType">
-
       <div>Name:</div>
       <input type="text" placeholder="name" v-model="slateName">
       <div>Iter:</div>
       <input type="text" placeholder="iter" v-model="iterCount">
       <div>Roster ct:</div>
       <input type="text" placeholder="roster count" v-model="rosterCount">
-      <div>Start time:</div>
-      <input type="text" placeholder="start time" v-model="startTime">
+      <div></div>
+      <div></div>
       <div>Exclude:</div>
       <textarea class="exclude-text span-3" name="" id="" cols="30" rows="2" placeholder="exclude players" v-model="excludedPlayers"></textarea>
       <div>Contests:</div>
@@ -312,7 +328,9 @@ const deleteSlate = () => {
 
 .header {
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
 
 .game-type {
