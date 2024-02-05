@@ -15,6 +15,7 @@ import optimizer
 import utils
 import os
 import data_utils
+import scripts_util
 
 
 
@@ -26,30 +27,6 @@ import data_utils
 # id -> projection, status
 # team -> start time, opp
 # slates -> teams, slate name1
-
-
-aws_access_key_id = os.getenv('AWS_ACCESS_KEY')
-aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-
-s3 = boto3.client('s3',
-                  aws_access_key_id=aws_access_key_id,
-                  aws_secret_access_key=aws_secret_access_key,
-                  region_name='us-east-1')
-
-def write_file(content, name):
-    try:
-        bucket_name = 'amichai-dfs-data'  # S3 bucket name
-        result = s3.put_object(Body=content, Bucket=bucket_name, Key=name)
-        print(result)
-    except ClientError as e:
-        # Handles errors from the service itself, such as incorrect bucket permissions
-        print('ClientError writing file {}: {}'.format(name, e))
-    except BotoCoreError as e:
-        # Handles errors in the boto3 framework, such as network errors
-        print('BotoCoreError writing file {}: {}'.format(name, e))
-    except Exception as e:
-        # Generic catch-all for any other exceptions
-        print('Unexpected error writing file {}: {}'.format(name, e))
 
 # date = '2023-11-22'
 date = utils.date_str()
@@ -90,12 +67,10 @@ slate_data = ''
 download_folder = '/Users/amichailevy/Downloads/'
 
 
-
-
 path_and_slate_names = [
-    # ('FanDuel-NBA-2023 ET-12 ET-25 ET-97569-players-list.csv', 'DK Main 12:00pm'),
-    ('DKSalaries (18).csv', 'DK Main 7:00pm ET'),
-    ('FanDuel-NBA-2024 ET-01 ET-19 ET-98572-players-list.csv', 'FD Main 7:00pm ET'),
+    ('DKSalaries (9).csv', 'DK Main 6:00pm ET'),
+    ('FanDuel-NBA-2024 ET-02 ET-04 ET-99053-players-list.csv', 'FD Main 6:00pm ET'),
+    ('DKSalaries (10).csv', 'DK Showdown 8:30pm ET'),
 ]
 
 seen_teams = []
@@ -162,7 +137,7 @@ for path_and_slate in path_and_slate_names:
                     
                     seen_teams.append(team)
                 
-            slate_player_data += '{},{},{},{},{}\n'.format(slate_name, player_id, name, positions, salary)
+            slate_player_data += '{},{},{},{},{},{}\n'.format(slate_name, player_id, name, positions, salary, team)
                 
                 
 print(team_data_array)
@@ -177,8 +152,8 @@ team_data = ''.join(team_data_sorted)
 
 date_suffix = utils.date_str()
     
-write_file(slate_player_data, 'slate_player_data_{}'.format(date_suffix))
-write_file(player_data, 'player_data_{}'.format(date_suffix))
-write_file(team_data, 'team_data_{}'.format(date_suffix))
-write_file(slate_data, 'slate_data_{}'.format(date_suffix))
+scripts_util.write_file(slate_player_data, 'slate_player_data_{}'.format(date_suffix))
+# write_file(player_data, 'player_data_{}'.format(date_suffix))
+scripts_util.write_file(team_data, 'team_data_{}'.format(date_suffix))
+scripts_util.write_file(slate_data, 'slate_data_{}'.format(date_suffix))
 

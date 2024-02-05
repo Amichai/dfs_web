@@ -185,7 +185,8 @@ const showExposures = async () => {
 
 const optimize = async () => {
   const currentTime = getCurrentTimeDecimal()
-  if (currentTime > startTime.value) {
+  // debugger
+  if (currentTime > startTime.value) { //|| true
     // alert('Slate has already started')
     // return
 

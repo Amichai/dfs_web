@@ -95,6 +95,8 @@ name_mapper_pp_to_fd = {
   'Danuel House Jr.': 'Danuel House',
   'Kevin Knox II': 'Kevin Knox',
   'Trey Murphy III': 'Trey Murphy',
+  'David Duke Jr.': 'David Duke',
+  'AJ Lawson': 'A.J. Lawson',
 }
 
 
@@ -138,4 +140,39 @@ dk_name_to_fd_name = {
   'Kevin Knox II': 'Kevin Knox',
   'Reggie Bullock Jr.': 'Reggie Bullock',
   'Trey Murphy III': 'Trey Murphy',
+}
+
+
+team_names = {
+  'Boston Celtics': 'BOS',
+  'Brooklyn Nets': 'BKN',
+  'New York Knicks': 'NY',
+  'Philadelphia 76ers': 'PHI',
+  'Toronto Raptors': 'TOR',
+  'Chicago Bulls': 'CHI',
+  'Cleveland Cavaliers': 'CLE',
+  'Detroit Pistons': 'DET',
+  'Indiana Pacers': 'IND',
+  'Milwaukee Bucks': 'MIL',
+  'Atlanta Hawks': 'ATL',
+  'Charlotte Hornets': 'CHA',
+  'Miami Heat': 'MIA',
+  'Orlando Magic': 'ORL',
+  'Washington Wizards': 'WAS',
+  'Denver Nuggets': 'DEN',
+  'Minnesota Timberwolves': 'MIN',
+  'Oklahoma City Thunder': 'OKC',
+  'Portland Trail Blazers': 'POR',
+  'Utah Jazz': 'UTA',
+  'Golden State Warriors': 'GS',
+  'Los Angeles Clippers': 'LAC',
+  'Los Angeles Lakers': 'LAL',
+  
+  'Phoenix Suns': 'PHO',
+  'Sacramento Kings': 'SAC',
+  'Dallas Mavericks': 'DAL',
+  'Houston Rockets': 'HOU',
+  'Memphis Grizzlies': 'MEM',
+  'New Orleans Pelicans': 'NO',
+  'San Antonio Spurs': 'SA',
 }

@@ -1,3 +1,27 @@
+import scripts_util
+import uploadProjectionChanges
+
+path_and_slate_names = [
+    ('DKSalaries (9).csv', 'DK Main 7:00pm ET'),
+    ('FanDuel-NBA-2024 ET-02 ET-05 ET-99073-players-list (1).csv', 'FD Main 7:00pm ET'),
+    # ('DKSalaries (10).csv', 'DK Showdown 8:30pm ET'),
+]
+
+### clear out the news feed
+
+scripts_util.write_file('', 'news_feed.txt')
+
+
+### clear out current caesars projections
+caesars_current_path = 'DBs/NBA/Caesars_NBA_current.txt'
+file = open(caesars_current_path, 'w')
+
+
+### upload current projection
+uploadProjectionChanges.upload()
+
+### upload slate data
+
 from tinydb import TinyDB, Query, where
 import itertools
 import requests
@@ -17,48 +41,12 @@ import os
 import data_utils
 
 
-
-# open fd slate file and dk slate file
-# parse relevant columns
-#name, normalized name, pos, salary, team
-
-# generate name (fd, dk) -> id
-# id -> projection, status
-# team -> start time, opp
-# slates -> teams, slate name1
-
-
-aws_access_key_id = os.getenv('AWS_ACCESS_KEY')
-aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-
-s3 = boto3.client('s3',
-                  aws_access_key_id=aws_access_key_id,
-                  aws_secret_access_key=aws_secret_access_key,
-                  region_name='us-east-1')
-
-def write_file(content, name):
-    try:
-        bucket_name = 'amichai-dfs-data'  # S3 bucket name
-        result = s3.put_object(Body=content, Bucket=bucket_name, Key=name)
-        print(result)
-    except ClientError as e:
-        # Handles errors from the service itself, such as incorrect bucket permissions
-        print('ClientError writing file {}: {}'.format(name, e))
-    except BotoCoreError as e:
-        # Handles errors in the boto3 framework, such as network errors
-        print('BotoCoreError writing file {}: {}'.format(name, e))
-    except Exception as e:
-        # Generic catch-all for any other exceptions
-        print('Unexpected error writing file {}: {}'.format(name, e))
-
-# date = '2023-11-22'
 date = utils.date_str()
 
 # we should actually pull this from the `current` table on any given day
 lines = data_utils.get_scraped_lines_for_date('Caesars', date)
 name_to_projection_fd = data_utils.scraped_lines_to_projections(lines, 'fd')
 name_to_projection_dk = data_utils.scraped_lines_to_projections(lines, 'dk')
-
 
 def lookup_projection(name, site):
     if site == 'fd':
@@ -90,18 +78,6 @@ slate_data = ''
 
 download_folder = '/Users/amichailevy/Downloads/'
 
-path_and_slate_names = [
-    ('FanDuel-NBA-2023 ET-12 ET-19 ET-97437-players-list.csv', 'FD Main 7:30'),
-    ('FanDuel-NBA-2023 ET-12 ET-19 ET-97438-players-list.csv', 'FD SA@MIL 8:00'),
-    ('FanDuel-NBA-2023 ET-12 ET-19 ET-97439-players-list.csv', 'FD BOS@GS 10:00'),
-    ('FanDuel-NBA-2023 ET-12 ET-19 ET-97445-players-list.csv', 'FD After Hours 10:00'),
-
-    ('DKSalaries (11).csv', 'DK Main 7:30'),
-    ('DKSalaries (12).csv', 'DK MEM@NOP 7:30'),
-    ('DKSalaries (13).csv', 'DK SAS@MIL 8:00'),
-    ('DKSalaries (14).csv', 'DK After Hours 10:00'),
-    ('DKSalaries (15).csv', 'DK BOS@GSW 10:00'),
-]
 
 seen_teams = []
 
@@ -114,7 +90,7 @@ for path_and_slate in path_and_slate_names:
     
     slate_data += '{},{}\n'.format(slate_name, 'FD' if is_fd else 'DK')
     
-    seen_player_ids = []
+    seen_names = []
 
     with open(path, 'r') as f:
         reader = csv.reader(f, delimiter=',', quotechar='"')
@@ -122,8 +98,7 @@ for path_and_slate in path_and_slate_names:
             if row[0] == 'Id' or row[0] == 'Position':
                 continue
             if is_fd:
-                ids = row[0].split('-')
-                player_id = ids[1]
+                player_id = row[0]
                 positions = row[1]
                 name = row[3]
                 salary = row[7]
@@ -132,12 +107,12 @@ for path_and_slate in path_and_slate_names:
                 opp = row[10]
                 status = row[11]
                 
-                if player_id not in seen_player_ids:
+                if name not in seen_names:
                     projection_fd = lookup_projection(name, 'fd')
                     projection_dk = lookup_projection(name, 'dk')
                     
                     player_data += '{},{},{},{},{}\n'.format(name, team, projection_fd, projection_dk, status)
-                    seen_player_ids.append(player_id)
+                    seen_names.append(name)
             elif is_dk:
                 positions = row[0]
                 name = row[2]
@@ -147,6 +122,13 @@ for path_and_slate in path_and_slate_names:
                 game = game_parts[0]
                 team = row[7]
                 status = ''
+                
+                if name not in seen_names:
+                    projection_fd = lookup_projection(name, 'fd')
+                    projection_dk = lookup_projection(name, 'dk')
+                    
+                    player_data += '{},{},{},{},{}\n'.format(name, team, projection_fd, projection_dk, status)
+                    seen_names.append(name)
                 
                 if not team in seen_teams:
                     team_normalized = utils.normalize_team_name(team)
@@ -161,7 +143,7 @@ for path_and_slate in path_and_slate_names:
                     
                     seen_teams.append(team)
                 
-            slate_player_data += '{},{},{},{},{}\n'.format(slate_name, player_id, name, positions, salary)
+            slate_player_data += '{},{},{},{},{},{}\n'.format(slate_name, player_id, name, positions, salary, team)
                 
                 
 print(team_data_array)
@@ -169,12 +151,15 @@ team_data_sorted = sorted(team_data_array, key=lambda x: x.split(',')[2])
 team_data = ''.join(team_data_sorted)
 # print(slate_player_data)
 # print(player_data)
-print("team data", team_data)
-print("slate data", slate_data)
+# print("team data", team_data)
+# print("slate data", slate_data)
 
 # import pdb; pdb.set_trace()
+
+date_suffix = utils.date_str()
     
-write_file(slate_player_data, 'slate_player_data')
-write_file(player_data, 'player_data')
-write_file(team_data, 'team_data')
-write_file(slate_data, 'slate_data')
+scripts_util.write_file(slate_player_data, 'slate_player_data_{}'.format(date_suffix))
+# write_file(player_data, 'player_data_{}'.format(date_suffix))
+scripts_util.write_file(team_data, 'team_data_{}'.format(date_suffix))
+scripts_util.write_file(slate_data, 'slate_data_{}'.format(date_suffix))
+

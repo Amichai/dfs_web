@@ -45,11 +45,14 @@ def get_scraped_lines_historical(scraper, sport, date):
     to_return = list(name_stat_to_obj.values())
     return to_return
 
-def get_scraped_lines(scraper, sport='NBA'):
+def get_scraped_lines(scraper, sport='NBA', path = None):
     file_most_recent = open('DBs/{}/{}_current.txt'.format(sport, scraper), 'r')
 
     all_results = []
     lines = file_most_recent.readlines()
+    if len(lines) == 0:
+        return []
+    
     time = lines[0]
     keys = lines[1].split(',')
     rows = lines[2:]
@@ -187,7 +190,6 @@ def get_caesars_projection_history():
         }
 
     print(name_to_projection_history)
-
 
 def write_slate(sport, slate_id, site, date, columns, player_data, game_data):
     filepath = 'DBs/{}/slates_{}.txt'.format(sport, date)
@@ -348,7 +350,7 @@ def add_casesar_projections(name_stat_to_val, all_names, site='fd'):
             name_stat_to_val["{}_{}".format(name, 'CaesarsComputed')] = round(val, 3)
 
 
-def get_current_projections(sport):
+def get_current_projections(sport, site='fd'):
     lines = get_scraped_lines('Caesars_NBA')
     name_stat_to_val = {}
     all_names = []
@@ -363,7 +365,7 @@ def get_current_projections(sport):
         name_stat_to_val["{}_{}".format(name, stat)] = projection
         pass
 
-    add_casesar_projections(name_stat_to_val, all_names)
+    add_casesar_projections(name_stat_to_val, all_names, site)
 
     to_return = {}
 
@@ -382,3 +384,7 @@ def get_current_projections(sport):
 
 
     return to_return
+
+# def get_team_to_start_time():
+#     get_slates(sport, site, date):
+#     pass

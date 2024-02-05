@@ -28,7 +28,7 @@ def _get_player_pool(name_stat_to_val, seen_names, slate_lines, site, to_exclude
 
       elif site == 'dk' and name in name_mapper_pp_to_dk:
           name = name_mapper_pp_to_dk[name]
-
+          
       if 'DST' in name:
           parsed_name = name.split(' ')[0]
           matched_names = [a for a in slate_lines if parsed_name in a['name']]
@@ -925,7 +925,6 @@ def optimize_historical(sport, site, slate_id, roster_count, iter_count, exclude
 
         _, game_data = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
         start_times = utils.parse_start_times_from_slate(game_data)
-
         for roster in results:
             optimize_dk_roster_for_late_swap(roster,
                                              start_times, name_to_positions)
@@ -955,7 +954,6 @@ def optimize(sport, site, slate_id, roster_count, iter_count, excluded):
 
         _, game_data = data_utils.get_slate_players(sport, site, slate_id, utils.date_str())
         start_times = utils.parse_start_times_from_slate(game_data)
-
         for roster in results:
             optimize_dk_roster_for_late_swap(roster,
                                              start_times, name_to_positions)

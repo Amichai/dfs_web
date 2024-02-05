@@ -354,8 +354,10 @@ def optimize():
     elif sport == "NBA" and site == 'fd' and game_type == 'single_game':
         results, name_to_id = optimizer.optimize_single_game_fd(slate_id, roster_count, excluded_names)
     
+    
     roster_data = collect_roster_data(results, name_to_id, site)
     utils.print_player_exposures(results)
+    print(results[0])
     return jsonify(roster_data)
 
 @app.route('/getRosterExposures', methods=['POST'])

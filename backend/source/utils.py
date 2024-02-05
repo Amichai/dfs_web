@@ -1199,18 +1199,14 @@ def lineup_validator_fd(roster):
     return max(team_ct.values()) <= 4
 
 def lineup_validator_dk(roster):
-    return True
     seen_games = []
     
     # TODO
+    return True
     
     team_to_opp = {
-        'WAS': 'ORL',
-        'MEM': 'DAL',
-        'PHI': 'BOS',
-        'SAS': 'NOP',
-        'NYK': 'TOR',
-        'DEN': 'PHX',
+        'LAL': 'MIN',
+        'WAS': 'POR',
     }
     
     team_to_opp_2 = {}
