@@ -68,9 +68,9 @@ download_folder = '/Users/amichailevy/Downloads/'
 
 
 path_and_slate_names = [
-    ('DKSalaries (9).csv', 'DK Main 6:00pm ET'),
-    ('FanDuel-NBA-2024 ET-02 ET-04 ET-99053-players-list.csv', 'FD Main 6:00pm ET'),
-    ('DKSalaries (10).csv', 'DK Showdown 8:30pm ET'),
+    # ('DKSalaries (9).csv', 'DK Main 6:00pm ET'),
+    # ('FanDuel-NBA-2024 ET-02 ET-04 ET-99053-players-list.csv', 'FD Main 6:00pm ET'),
+    # ('DKSalaries (10).csv', 'DK Showdown 8:30pm ET'),
 ]
 
 seen_teams = []

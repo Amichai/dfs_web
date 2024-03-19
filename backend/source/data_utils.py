@@ -46,7 +46,10 @@ def get_scraped_lines_historical(scraper, sport, date):
     return to_return
 
 def get_scraped_lines(scraper, sport='NBA', path = None):
-    file_most_recent = open('DBs/{}/{}_current.txt'.format(sport, scraper), 'r')
+    if path == None:
+        path = 'DBs/{}/{}_current.txt'.format(sport, scraper)
+    
+    file_most_recent = open(path, 'r')
 
     all_results = []
     lines = file_most_recent.readlines()
@@ -58,6 +61,8 @@ def get_scraped_lines(scraper, sport='NBA', path = None):
     rows = lines[2:]
 
     for row in rows:
+      if row.startswith('t:'):
+        continue
       obj = {}
       for idx in range(len(keys)):
           key = keys[idx].strip()
@@ -349,6 +354,43 @@ def add_casesar_projections(name_stat_to_val, all_names, site='fd'):
             
             name_stat_to_val["{}_{}".format(name, 'CaesarsComputed')] = round(val, 3)
 
+
+def get_current_projections_persisted(site='fd'):
+    date = utils.date_str()
+    path = 'DBs/{}/{}_{}.txt'.format('NBA', 'Caesars', date)
+    lines = get_scraped_lines('Caesars_NBA', 'NBA', path)
+    name_stat_to_val = {}
+    all_names = []
+    for line in lines:
+        name = line['name']
+        if not name in all_names:
+            all_names.append(name)
+        
+        stat = line['stat']
+        projection = line['line_score']
+
+        name_stat_to_val["{}_{}".format(name, stat)] = projection
+        pass
+
+    add_casesar_projections(name_stat_to_val, all_names, site)
+
+    to_return = {}
+
+    for name in all_names:
+        key1 = "{}_{}".format(name, "Fantasy Score")
+        key2 = "{}_{}".format(name, "CaesarsComputed")
+        proj = None
+        if key1 in name_stat_to_val:
+            proj = name_stat_to_val[key1]
+
+        if key2 in name_stat_to_val:
+            proj = name_stat_to_val[key2]
+
+        if proj != None:
+            to_return[name] = proj
+
+
+    return to_return
 
 def get_current_projections(sport, site='fd'):
     lines = get_scraped_lines('Caesars_NBA')

@@ -19,17 +19,23 @@ import data_utils
 import scripts_util
 
 def upload():
+    
+    player_statuses = scripts_util.read_file('player_statuses').split('\n')
+    player_statuses = [a for a in player_statuses if a != '']
+    excluded_players = [a.split(',')[0] for a in player_statuses if a.split(',')[3] == 'O']
+    gtd_players = [a.split(',')[0] for a in player_statuses if a.split(',')[3] == 'GTD']
+    
     date_suffix = utils.date_str()
     current_player_data = scripts_util.read_file('player_data_{}'.format(date_suffix))
     lines = current_player_data.split('\n')
-    name_to_status = {}
+    name_to_row = {}
     for line in lines:
         parts = line.split(',')
         if len(parts) < 2:
             continue
         name = parts[0]
         status = parts[-1]
-        name_to_status[name] = status
+        name_to_row[name] = line
 
 
     # import pdb; pdb.set_trace()
@@ -37,7 +43,7 @@ def upload():
     sport = 'NBA'
     scraper_name = 'Caesars'
 
-    # TODO reimplement
+    # TODO use data_utils.get_current_projections_persisted() to persist projections for started games
     initial_projections_fd = data_utils.get_current_projections(sport)
     initial_projections_dk = data_utils.get_current_projections(sport, 'dk')
 
@@ -50,7 +56,7 @@ def upload():
     scrape_time = str(datetime.datetime.now()).split('.')[0]
     utils.write_to_files('t:' + str(scrape_time) + '\n', file, file_most_recent)
 
-    scrape_results = scraper.scrape(sport, scraper_name, scrape_time)
+    scrape_results = scraper.scrape(sport, scraper_name, scrape_time) # GAME DAY parameter here
     name_to_team = {}
     for scrape_result in scrape_results:
         team1 = scrape_result['team']
@@ -65,7 +71,7 @@ def upload():
     file.close()
     file_most_recent.close()
 
-    player_data = ''
+    player_data = []
 
     new_projections_fd = data_utils.get_current_projections(sport)
     new_projections_dk = data_utils.get_current_projections(sport, 'dk')
@@ -76,17 +82,29 @@ def upload():
     news_feed_updates = [] # name, team, projectionfd, projectiondk, status?
 
     current_time = time.time()
+    seen_player_names = []
 
     for key in set(initial_projections_fd.keys()).union(new_projections_fd.keys()):
         initial_projection_fd = initial_projections_fd.get(key)
         initial_projection_dk = initial_projections_dk.get(key)
         new_fd_projection = new_projections_fd.get(key)
         new_dk_projection = new_projections_dk.get(key)
+
+            
         
         if new_fd_projection != None:
+            if not key in seen_player_names:
+                seen_player_names.append(key)
+            
             team = name_to_team[key]
-            status = name_to_status.get(key, '')
-            player_data += '{},{},{},{},{}\n'.format(key, team, new_fd_projection, new_dk_projection, status)
+            if key in excluded_players:
+                player_data.append('{},{},{},{},{}'.format(key, team, 0, 0, 'O'))
+            else:
+                status = ''
+                if key in gtd_players:
+                    status = 'GTD'
+                player_data.append('{},{},{},{},{}'.format(key, team, new_fd_projection, new_dk_projection, status))
+            
         
         if initial_projection_fd == None:
             team = name_to_team[key]
@@ -115,7 +133,18 @@ def upload():
     removed_sorted = sorted(removed, key=lambda a: a[1], reverse=True)
     if len(removed_sorted) > 0:
         print("Removed: {}".format(",".join([a[0] for a in removed_sorted])))
-
+        # this is where we should be persistiting the removed players to player_data
+        # for removed in removed_sorted:
+        #     name = removed[0]
+        #     if name in name_to_row:
+        #         line = name_to_row[name]
+        #         player_data.append(line)
+                
+    for name in name_to_row.keys():
+        if name not in seen_player_names:
+            line = name_to_row[name]
+            player_data.append(line)
+            
 
     current_news_feed = scripts_util.read_file('news_feed.txt')
     # current_news_feed = ''
@@ -130,6 +159,9 @@ def upload():
 
     date_suffix = utils.date_str()
 
-    scripts_util.write_file(player_data, 'player_data_{}'.format(date_suffix))
+    scripts_util.write_file("\n".join(player_data), 'player_data_{}'.format(date_suffix))
 
     scripts_util.increment_feed_version()
+    
+if __name__ == "__main__":
+    upload()

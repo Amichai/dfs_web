@@ -3,7 +3,7 @@ import uploadProjectionChanges
 
 path_and_slate_names = [
     ('DKSalaries (9).csv', 'DK Main 7:00pm ET'),
-    ('FanDuel-NBA-2024 ET-02 ET-05 ET-99073-players-list (1).csv', 'FD Main 7:00pm ET'),
+    ('FanDuel-NBA-2024 ET-02 ET-09 ET-99211-players-list (1).csv', 'FD Main 7:00pm ET'),
     # ('DKSalaries (10).csv', 'DK Showdown 8:30pm ET'),
 ]
 
@@ -18,6 +18,7 @@ file = open(caesars_current_path, 'w')
 
 
 ### upload current projection
+# TODO: extract and pass name to status here so we don't need to set statuses manually any more
 uploadProjectionChanges.upload()
 
 ### upload slate data
@@ -145,7 +146,6 @@ for path_and_slate in path_and_slate_names:
                 
             slate_player_data += '{},{},{},{},{},{}\n'.format(slate_name, player_id, name, positions, salary, team)
                 
-                
 print(team_data_array)
 team_data_sorted = sorted(team_data_array, key=lambda x: x.split(',')[2])
 team_data = ''.join(team_data_sorted)
@@ -157,7 +157,6 @@ team_data = ''.join(team_data_sorted)
 # import pdb; pdb.set_trace()
 
 date_suffix = utils.date_str()
-    
 scripts_util.write_file(slate_player_data, 'slate_player_data_{}'.format(date_suffix))
 # write_file(player_data, 'player_data_{}'.format(date_suffix))
 scripts_util.write_file(team_data, 'team_data_{}'.format(date_suffix))

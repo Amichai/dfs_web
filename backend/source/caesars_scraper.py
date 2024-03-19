@@ -8,6 +8,26 @@ import time
 from selenium.webdriver.common.by import By
 
 
+headers = {
+    'authority': 'api.americanwagering.com',
+    'accept': '*/*',
+    'accept-language': 'en-US,en;q=0.9',
+    'content-type': 'application/json',
+    'origin': 'https://sportsbook.caesars.com',
+    'referer': 'https://sportsbook.caesars.com/',
+    'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'cross-site',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    'x-app-version': '7.8.2',
+    'x-aws-waf-token': 'd54677cb-c7bf-4b5c-add6-0de10122dfcd:EQoAeiByUaAJAAAA:e/xiXkqF5Pld7t1/g4TrpkyhN9omyNzZ0KL7+ZISFbZGU0w085Il45qs5L75BBW/tDjerlDgbGY4YdQDawd//L+R/8bot+/Yesb8Exak/hHsGR1czmuAdmxORN/emAAmg3INpUIifFuiEvWvJozbKdcoi58acDD3uu4nS04OmKfXF0ncHjbYFVLWECpAOj/enW7IBOP3PwdEx5tFMQEbpw/AMcKjjAHxD+M6afla4zP2YcJPc+0TaC6XrAcL5/ilmfQ=',
+    'x-platform': 'cordova-desktop',
+    'x-unique-device-id': '529222af-9233-4c2a-804f-84cb57081218',
+}
+
 known_sports = ["NBA","WNBA","MLB","NFL","MMA","CFB","PGA", "NHL"]
 
 class CaesarsScraper:
@@ -40,12 +60,24 @@ class CaesarsScraper:
     self.driver = utils.get_chrome_driver()
     self.all_team_names = ["Atlanta Hawks","Boston Celtics","Brooklyn Nets","Charlotte Hornets","Chicago Bulls","Cleveland Cavaliers","Dallas Mavericks","Denver Nuggets","Detroit Pistons","Golden State Warriors","Houston Rockets","Indiana Pacers","Los Angeles Clippers","Los Angeles Lakers","Memphis Grizzlies","Miami Heat","Milwaukee Bucks","Minnesota Timberwolves","New Orleans Pelicans","New York Knicks","Oklahoma City Thunder","Orlando Magic","Philadelphia 76ers","Phoenix Suns","Portland Trail Blazers","Sacramento Kings","San Antonio Spurs","Toronto Raptors","Utah Jazz","Washington Wizards"]
 
+
+  def query_url(self, url):
+    response = requests.get(
+      url,
+      headers=headers,
+    )
+    
+    # import pdb; pdb.set_trace()
+    return response.json()
+    
+
   def _get_game_guids_today(self):
+    as_json = self.query_url('https://api.americanwagering.com/regions/us/locations/nj/brands/czr/sb/v3/sports/basketball/events/schedule/')
     # url = "https://www.williamhill.com/us/nj/bet/api/v3/sports/{}/events/schedule".format(self.sport_name)
-    url = "https://api.americanwagering.com/regions/us/locations/nj/brands/czr/sb/v3/sports/{}/events/schedule".format(self.sport_name)
-    print(url)
-    # result = requests.get(url)
-    as_json  = utils.get_with_selenium(url)
+    # url = "https://api.americanwagering.com/regions/us/locations/nj/brands/czr/sb/v3/sports/{}/events/schedule".format(self.sport_name)
+    # print(url)
+    # # result = requests.get(url)
+    # as_json  = utils.get_with_selenium(url)
 
     id_to_start_time = {}
     # print(result)
@@ -109,15 +141,12 @@ class CaesarsScraper:
       print("GUID: {}".format(guid))
       url = "https://api.americanwagering.com/regions/us/locations/nj/brands/czr/sb/v3/events/{}".format(guid)
 
-      self.driver.get(url)
 
       time.sleep(1.0)
 
-      # as_text = self.driver.find_element('tag', 'body').text
-      as_text = self.driver.find_element(By.CSS_SELECTOR, 'body').text
 
+      as_json = self.query_url(url)
 
-      as_json = json.loads(as_text)
       if not 'markets' in as_json:
         __import__('pdb').set_trace()
         continue
