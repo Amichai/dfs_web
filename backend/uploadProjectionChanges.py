@@ -144,9 +144,11 @@ def upload():
         if name not in seen_player_names:
             line = name_to_row[name]
             player_data.append(line)
-            
+    
+    
+    news_feed_file_name = 'news_feed_{}'.format(date_suffix)
 
-    current_news_feed = scripts_util.read_file('news_feed.txt')
+    current_news_feed = scripts_util.read_file(news_feed_file_name)
     # current_news_feed = ''
 
     news_feed_string = "{}{}, {}".format(current_news_feed, current_time, json.dumps(news_feed_updates)) + '\n'
@@ -154,10 +156,8 @@ def upload():
     #upload news feed
     # upload player projections and status
 
-    scripts_util.write_file(news_feed_string, 'news_feed.txt')
+    scripts_util.write_file(news_feed_string, news_feed_file_name)
     out_players = []
-
-    date_suffix = utils.date_str()
 
     scripts_util.write_file("\n".join(player_data), 'player_data_{}'.format(date_suffix))
 

@@ -1,5 +1,6 @@
 import csv
 import scripts_util
+import os
 
 import sys
 sys.path.append('/Users/amichailevy/Documents/spikes/dfs_web/backend/source/')
@@ -12,12 +13,28 @@ excluded_players = [a for a in excluded_players if a != '']
 excluded_players_dict = {a.split(',')[0]: a.split(',') for a in excluded_players}
 
 fd_name_to_dk_name = {v: k for k, v in dk_name_to_fd_name.items()}
-
 download_folder = '/Users/amichailevy/Downloads/'
-filenames = [
-  'FanDuel-NBA-2024 ET-03 ET-19 ET-100511-players-list (1).csv',
-]
+
+
+########
+game_ids = [100661]
 exclude = []
+########
+
+id_to_file = {}
+all_files = os.listdir(download_folder)
+all_files.sort(key=lambda x: os.path.getctime(download_folder + x))
+for file in all_files:
+    if os.path.isfile(os.path.join(download_folder, file)):
+      for game_id in game_ids:
+        file_tag = f'{game_id}-players-list'
+        if file_tag in file:
+          id_to_file[game_id] = file
+          break
+
+print(id_to_file)
+filenames = list(id_to_file.values())
+
 
 new_statuses = []
 updated_statuses = []
