@@ -94,7 +94,7 @@ rows = [','.join(a) for a in excluded_players_dict.values()]
 scripts_util.write_file('\n'.join(rows), 'player_statuses')
 print("new statuses:")
 for name, status in new_statuses:
-  print(status)
+  print(f'{name} -> {status}')
   if status == 'O':
     append_to_news_feed += f'{name} marked OUT\n'
   
